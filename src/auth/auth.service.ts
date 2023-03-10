@@ -2,13 +2,17 @@ import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "..//prisma/prisma.service";
 import * as argon from 'argon2';
 import { AuthDTO } from "./dto";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable({})
 export class AuthService {
 
-    constructor(private prismaService: PrismaService) {
-
-    }
+    constructor(
+        private prismaService: PrismaService,
+        private jwrService: JwtService,
+        private configService: ConfigService
+    ) { }
 
     async register(authDTO: AuthDTO) {
         const hashedPassword = await argon.hash(authDTO.password)
@@ -29,7 +33,7 @@ export class AuthService {
                     createdAt: true
                 }
             })
-            return user
+            return await this.signJwtToken(user.id, user.phoneNumber)
         } catch (error) {
             if (error.code == 'P2002') {
                 // throw new ForbiddenException(error.message)
@@ -52,6 +56,21 @@ export class AuthService {
         if (!passwordMatched)
             return { message: "Wrong password" }
         delete user.hashedPassword
-        return user
+        return await this.signJwtToken(user.id, user.phoneNumber)
+    }
+
+    async signJwtToken(userId: number, phoneNumber: string)
+        : Promise<{ accessToken: string }> {
+        const payload = {
+            sub: userId,
+            phoneNumber
+        }
+        const jwtString = await this.jwrService.signAsync(payload, {
+            expiresIn: '2 days',
+            secret: this.configService.get('JWT_SECRET')
+        })
+        return {
+            accessToken: jwtString
+        }
     }
 }
