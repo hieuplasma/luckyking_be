@@ -11,21 +11,28 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  phoneNumber String
+  id             Int       @id @default(autoincrement())
+  phoneNumber    String    @unique
   hashedPassword String
-  fullName String
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-  email String
-  address String
-  identify String
-  balance Int
+  fullName       String?
+  createdAt      DateTime  @default(now())
+  updateAt       DateTime  @updatedAt
+  email          String?
+  address        String?
+  identify       String?
+  balance        Int?
+  sessions       Session[]
+
+  @@map("users") //users is table's name in postgres SQL
 }
 
 model Session {
-  int Int @id @default(autoincrement())
+  int         Int    @id @default(autoincrement())
   phoneNumber String
   accessToken String
-  deviceId String
+  deviceId    String
+  User        User?  @relation(fields: [userId], references: [id])
+  userId      Int?
+
+  @@map("sessions")
 }
