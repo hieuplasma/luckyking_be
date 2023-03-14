@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsPhoneNumber, IsString } from "class-validator"
+import { IsNotEmpty, IsPhoneNumber, IsString, IS_PHONE_NUMBER } from "class-validator"
 
 export class AuthDTO {
     @IsPhoneNumber('VN')
@@ -8,4 +8,18 @@ export class AuthDTO {
     @IsNotEmpty()
     @IsString()
     password: string
+
+    @IsNotEmpty()
+    @IsString()
+    deviceId: string
+}
+
+export class CheckAuthDTO{
+    @IsPhoneNumber('VN')
+    @IsNotEmpty()
+    phoneNumber: string
+
+    @IsNotEmpty()
+    @IsString()
+    deviceId: string
 }

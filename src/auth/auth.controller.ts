@@ -1,9 +1,14 @@
 import { Body, Controller, Post, Req } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { AuthDTO } from "./dto";
+import { AuthDTO, CheckAuthDTO } from "./dto";
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) {
+    }
+
+    @Post("check")
+    check(@Body() body: CheckAuthDTO) {
+        return this.authService.check(body)
     }
 
     @Post("register")

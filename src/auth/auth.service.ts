@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "..//prisma/prisma.service";
 import * as argon from 'argon2';
-import { AuthDTO } from "./dto";
+import { AuthDTO, CheckAuthDTO } from "./dto";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 
@@ -14,6 +14,23 @@ export class AuthService {
         private configService: ConfigService
     ) { }
 
+    async check(checkAuthDTO: CheckAuthDTO) {
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                phoneNumber: checkAuthDTO.phoneNumber
+            }
+        })
+        if (!user) return { errorMessage: "Request register", errorCode: "CA001" }
+        // if (user.status == 'block') return { errorMessage: "This account had been block", errorCode: "CA002" }
+        const device = this.prismaService.device.findFirst({
+            where: {
+                AND: { userId: user.id, deviceId: checkAuthDTO.deviceId }
+            }
+        })
+        if (!device) return { errorMessage: "Request OTP", errorCode: "CA003" }
+        return { errorMessage: "Allow login", errorCode: "CA004" }
+    }
+
     async register(authDTO: AuthDTO) {
         const hashedPassword = await argon.hash(authDTO.password)
         try {
@@ -25,12 +42,19 @@ export class AuthService {
                     email: '',
                     address: '',
                     identify: '',
-                    balance: 0
+                    balance: 0,
+                    device: {
+                        create: {
+                            deviceId: authDTO.deviceId,
+                            lastLogin: new Date()
+                        }
+                    }
                 },
                 select: {
                     id: true,
                     phoneNumber: true,
-                    createdAt: true
+                    createdAt: true,
+                    device: true
                 }
             })
             return await this.signJwtToken(user.id, user.phoneNumber)
@@ -54,8 +78,17 @@ export class AuthService {
             authDTO.password
         )
         if (!passwordMatched)
-            return { message: "Wrong password" }
+            return { errorMessage: "Wrong password", errorCode: "LG001" }
         delete user.hashedPassword
+        const device = await this.prismaService.device.create({
+            data: {
+                deviceId: authDTO.deviceId,
+                lastLogin: new Date(),
+                User: {
+                    connect: { id: user.id }
+                }
+            }
+        })
         return await this.signJwtToken(user.id, user.phoneNumber)
     }
 
