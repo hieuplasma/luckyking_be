@@ -4,12 +4,29 @@ services:
     image: postgres:15.0
     container_name: dev-database
     ports: 
-      - 5434:5432
+      - 5432:5432
     environment:
       POSGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: mydb
     networks: 
       - nestjs-network
+  dev:
+    container_name: luckyking-api
+    image: nestjs-api-dev:1.0.0
+    build:
+      context: .
+      target: development
+      dockerfile: ./Dockerfile
+    command: npm run start:debug
+    ports:
+      - 3003:3001
+      # - 9229:9229
+    networks:
+      - nestjs-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
 networks:
   nestjs-network: 

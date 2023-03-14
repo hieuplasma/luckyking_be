@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -24,7 +25,7 @@ model User {
   // sessions       Session[]
   device         Device[]
 
-  @@map("users") //users is table's name in postgres SQL
+  // @@map("users") //users is table's name in postgres SQL
 }
 
 // model Session {
