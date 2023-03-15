@@ -4,11 +4,11 @@ services:
     image: postgres:15.0
     container_name: dev-database
     ports: 
-      - 5432:5432
+      - ${DB_PORT}:5432
     environment:
-      POSGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
+      POSGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     networks: 
       - nestjs-network
   dev:
@@ -18,7 +18,8 @@ services:
       context: .
       target: development
       dockerfile: ./Dockerfile
-    command: npm run start:debug
+    # command: npm run start:debug
+    command: npm run start:prod
     ports:
       - 3003:3001
       # - 9229:9229
