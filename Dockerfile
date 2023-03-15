@@ -1,4 +1,4 @@
-FROM node:18-alpine As development
+FROM keymetrics/pm2:18-alpine As development
 
 WORKDIR /usr/src/app
 
@@ -15,7 +15,7 @@ RUN npx prisma generate
 
 RUN npm run build
 
-FROM node:18-alpine
+FROM keymetrics/pm2:18-alpine
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
@@ -26,5 +26,6 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3003
 
-CMD ["npm","run" "start:prod"]
+CMD ["npm","run" "start:prod:pm2"]
+# CMD ["npm","run" "start:prod"]
 # CMD [ "node", "dist/main" ]
