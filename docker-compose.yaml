@@ -19,8 +19,8 @@ services:
       target: development
       dockerfile: ./Dockerfile
     # command: npm run start:debug
-    # command: npm run start:prod
-    command: npm run start:prod:pm2
+    command: npm run start:prod
+    # command: npm run start:prod:pm2
     ports:
       - 3003:3001
       # - 9229:9229
