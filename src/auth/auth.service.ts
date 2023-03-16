@@ -80,7 +80,12 @@ export class AuthService {
         if (!passwordMatched)
             return { errorMessage: "Wrong password", errorCode: "LG001" }
         delete user.hashedPassword
-        const device = await this.prismaService.device.create({
+        const deviceId = await this.prismaService.device.findFirst({
+            where: {
+                AND: { userId: user.id, deviceId: authDTO.deviceId }
+            }
+        })
+        if (!deviceId) await this.prismaService.device.create({
             data: {
                 deviceId: authDTO.deviceId,
                 lastLogin: new Date(),

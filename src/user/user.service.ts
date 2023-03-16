@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 // import { User } from "@prisma/client";
-import { User } from '../../node_modules/.prisma/client'; 
+import { User } from '../../node_modules/.prisma/client';
 import { PrismaService } from "../prisma/prisma.service";
 import { UserDTO } from "./dto/user.dto";
 
@@ -21,6 +21,13 @@ export class UserService {
             }
         })
         user.updateAt = new Date()
+        delete user.hashedPassword
         return user
+    }
+
+    async getAllUser() {
+        const users = await this.prismaService.user.findMany()
+        users.map((item) => delete item.hashedPassword)
+        return users
     }
 }
