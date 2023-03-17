@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionType } from '../common/enum'
 import { RechargeDTO } from './dto';
@@ -7,11 +8,12 @@ import { RechargeDTO } from './dto';
 export class TransactionService {
     constructor(private prismaService: PrismaService) { }
 
-    async rechargeMoney(body: RechargeDTO) {
+    async rechargeMoney(transactionPerson: User,body: RechargeDTO) {
         if ((body.amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
         const user = await this.prismaService.user.findUnique({
             where: { phoneNumber: body.phoneNumber }
         })
+        if (!user) { throw new ForbiddenException("User not found") }
         const transaction = await this.prismaService.transaction.create({
             data: {
                 type: TransactionType.Recharge,
@@ -22,7 +24,8 @@ export class TransactionService {
                     connect: { id: user.id }
                 },
                 source: body.source,
-                destination: body.destination
+                destination: body.destination,
+                transactionPersonId: transactionPerson.id
             },
             select: {
                 type: true,

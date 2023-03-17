@@ -18,7 +18,7 @@ generator erd {
 
 model User {
   // @@map("users") //users is table's name in postgres SQL
-  id             Int      @id @default(autoincrement())
+  id             String   @id @default(uuid())
   phoneNumber    String   @unique
   hashedPassword String
   fullName       String?
@@ -28,8 +28,8 @@ model User {
   address        String?
   identify       String?
   balance        Int      @default(0)
-  status         String? // Active, Block
-  role           String   @default("User") // Admin, User
+  status         String   @default("active")
+  role           String   @default("user") // Admin, User
   avatar         String? // Link anh
   personNumber   Int? // Ma alias ca nhan
 
@@ -39,18 +39,19 @@ model User {
   Order        Order[]
   Cart         Cart?
   MoneyAccount MoneyAccount?
+  RewardWallet RewardWallet?
 }
 
 model Device {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   deviceId  String
   lastLogin DateTime
   user      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    String
 }
 
 model Lottery {
-  id            Int           @id @default(autoincrement())
+  id            String        @id @default(uuid())
   type          String // Cac loai ve Vietlot
   // detail     Json // detail dang {number:[[3,4,5,...],[6,7,8,...],[30],...], description: ve bao 4 bac 10 }
   buyTime       DateTime      @default(now())
@@ -63,11 +64,11 @@ model Lottery {
   imageFront    String? // Link anh ve ma truoc
   imageback     String // Link anh ve mat sau
   user          User          @relation(fields: [userId], references: [id])
-  userId        Int
+  userId        String
   Order         Order?        @relation(fields: [orderId], references: [id])
-  orderId       Int?
+  orderId       String?
   Cart          Cart?         @relation(fields: [cartId], references: [id])
-  cartId        Int?
+  cartId        String?
   NumberLottery NumberLotery?
   periodCode    String // Mã kỳ quay
   periodTime    DateTime // Thời gian quay
@@ -75,33 +76,33 @@ model Lottery {
 }
 
 model Cart {
-  id      Int       @id @default(autoincrement())
+  id      String    @id @default(uuid())
   User    User      @relation(fields: [userId], references: [id])
-  userId  Int       @unique
+  userId  String    @unique
   Lottery Lottery[]
 }
 
 // Lich su giao dich, bien dong so du, lich su thang, thua se dung api rut gon cua lich su giao dich
 model Transaction {
-  id          Int      @id @default(autoincrement())
-  type        String // nap tien, rut tien, nhan thuong
-  detail      Json? // detail dang {nguon nap, rut ve dau, nhan thuong tu cai gi}
-  description String   @default("")
-  amount      Int      @default(0) // SO tien 
-  payment     String   @default("") // Hinh thuc thanh toan
-  User        User     @relation(fields: [userId], references: [id])
-  userId      Int
-  createAt    DateTime @default(now())
-  source      String? // Mo ta nguon
-  destination String? // Mo ta dich den
+  id                  String   @id @default(uuid())
+  type                String // nap tien, rut tien, nhan thuong
+  description         String   @default("")
+  amount              Int      @default(0) // so tien 
+  payment             String   @default("") // Hinh thuc thanh toan
+  User                User     @relation(fields: [userId], references: [id])
+  userId              String
+  createAt            DateTime @default(now())
+  source              String? // Mo ta nguon
+  destination         String? // Mo ta dich den
+  transactionPersonId String? // UserId cua nguoi thuc hien giao dich (admin)
 }
 
 // Lich su mua hang: mua ve, tra ve
 model Order {
-  id                Int       @id @default(autoincrement())
+  id                String    @id @default(uuid())
   amount            Int // So tien
   user              User      @relation(fields: [userId], references: [id])
-  userId            Int
+  userId            String
   description       String?
   Lottery           Lottery[]
   statusDescription String?
@@ -118,18 +119,27 @@ model Order {
 }
 
 model MoneyAccount {
-  id         Int     @id @default(autoincrement())
+  id         String  @id @default(uuid())
   name       String? @default("Ví Lucky King") // ten money account
   balance    Int     @default(0)
   decription String?
   user       User    @relation(fields: [userId], references: [id])
-  userId     Int     @unique
+  userId     String  @unique
+}
+
+model RewardWallet {
+  id         String  @id @default(uuid())
+  name       String? @default("Ví nhận thưởng") // ten vi nhan thuong
+  balance    Int     @default(0)
+  decription String?
+  user       User    @relation(fields: [userId], references: [id])
+  userId     String  @unique
 }
 
 model NumberLotery {
-  id            Int     @id @default(autoincrement())
+  id            String  @id @default(uuid())
   Lottery       Lottery @relation(fields: [lotteryId], references: [id])
-  lotteryId     Int     @unique
+  lotteryId     String  @unique
   level         Int // bac cua ve
   numberSets    Int // số bộ số
   numberDetail  Json // {boSo:[...], tienCuoc:int}

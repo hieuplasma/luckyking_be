@@ -4,6 +4,7 @@ import * as argon from 'argon2';
 import { AuthDTO, CheckAuthDTO } from "./dto";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
+import { UserStatus } from "src/common/enum";
 
 @Injectable({})
 export class AuthService {
@@ -38,28 +39,23 @@ export class AuthService {
                 data: {
                     phoneNumber: authDTO.phoneNumber,
                     hashedPassword: hashedPassword,
-                    fullName: '',
-                    email: '',
-                    address: '',
-                    identify: '',
+                    status: UserStatus.Acticve,
                     Device: {
                         create: {
                             deviceId: authDTO.deviceId,
                             lastLogin: new Date()
                         }
                     },
-                    MoneyAccount: {
-                        create: {
-                            decription: "Ví LuckyKing của " + authDTO.phoneNumber
-                        }
-                    }
+                    MoneyAccount: { create: { decription: "Ví LuckyKing của " + authDTO.phoneNumber } },
+                    RewardWallet: { create: { decription: "Ví nhận thưởng của " + authDTO.phoneNumber } }
                 },
                 select: {
                     id: true,
                     phoneNumber: true,
                     createdAt: true,
                     Device: true,
-                    MoneyAccount: true
+                    MoneyAccount: true,
+                    RewardWallet: true
                 }
             })
             const accessToken = await this.signJwtToken(user.id, user.phoneNumber)
@@ -105,7 +101,7 @@ export class AuthService {
         return await this.signJwtToken(user.id, user.phoneNumber)
     }
 
-    async signJwtToken(userId: number, phoneNumber: string)
+    async signJwtToken(userId: string, phoneNumber: string)
         : Promise<{ accessToken: string }> {
         const payload = {
             sub: userId,
