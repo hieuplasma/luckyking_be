@@ -13,9 +13,10 @@ import { Role } from 'src/common/enum';
 export class UserController {
     constructor(private userService: UserService) {
     }
-    // @UseGuards(AuthGuard('jwt'))
-    @UseGuards(MyJwtGuard)
+
+    @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-info')
+    @Roles(Role.Admin, Role.User)
     getUserInfo(@GetUser() user: User) {
         return user
     }

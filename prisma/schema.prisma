@@ -120,7 +120,7 @@ model Order {
 
 model MoneyAccount {
   id         String  @id @default(uuid())
-  name       String? @default("Ví Lucky King") // ten money account
+  name       String? @default("Ví LuckyKing") // ten money account
   balance    Int     @default(0)
   decription String?
   user       User    @relation(fields: [userId], references: [id])
