@@ -1,10 +1,10 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "..//prisma/prisma.service";
 import * as argon from 'argon2';
-import { AuthDTO, CheckAuthDTO } from "./dto";
+import { AuthDTO, CheckAuthDTO, CreateStaffDTO } from "./dto";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { UserStatus } from "src/common/enum";
+import { Role, UserStatus } from "src/common/enum";
 
 @Injectable({})
 export class AuthService {
@@ -46,6 +46,7 @@ export class AuthService {
                             lastLogin: new Date()
                         }
                     },
+                    role: Role.User,
                     MoneyAccount: { create: { decription: "Ví LuckyKing của " + authDTO.phoneNumber } },
                     RewardWallet: { create: { decription: "Ví nhận thưởng của " + authDTO.phoneNumber } }
                 },
@@ -99,6 +100,50 @@ export class AuthService {
             }
         })
         return await this.signJwtToken(user.id, user.phoneNumber)
+    }
+
+    async createStaff(createStaffDTO: CreateStaffDTO) { 
+        const hashedPassword = await argon.hash(createStaffDTO.password)
+        try {
+            const user = await this.prismaService.user.create({
+                data: {
+                    phoneNumber: createStaffDTO.phoneNumber,
+                    hashedPassword: hashedPassword,
+                    status: UserStatus.Acticve,
+                    Device: {
+                        create: {
+                            deviceId: createStaffDTO.deviceId,
+                            lastLogin: new Date()
+                        }
+                    },
+                    fullName: createStaffDTO.fullName,
+                    role: createStaffDTO.role,
+                    address: createStaffDTO.address,
+                    personNumber: createStaffDTO.personNumber,
+                    identify: createStaffDTO.identify
+                },
+                select: {
+                    id: true,
+                    phoneNumber: true,
+                    createdAt: true,
+                    Device: true,
+                    fullName: true,
+                    role: true,
+                    address: true,
+                    personNumber: true,
+                    identify: true
+                }
+            })
+            const accessToken = await this.signJwtToken(user.id, user.phoneNumber)
+            //@ts-ignore
+            user.accessToken = accessToken
+            return user
+        } catch (error) {
+            if (error.code == 'P2002') {
+                // throw new ForbiddenException(error.message)
+                throw new ForbiddenException("registered phone number")
+            }
+        }
     }
 
     async signJwtToken(userId: string, phoneNumber: string)

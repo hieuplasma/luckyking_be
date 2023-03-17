@@ -18,11 +18,12 @@ export class UserController {
     @Get('get-info')
     @Roles(Role.Admin, Role.User)
     getUserInfo(@GetUser() user: User) {
-        return user
+        return this.userService.getUserInfo(user)
     }
 
-    @UseGuards(MyJwtGuard)
+    @UseGuards(MyJwtGuard, RolesGuard)
     @Post('update-info')
+    @Roles(Role.User)
     updateUserInfo(@GetUser() user: User, @Body() body: UserDTO) {
         return this.userService.updateUserInfo(user, body)
     }

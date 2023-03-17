@@ -1,5 +1,6 @@
 export enum TransactionType {
     Recharge = "recharge",
     WithDraw = "withdraw",
-    Rewarded = "rewarded"
+    Rewarded = "rewarded",
+    BuyLottery = "buylottery"
 }

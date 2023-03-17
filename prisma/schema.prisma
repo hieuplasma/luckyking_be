@@ -27,11 +27,11 @@ model User {
   email          String?
   address        String?
   identify       String?
-  balance        Int      @default(0)
+  // balance        Int      @default(0)
   status         String   @default("active")
   role           String   @default("user") // Admin, User
   avatar         String? // Link anh
-  personNumber   Int? // Ma alias ca nhan
+  personNumber   String? // Ma alias ca nhan
 
   Device       Device[]
   Lottery      Lottery[]
@@ -55,14 +55,13 @@ model Lottery {
   type          String // Cac loai ve Vietlot
   // detail     Json // detail dang {number:[[3,4,5,...],[6,7,8,...],[30],...], description: ve bao 4 bac 10 }
   buyTime       DateTime      @default(now())
-  resultTime    DateTime
+  resultTime    DateTime?
   deleteTime    DateTime?
   bets          Int // tien dat cuoc
-  totalMoney    Int // Tong gia tien
   benefits      Int // tien an duoc
   status        String // ve dang cho kq, ve dan trung, ve da truot, ve da huy
   imageFront    String? // Link anh ve ma truoc
-  imageback     String // Link anh ve mat sau
+  imageback     String? // Link anh ve mat sau
   user          User          @relation(fields: [userId], references: [id])
   userId        String
   Order         Order?        @relation(fields: [orderId], references: [id])
