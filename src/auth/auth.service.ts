@@ -42,11 +42,15 @@ export class AuthService {
                     email: '',
                     address: '',
                     identify: '',
-                    balance: 0,
                     Device: {
                         create: {
                             deviceId: authDTO.deviceId,
                             lastLogin: new Date()
+                        }
+                    },
+                    MoneyAccount: {
+                        create: {
+                            decription: "Ví LuckyKing của " + authDTO.phoneNumber
                         }
                     }
                 },
@@ -54,10 +58,14 @@ export class AuthService {
                     id: true,
                     phoneNumber: true,
                     createdAt: true,
-                    Device: true
+                    Device: true,
+                    MoneyAccount: true
                 }
             })
-            return await this.signJwtToken(user.id, user.phoneNumber)
+            const accessToken = await this.signJwtToken(user.id, user.phoneNumber)
+            //@ts-ignore
+            user.accessToken = accessToken
+            return user
         } catch (error) {
             if (error.code == 'P2002') {
                 // throw new ForbiddenException(error.message)
