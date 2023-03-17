@@ -50,28 +50,28 @@ model Device {
 }
 
 model Lottery {
-  id                Int           @id @default(autoincrement())
-  type              String // Cac loai ve Vietlot
+  id            Int           @id @default(autoincrement())
+  type          String // Cac loai ve Vietlot
   // detail     Json // detail dang {number:[[3,4,5,...],[6,7,8,...],[30],...], description: ve bao 4 bac 10 }
-  buyTime           DateTime
-  resultTime        DateTime
-  deleteTime        DateTime?
-  bets              Int // tien dat cuoc
-  totalMoney        Int // Tong gia tien
-  benefits          Int // tien an duoc
-  status            String // ve dang cho kq, ve dan trung, ve da truot, ve da huy
-  imageFront        String? // Link anh ve ma truoc
-  imageback         String // Link anh ve mat sau
-  user              User          @relation(fields: [userId], references: [id])
-  userId            Int
-  Order             Order?        @relation(fields: [orderId], references: [id])
-  orderId           Int?
-  Cart              Cart?         @relation(fields: [cartId], references: [id])
-  cartId            Int?
-  NumberLottery     NumberLotery?
-  maKyQuay          String
-  thoiGianQuay      DateTime
-  trangThaiSoThuong Boolean // Da so thuong hay chua
+  buyTime       DateTime
+  resultTime    DateTime
+  deleteTime    DateTime?
+  bets          Int // tien dat cuoc
+  totalMoney    Int // Tong gia tien
+  benefits      Int // tien an duoc
+  status        String // ve dang cho kq, ve dan trung, ve da truot, ve da huy
+  imageFront    String? // Link anh ve ma truoc
+  imageback     String // Link anh ve mat sau
+  user          User          @relation(fields: [userId], references: [id])
+  userId        Int
+  Order         Order?        @relation(fields: [orderId], references: [id])
+  orderId       Int?
+  Cart          Cart?         @relation(fields: [cartId], references: [id])
+  cartId        Int?
+  NumberLottery NumberLotery?
+  periodCode    String // Mã kỳ quay
+  periodTime    DateTime // Thời gian quay
+  bonusStatus   Boolean // Trạng thái so thưởng
 }
 
 model Cart {
@@ -112,7 +112,7 @@ model Order {
   tradingCode       String // ma giao dich
   surcharge         Int // phu phi
   dataPart          String // 20230316 ngay dat don hang
-  paidStatus        String // Trang thai tra thuong
+  rewardStatus      String // Trang thai tra thuong
 }
 
 model MoneyAccount {
@@ -128,8 +128,8 @@ model NumberLotery {
   id            Int     @id @default(autoincrement())
   Lottery       Lottery @relation(fields: [lotteryId], references: [id])
   lotteryId     Int     @unique
-  bac           Int // bac cua ve
-  soBoSo        Int //
+  level         Int // bac cua ve
+  numberSets    Int // số bộ số
   numberDetail  Json // {boSo:[...], tienCuoc:int}
   statusWinning String // Trung hay khong trung
 }
