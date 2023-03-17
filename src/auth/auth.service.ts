@@ -43,7 +43,7 @@ export class AuthService {
                     address: '',
                     identify: '',
                     balance: 0,
-                    device: {
+                    Device: {
                         create: {
                             deviceId: authDTO.deviceId,
                             lastLogin: new Date()
@@ -54,7 +54,7 @@ export class AuthService {
                     id: true,
                     phoneNumber: true,
                     createdAt: true,
-                    device: true
+                    Device: true
                 }
             })
             return await this.signJwtToken(user.id, user.phoneNumber)
@@ -89,7 +89,7 @@ export class AuthService {
             data: {
                 deviceId: authDTO.deviceId,
                 lastLogin: new Date(),
-                User: {
+                user: {
                     connect: { id: user.id }
                 }
             }

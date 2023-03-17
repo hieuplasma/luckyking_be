@@ -11,7 +11,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../ERD.png"
+}
+
 model User {
+  // @@map("users") //users is table's name in postgres SQL
   id             Int      @id @default(autoincrement())
   phoneNumber    String   @unique
   hashedPassword String
@@ -22,29 +28,108 @@ model User {
   address        String?
   identify       String?
   balance        Int?
-  // sessions       Session[]
-  device         Device[]
-  status         String?
-  role           String?
+  status         String? // Active, Block
+  role           String? // Admin, User
+  avatar         String? // Link anh
+  personNumber   Int? // Ma alias ca nhan
 
-  // @@map("users") //users is table's name in postgres SQL
+  Device       Device[]
+  Lottery      Lottery[]
+  Transaction  Transaction[]
+  Order        Order[]
+  Cart         Cart?
+  MoneyAccount MoneyAccount[]
 }
-
-// model Session {
-//   int         Int    @id @default(autoincrement())
-//   phoneNumber String
-//   accessToken String
-//   deviceId    String
-//   User        User?  @relation(fields: [userId], references: [id])
-//   userId      Int?
-
-//   @@map("sessions")
-// }
 
 model Device {
   id        Int      @id @default(autoincrement())
   deviceId  String
   lastLogin DateTime
-  User      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   userId    Int
+}
+
+model Lottery {
+  id                Int           @id @default(autoincrement())
+  type              String // Cac loai ve Vietlot
+  // detail     Json // detail dang {number:[[3,4,5,...],[6,7,8,...],[30],...], description: ve bao 4 bac 10 }
+  buyTime           DateTime
+  resultTime        DateTime
+  deleteTime        DateTime?
+  bets              Int // tien dat cuoc
+  totalMoney        Int // Tong gia tien
+  benefits          Int // tien an duoc
+  status            String // ve dang cho kq, ve dan trung, ve da truot, ve da huy
+  imageFront        String? // Link anh ve ma truoc
+  imageback         String // Link anh ve mat sau
+  user              User          @relation(fields: [userId], references: [id])
+  userId            Int
+  Order             Order?        @relation(fields: [orderId], references: [id])
+  orderId           Int?
+  Cart              Cart?         @relation(fields: [cartId], references: [id])
+  cartId            Int?
+  NumberLottery     NumberLotery?
+  maKyQuay          String
+  thoiGianQuay      DateTime
+  trangThaiSoThuong Boolean // Da so thuong hay chua
+}
+
+model Cart {
+  id      Int       @id @default(autoincrement())
+  User    User      @relation(fields: [userId], references: [id])
+  userId  Int       @unique
+  Lottery Lottery[]
+}
+
+// Lich su giao dich, bien dong so du, lich su thang, thua se dung api rut gon cua lich su giao dich
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  type        String // nap tien, rut tien, nhan thuong
+  detail      Json // detail dang {nguon nap, rut ve dau, nhan thuong tu cai gi}
+  description String
+  amount      Int // SO tien
+  payment     String // Hinh thuc thanh toan
+  User        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  createAt    DateTime
+}
+
+// Lich su mua hang: mua ve, tra ve
+model Order {
+  id                Int       @id @default(autoincrement())
+  amount            Int // So tien
+  user              User      @relation(fields: [userId], references: [id])
+  userId            Int
+  description       String?
+  Lottery           Lottery[]
+  statusDescription String?
+  status            String // da mua thanh cong, dang xu ly, da huy
+  creataAt          DateTime
+  confirmAt         DateTime?
+  confirmBy         String? // ma diem ban hang - account ban hang
+  confrimByStaff    String?
+  payment           String? //hinh thuc thanh tonan
+  tradingCode       String // ma giao dich
+  surcharge         Int // phu phi
+  dataPart          String // 20230316 ngay dat don hang
+  paidStatus        String // Trang thai tra thuong
+}
+
+model MoneyAccount {
+  id         Int    @id @default(autoincrement())
+  type       String // Cong, tru tien
+  balance    Int
+  decription String
+  user       User   @relation(fields: [userId], references: [id])
+  userId     Int
+}
+
+model NumberLotery {
+  id            Int     @id @default(autoincrement())
+  Lottery       Lottery @relation(fields: [lotteryId], references: [id])
+  lotteryId     Int     @unique
+  bac           Int // bac cua ve
+  soBoSo        Int //
+  numberDetail  Json // {boSo:[...], tienCuoc:int}
+  statusWinning String // Trung hay khong trung
 }
