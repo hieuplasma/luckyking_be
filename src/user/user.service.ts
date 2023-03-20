@@ -3,7 +3,7 @@ import { User } from '../../node_modules/.prisma/client';
 import { PrismaService } from "../prisma/prisma.service";
 import { UserDTO } from "./dto/user.dto";
 
-@Injectable({})
+@Injectable()
 export class UserService {
     constructor(private prismaService: PrismaService) { }
 
@@ -41,6 +41,10 @@ export class UserService {
         const users = await this.prismaService.user.findMany()
         users.map((item) => delete item.hashedPassword)
         return users
+    }
+
+    async getAllWallet(userId) {
+        return this.getBalance(userId)
     }
 
     private async getBalance(userId) {

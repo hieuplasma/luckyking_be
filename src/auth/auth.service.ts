@@ -48,7 +48,8 @@ export class AuthService {
                     },
                     role: Role.User,
                     MoneyAccount: { create: { decription: "Ví LuckyKing của " + authDTO.phoneNumber } },
-                    RewardWallet: { create: { decription: "Ví nhận thưởng của " + authDTO.phoneNumber } }
+                    RewardWallet: { create: { decription: "Ví nhận thưởng của " + authDTO.phoneNumber } },
+                    Cart: { create: {} }
                 },
                 select: {
                     id: true,
@@ -102,7 +103,7 @@ export class AuthService {
         return await this.signJwtToken(user.id, user.phoneNumber)
     }
 
-    async createStaff(createStaffDTO: CreateStaffDTO) { 
+    async createStaff(createStaffDTO: CreateStaffDTO) {
         const hashedPassword = await argon.hash(createStaffDTO.password)
         try {
             const user = await this.prismaService.user.create({

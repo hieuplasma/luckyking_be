@@ -11,10 +11,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  // output   = "../ERD.png"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "../ERD.png"
+// }
 
 model User {
   // @@map("users") //users is table's name in postgres SQL
@@ -53,12 +53,11 @@ model Device {
 model Lottery {
   id            String        @id @default(uuid())
   type          String // Cac loai ve Vietlot
-  // detail     Json // detail dang {number:[[3,4,5,...],[6,7,8,...],[30],...], description: ve bao 4 bac 10 }
   buyTime       DateTime      @default(now())
   resultTime    DateTime?
   deleteTime    DateTime?
-  bets          Int // tien dat cuoc
-  benefits      Int // tien an duoc
+  bets          Int @default(0)// tien dat cuoc
+  benefits      Int? @default(0) // tien an duoc
   status        String // ve dang cho kq, ve dan trung, ve da truot, ve da huy
   imageFront    String? // Link anh ve ma truoc
   imageback     String? // Link anh ve mat sau
@@ -69,9 +68,8 @@ model Lottery {
   Cart          Cart?         @relation(fields: [cartId], references: [id])
   cartId        String?
   NumberLottery NumberLotery?
-  periodCode    String // Mã kỳ quay
-  periodTime    DateTime // Thời gian quay
-  bonusStatus   Boolean // Trạng thái so thưởng
+  periodCode    String? // Mã kỳ quay
+  periodTime    DateTime? // Thời gian quay
 }
 
 model Cart {
@@ -105,16 +103,17 @@ model Order {
   description       String?
   Lottery           Lottery[]
   statusDescription String?
-  status            String // da mua thanh cong, dang xu ly, da huy
-  creataAt          DateTime
+  status            String? // da mua thanh cong, dang xu ly, da huy
+  creataAt          DateTime  @default(now())
   confirmAt         DateTime?
   confirmBy         String? // ma diem ban hang - account ban hang
   confrimByStaff    String?
   payment           String? //hinh thuc thanh tonan
-  tradingCode       String // ma giao dich
-  surcharge         Int // phu phi
-  dataPart          String // 20230316 ngay dat don hang
-  rewardStatus      String // Trang thai tra thuong
+  tradingCode       String? // ma giao dich
+  surcharge         Int? @default(0) // phu phi
+  dataPart          String? // 20230316 ngay dat don hang
+  rewardStatus      String? // Trang thai tra thuong
+  method            String    @default("keep") // giu ho, ship ve
 }
 
 model MoneyAccount {
@@ -142,5 +141,4 @@ model NumberLotery {
   level         Int // bac cua ve
   numberSets    Int // số bộ số
   numberDetail  Json // {boSo:[...], tienCuoc:int}
-  statusWinning String // Trung hay khong trung
 }

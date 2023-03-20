@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsPhoneNumber, IsString } from "class-validator"
+import { IsEnum, IsNotEmpty, IsPhoneNumber, IsString } from "class-validator"
+import { Role } from "src/common/enum"
 
 export class CreateStaffDTO {
     @IsPhoneNumber('VN')
@@ -26,7 +27,7 @@ export class CreateStaffDTO {
     identify: string
 
     @IsNotEmpty()
-    @IsString()
+    @IsEnum(Role)
     role: string
 
     @IsNotEmpty()

@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { User } from '../../node_modules/.prisma/client';
+import { Transaction, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionType } from '../common/enum'
 import { RechargeDTO, WithDrawLuckyKingDTO } from './dto';
@@ -74,7 +74,6 @@ export class TransactionService {
                 destination: true,
             }
         })
-
         const moneyAccount = await this.updateLucKyingBalance(user.id, body.amount, WalletEnum.Increase)
         const rewardWallet = await this.updateRewardWalletBalance(user.id, body.amount, WalletEnum.Decrease)
         delete transaction.User.hashedPassword
@@ -83,6 +82,21 @@ export class TransactionService {
         //@ts-ignore
         transaction.rewardWalletBalance = rewardWallet.balance
         return transaction
+    }
+
+    async getListTransaction(user: User) {
+        const list: Transaction[] = await this.prismaService.transaction.findMany({
+            where: { userId: user.id }
+        })
+        return list
+    }
+
+    async getListTransactionByUserId(userId) {
+        const list: Transaction[] = await this.prismaService.transaction.findMany({
+            where: { userId: userId }
+        })
+        // list.map(item => item.userId = userId)
+        return list
     }
 
     private async updateLucKyingBalance(userId, amount, type) {

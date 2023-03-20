@@ -34,4 +34,11 @@ export class UserController {
     getAllUser() {
         return this.userService.getAllUser()
     }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-all-wallet')
+    @Roles(Role.User)
+    getAllWallet(@GetUser() user: User) {
+        return this.userService.getAllWallet(user.id)
+    }
 }
