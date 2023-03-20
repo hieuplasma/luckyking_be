@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "..//prisma/prisma.service";
 import * as argon from 'argon2';
-import { AuthDTO, CheckAuthDTO, CreateStaffDTO } from "./dto";
+import { AuthDTO, CheckAuthDTO, CreateStaffDTO, UpdatePassWordDTO } from "./dto";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { Role, UserStatus } from "src/common/enum";
@@ -11,7 +11,7 @@ export class AuthService {
 
     constructor(
         private prismaService: PrismaService,
-        private jwrService: JwtService,
+        private jwtService: JwtService,
         private configService: ConfigService
     ) { }
 
@@ -147,13 +147,35 @@ export class AuthService {
         }
     }
 
+    async updatePassword(body: UpdatePassWordDTO) {
+        const hashedPassword = await argon.hash(body.newPassword)
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                phoneNumber: body.phoneNumber
+            }
+        })
+        if (!user) { throw new ForbiddenException("User not found") }
+        const passwordMatched = await argon.verify(
+            user.hashedPassword,
+            body.oldPassword
+        )
+        if (!passwordMatched) return { errorMessage: "Wrong password", errorCode: "LG001" }
+
+        const update = await this.prismaService.user.update({
+            where: { phoneNumber: body.phoneNumber },
+            data: { hashedPassword: hashedPassword },
+            select: { phoneNumber: true, updateAt: true }
+        })
+        return update
+    }
+
     async signJwtToken(userId: string, phoneNumber: string)
         : Promise<{ accessToken: string }> {
         const payload = {
             sub: userId,
             phoneNumber
         }
-        const jwtString = await this.jwrService.signAsync(payload, {
+        const jwtString = await this.jwtService.signAsync(payload, {
             expiresIn: '2 days',
             secret: this.configService.get('JWT_SECRET')
         })

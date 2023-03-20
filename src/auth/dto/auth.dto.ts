@@ -23,3 +23,17 @@ export class CheckAuthDTO{
     @IsString()
     deviceId: string
 }
+
+export class UpdatePassWordDTO {
+    @IsPhoneNumber('VN')
+    @IsNotEmpty()
+    phoneNumber: string
+
+    @IsNotEmpty()
+    @IsString()
+    oldPassword: string
+
+    @IsNotEmpty()
+    @IsString()
+    newPassword: string
+}
