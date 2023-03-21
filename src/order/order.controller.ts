@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { Order, User } from '../../node_modules/.prisma/client';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO } from './dto';
+import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO, ConfirmOrderDTO } from './dto';
 import { OrderService } from './order.service';
 
 @Controller('order')
@@ -26,9 +26,17 @@ export class OrderController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-all')
     @Roles(Role.User)
-    getListOrder(@GetUser() user: User): Promise<Order[]> {
-        return this.orderService.getListOrder(user)
+    getListOrder(@GetUser() user: User, @Query('status') status: keyof typeof OrderStatus): Promise<Order[]> {
+        return this.orderService.getListOrder(user, status)
     }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-by-id')
+    @Roles(Role.User, Role.Staff, Role.Admin)
+    getOrderById(@Query('orderId') orderId: string): Promise<Order> {
+        return this.orderService.getOrderById(orderId)
+    }
+
 
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-pending')
@@ -40,7 +48,14 @@ export class OrderController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('return')
     @Roles(Role.Staff, Role.User)
-    returnOrder(@GetUser() user: User, body: ReturnOrderDTO) {
+    returnOrder(@GetUser() user: User, @Body() body: ReturnOrderDTO) {
         return this.orderService.returnOrder(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('confirm')
+    @Roles(Role.Staff)
+    confirmOrder(@GetUser() user: User, @Body() body: ConfirmOrderDTO) {
+        return this.orderService.confirmOrder(user, body)
     }
 }

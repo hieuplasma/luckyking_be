@@ -1,15 +1,21 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, ReturnOrderDTO } from './dto';
+import { ConfirmOrderDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, ReturnOrderDTO } from './dto';
 import { Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
+import { LUCKY_KING_PAYMENT } from 'src/common/constants';
+import { TransactionService } from 'src/transaction/transaction.service';
 
 @Injectable()
 export class OrderService {
-    constructor(private prismaService: PrismaService, private userService: UserService) { }
+    constructor(
+        private prismaService: PrismaService,
+        private userService: UserService,
+        private transactionService: TransactionService
+    ) { }
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
@@ -99,9 +105,18 @@ export class OrderService {
         return order
     }
 
-    async getListOrder(me: User): Promise<Order[]> {
+    async getOrderById(orderId: string): Promise<Order> {
+        console.log(orderId)
+        const order = await this.prismaService.order.findUnique({
+            where: { id: orderId },
+            include: { Lottery: { include: { NumberLottery: true } }, user: true }
+        })
+        return order
+    }
+
+    async getListOrder(me: User, status: keyof typeof OrderStatus): Promise<Order[]> {
         const orders = await this.prismaService.order.findMany({
-            where: { userId: me.id, },
+            where: { AND: { userId: me.id, status: status } },
             include: { Lottery: { include: { NumberLottery: true } } }
         })
         return orders
@@ -115,20 +130,79 @@ export class OrderService {
         return orders
     }
 
-    async returnOrder(user: User, body: ReturnOrderDTO) {
+    async returnOrder(user: User, body: ReturnOrderDTO): Promise<Order> {
+        const newStatus = body.status ? body.status : OrderStatus.RETURNED
         let confirmBy = ""
         if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
         const order = await this.prismaService.order.update({
             data: {
-                status: body.status ? body.status : OrderStatus.RETURNED,
+                status: newStatus,
                 statusDescription: body.description,
                 confirmAt: new Date(),
                 confirmBy: confirmBy,
-                confrimUserId: user.id
+                confrimUserId: user.id,
             },
-            where: { id: body.orderId }
+            where: { id: body.orderId },
+            include: { Lottery: true }
         })
+        await this.prismaService.$transaction(
+            order.Lottery.map((child) =>
+                this.prismaService.lottery.update({
+                    where: { id: child.id },
+                    data: { status: newStatus },
+                })
+            )
+        )
         return order
+    }
+
+    async confirmOrder(user: User, body: ConfirmOrderDTO): Promise<Order> {
+        const newStatus = body.status ? body.status : OrderStatus.CONFIRMED
+        const payment = body.payment || LUCKY_KING_PAYMENT
+        let confirmBy = ""
+        if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
+
+        const order = await this.prismaService.order.findUnique({
+            where: { id: body.orderId },
+            include: { user: true, Lottery: true }
+        })
+        order.Lottery.map(item => {
+            if (!(item.imageBack || item.imageFront)) { throw new ForbiddenException("All lotteries must have image!") }
+        })
+
+        const transaction = await this.transactionService.payForOrder(
+            order.user,
+            order.amount + order.surcharge,
+            payment,
+            "Ví LuckyKing",
+            "Ví của nhà phát triển",
+            user.id
+        )
+
+        const orderConfirmed = await this.prismaService.order.update({
+            data: {
+                status: newStatus,
+                statusDescription: body.description,
+                confirmAt: new Date(),
+                confirmBy: confirmBy,
+                confrimUserId: user.id,
+                payment: payment,
+                tradingCode: transaction.id
+            },
+            where: { id: body.orderId },
+            include: { Lottery: true }
+        })
+        await this.prismaService.$transaction(
+            orderConfirmed.Lottery.map((child) =>
+                this.prismaService.lottery.update({
+                    where: { id: child.id },
+                    data: { status: newStatus },
+                })
+            )
+        )
+        //@ts-ignore
+        orderConfirmed.transaction = transaction
+        return orderConfirmed
     }
 }
 

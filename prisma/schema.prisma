@@ -60,7 +60,7 @@ model Lottery {
   benefits      Int?          @default(0) // tien an duoc
   status        OrderStatus?
   imageFront    String? // Link anh ve ma truoc
-  imageback     String? // Link anh ve mat sau
+  imageBack     String? // Link anh ve mat sau
   user          User          @relation(fields: [userId], references: [id])
   userId        String
   Order         Order?        @relation(fields: [orderId], references: [id])

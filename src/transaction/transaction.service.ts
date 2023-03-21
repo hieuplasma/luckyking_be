@@ -84,6 +84,41 @@ export class TransactionService {
         return transaction
     }
 
+    async payForOrder(user, amount, payment, source, destination, transactionPersonId) {
+        const wallet = await this.prismaService.moneyAccount.findUnique({
+            where: { userId: user.id }
+        })
+        if (wallet.balance < amount) { throw new ForbiddenException("The balance is not enough") }
+        const transaction = await this.prismaService.transaction.create({
+            data: {
+                type: TransactionType.Recharge,
+                description: "Mua vé xổ số",
+                amount: parseInt(amount.toString()),
+                payment: payment,
+                User: {
+                    connect: { id: user.id }
+                },
+                source: source,
+                destination: destination,
+                transactionPersonId: transactionPersonId
+            },
+            select: {
+                id: true,
+                type: true,
+                description: true,
+                amount: true,
+                payment: true,
+                User: true,
+                source: true,
+                destination: true,
+            }
+        })
+        const moneyAccount = await this.updateLucKyingBalance(user.id, amount, WalletEnum.Decrease)
+           //@ts-ignore
+           transaction.luckykingBalance = moneyAccount.balance
+           return transaction
+    }
+
     async getListTransaction(user: User) {
         const list: Transaction[] = await this.prismaService.transaction.findMany({
             where: { userId: user.id }
