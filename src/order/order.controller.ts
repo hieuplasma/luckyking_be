@@ -3,7 +3,7 @@ import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO, ConfirmOrderDTO } from './dto';
+import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO, ConfirmOrderDTO, CreateOrderKenoDTO } from './dto';
 import { OrderService } from './order.service';
 
 @Controller('order')
@@ -22,6 +22,14 @@ export class OrderController {
     createOderMax3d(@GetUser() user: User, @Body() body: CreateOrderMax3dDTO): Promise<Order> {
         return this.orderService.createOrderMax3d(user, body)
     }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('add-keno')
+    @Roles(Role.User)
+    createOderKeno(@GetUser() user: User, @Body() body: CreateOrderKenoDTO): Promise<Order> {
+        return this.orderService.createOrderMax3d(user, body)
+    }
+
 
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-all')

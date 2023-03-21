@@ -59,3 +59,35 @@ export class CreateOrderMax3dDTO {
 
     surcharge: number
 }
+
+export class CreateOrderKenoDTO {
+    @IsEnum(LotteryType)
+    @IsNotEmpty()
+    lotteryType: string
+
+    @IsNotEmpty()
+    amount: number
+
+    @IsEnum(OrderMethod)
+    @IsNotEmpty()
+    method: string
+
+    @IsNotEmpty()
+    level: number
+
+    @IsArray()
+    @IsString({ each: true })
+    @ArrayMinSize(1)
+    numbers: any
+
+    @IsArray()
+    @ArrayMinSize(1)
+    bets: any
+
+
+    @IsNotEmpty()
+    @IsString()
+    periodCode: string
+
+    surcharge: number
+}
