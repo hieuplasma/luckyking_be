@@ -29,7 +29,7 @@ model User {
   identify       String?
   // balance        Int      @default(0)
   status         String   @default("active")
-  role           String   @default("user") // Admin, User
+  role           String   @default("user") // admin, u8ser, staff
   avatar         String? // Link anh
   personNumber   String? // Ma alias ca nhan
 
@@ -56,9 +56,9 @@ model Lottery {
   buyTime       DateTime      @default(now())
   resultTime    DateTime?
   deleteTime    DateTime?
-  bets          Int @default(0)// tien dat cuoc
-  benefits      Int? @default(0) // tien an duoc
-  status        String // ve dang cho kq, ve dan trung, ve da truot, ve da huy
+  bets          Int           @default(0) // tien dat cuoc
+  benefits      Int?          @default(0) // tien an duoc
+  status        OrderStatus?
   imageFront    String? // Link anh ve ma truoc
   imageback     String? // Link anh ve mat sau
   user          User          @relation(fields: [userId], references: [id])
@@ -94,7 +94,7 @@ model Transaction {
   transactionPersonId String? // UserId cua nguoi thuc hien giao dich (admin)
 }
 
-// Lich su mua hang: mua ve, tra ve
+// Lich su mua hang: mua ve, tra thuong, nap tien, rut tien
 model Order {
   id                String    @id @default(uuid())
   amount            Int // So tien
@@ -103,16 +103,15 @@ model Order {
   description       String?
   Lottery           Lottery[]
   statusDescription String?
-  status            String? // da mua thanh cong, dang xu ly, da huy
+  status            OrderStatus?
   creataAt          DateTime  @default(now())
   confirmAt         DateTime?
-  confirmBy         String? // ma diem ban hang - account ban hang
-  confrimByStaff    String?
+  confirmBy         String? // ma diem ban hang
+  confrimUserId     String? // staffId neu nguoi ban hang confirm, userId neu nguoi dung tu confirm
   payment           String? //hinh thuc thanh tonan
-  tradingCode       String? // ma giao dich
-  surcharge         Int? @default(0) // phu phi
+  tradingCode       String? // ma giao dich (transactionId)
+  surcharge         Int?      @default(0) // phu phi
   dataPart          String? // 20230316 ngay dat don hang
-  rewardStatus      String? // Trang thai tra thuong
   method            String    @default("keep") // giu ho, ship ve
 }
 
@@ -135,10 +134,20 @@ model RewardWallet {
 }
 
 model NumberLotery {
-  id            String  @id @default(uuid())
-  Lottery       Lottery @relation(fields: [lotteryId], references: [id])
-  lotteryId     String  @unique
-  level         Int // bac cua ve
-  numberSets    Int // số bộ số
-  numberDetail  Json // {boSo:[...], tienCuoc:int}
+  id           String  @id @default(uuid())
+  Lottery      Lottery @relation(fields: [lotteryId], references: [id])
+  lotteryId    String  @unique
+  level        Int // bac cua ve
+  numberSets   Int // số bộ số
+  numberDetail Json // {boSo:[...], tienCuoc:int}
+}
+
+enum OrderStatus {
+  PENDING // chưa xử lý
+  CONFIRMED //đã nhận tiền
+  ERROR //Lỗi hết bộ số hay 1 lý do nào đó
+  RETURNED //đã trả lại
+  WON // ve thang
+  PAID // da tra thuong
+  NO_PRIZE // khong trung thuong
 }

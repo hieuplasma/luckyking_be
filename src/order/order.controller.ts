@@ -3,7 +3,7 @@ import { Order, User } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO } from './dto';
+import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO } from './dto';
 import { OrderService } from './order.service';
 
 @Controller('order')
@@ -28,5 +28,19 @@ export class OrderController {
     @Roles(Role.User)
     getListOrder(@GetUser() user: User): Promise<Order[]> {
         return this.orderService.getListOrder(user)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-pending')
+    @Roles(Role.Staff)
+    getAllPendingOrder(): Promise<Order[]> {
+        return this.orderService.getAllPendingOrder()
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('return')
+    @Roles(Role.Staff, Role.User)
+    returnOrder(@GetUser() user: User, body: ReturnOrderDTO) {
+        return this.orderService.returnOrder(user, body)
     }
 }

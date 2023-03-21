@@ -8,9 +8,12 @@ export enum LotteryType {
     Max3DPro = "max3dpro"
 }
 
-export enum LotteryStatus {
-    PENDING = "pending", // dang cho ket qua
-    WON = "won", // Ve da trung
-    FAILED = "failed", // Ve da truot
-    CANCELLED = "cancelled" // Ve da huy
-}
+// export enum LotteryStatus {
+//     PENDING = "pending",// chưa xử lý
+//     CONFIRMED = "confirmed",//đã nhận tiền
+//     ERROR = "error",//Lỗi hết bộ số hay 1 lý do nào đó
+//     RETURNED = "returned",//đã trả lại,\
+//     WON = "won", // ve thang
+//     PAID = "paid", // da tra thuong
+//     NO_PRIZE = "no_prize" // khong trung thuong
+// }

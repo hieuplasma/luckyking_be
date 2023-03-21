@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Role } from "src/common/enum";
 import { User } from '../../node_modules/.prisma/client';
 import { PrismaService } from "../prisma/prisma.service";
 import { UserDTO } from "./dto/user.dto";
@@ -11,11 +12,13 @@ export class UserService {
         const user = await this.prismaService.user.findUnique({
             where: { id: me.id }
         })
-        const balance = await this.getBalance(me.id)
-        //@ts-ignore
-        user.luckykingBalance = balance.luckykingBalance
-        //@ts-ignore
-        user.rewardWalletBalance = balance.rewardWalletBalance
+        if (user.role == Role.User) {
+            const balance = await this.getBalance(me.id)
+            //@ts-ignore
+            user.luckykingBalance = balance.luckykingBalance
+            //@ts-ignore
+            user.rewardWalletBalance = balance.rewardWalletBalance
+        }
         delete user.hashedPassword
         return user
     }

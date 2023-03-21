@@ -1,8 +1,8 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Order, User } from '../../node_modules/.prisma/client';
+import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateOrderMax3dDTO, CreateOrderMegaPowerDTO } from './dto';
-import { LotteryStatus, OrderStatus, RewardStatus } from 'src/common/enum';
+import { CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, ReturnOrderDTO } from './dto';
+import { Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
@@ -31,14 +31,13 @@ export class OrderService {
                 status: OrderStatus.PENDING,
                 dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                 method: body.method,
-                rewardStatus: RewardStatus.PENDING,
                 surcharge: surcharge,
                 Lottery: {
                     create: {
                         userId: user.id,
                         type: body.lotteryType,
                         bets: amount,
-                        status: LotteryStatus.PENDING,
+                        status: OrderStatus.PENDING,
                         periodCode: body.periodCode,
                         periodTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
@@ -76,14 +75,13 @@ export class OrderService {
                 status: OrderStatus.PENDING,
                 dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                 method: body.method,
-                rewardStatus: RewardStatus.PENDING,
                 surcharge: surcharge,
                 Lottery: {
                     create: {
                         userId: user.id,
                         type: body.lotteryType,
                         bets: amount,
-                        status: LotteryStatus.PENDING,
+                        status: OrderStatus.PENDING,
                         periodCode: body.periodCode,
                         periodTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
@@ -108,4 +106,29 @@ export class OrderService {
         })
         return orders
     }
+
+    async getAllPendingOrder(): Promise<Order[]> {
+        const orders = await this.prismaService.order.findMany({
+            where: { status: OrderStatus.PENDING },
+            include: { Lottery: { include: { NumberLottery: true } } }
+        })
+        return orders
+    }
+
+    async returnOrder(user: User, body: ReturnOrderDTO) {
+        let confirmBy = ""
+        if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
+        const order = await this.prismaService.order.update({
+            data: {
+                status: body.status ? body.status : OrderStatus.RETURNED,
+                statusDescription: body.description,
+                confirmAt: new Date(),
+                confirmBy: confirmBy,
+                confrimUserId: user.id
+            },
+            where: { id: body.orderId }
+        })
+        return order
+    }
 }
+

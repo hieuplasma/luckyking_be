@@ -62,7 +62,7 @@ export class AuthService {
             })
             const accessToken = await this.signJwtToken(user.id, user.phoneNumber)
             //@ts-ignore
-            user.accessToken = accessToken
+            user.accessToken = accessToken.accessToken
             return user
         } catch (error) {
             if (error.code == 'P2002') {
@@ -137,7 +137,7 @@ export class AuthService {
             })
             const accessToken = await this.signJwtToken(user.id, user.phoneNumber)
             //@ts-ignore
-            user.accessToken = accessToken
+            user.accessToken = accessToken.accessToken
             return user
         } catch (error) {
             if (error.code == 'P2002') {
