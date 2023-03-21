@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { Transaction, User } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
@@ -34,7 +34,7 @@ export class TransactionController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('list-by-userid')
     @Roles(Role.Admin, Role.Staff)
-    getListTransactionByUserId(@Param() userId: string) {
+    getListTransactionByUserId(@Query('userId') userId: string) {
         return this.transactionService.getListTransactionByUserId(userId)
     }
 }
