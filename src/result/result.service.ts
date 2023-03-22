@@ -211,7 +211,7 @@ export class ResultService {
 
     // Insert old result 
     async insertOldResultKeno(body: OldResultKenoDTO) {
-        const result = this.prismaService.resultKeno.create({
+        const result = await this.prismaService.resultKeno.create({
             data: {
                 drawn: true,
                 drawCode: parseInt(body.drawCode.toString()),
@@ -223,7 +223,7 @@ export class ResultService {
     }
 
     async insertOldResultPower(body: OldResultPowerDTO) {
-        const result = this.prismaService.resultPower.create({
+        const result = await this.prismaService.resultPower.create({
             data: {
                 drawn: true,
                 drawCode: parseInt(body.drawCode.toString()),
@@ -236,7 +236,7 @@ export class ResultService {
     }
 
     async insertOldResultMega(body: OldResultMegaDTO) {
-        const result = this.prismaService.resultMega.create({
+        const result = await this.prismaService.resultMega.create({
             data: {
                 drawn: true,
                 drawCode: parseInt(body.drawCode.toString()),
@@ -266,9 +266,10 @@ export class ResultService {
 
     // Insert Schedule Manual
     async insertScheduleKeno(body: ScheduleKenoDTO) {
-        const check = this.prismaService.resultKeno.findFirst({ where: { drawCode: body.drawCode } })
+        const check = await this.prismaService.resultKeno.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
+        console.log(check)
         if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
-        const result = this.prismaService.resultKeno.create({
+        const result = await this.prismaService.resultKeno.create({
             data: {
                 drawn: false,
                 drawCode: parseInt(body.drawCode.toString()),
@@ -279,28 +280,28 @@ export class ResultService {
     }
 
     async insertScheduleMega(body: ScheduleKenoDTO) {
-        const check = this.prismaService.resultMega.findFirst({ where: { drawCode: body.drawCode } })
+        const check = await this.prismaService.resultMega.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
         if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
         return await this.addScheduleMega(body.drawCode, body.drawTime)
     }
 
     async insertSchedulePower(body: ScheduleKenoDTO) {
-        const check = this.prismaService.resultPower.findFirst({ where: { drawCode: body.drawCode } })
+        const check = await this.prismaService.resultPower.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
         if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
         return await this.addSchedulePower(body.drawCode, body.drawTime)
     }
 
     async insertScheduleMax3d(body: ScheduleMax3dDTO) {
-        const check = this.prismaService.resultMax3d.findFirst({ where: { drawCode: body.drawCode } })
+        const check = await this.prismaService.resultMax3d.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
         if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
         let tmp
         switch (body.type) {
             case LotteryType.Max3D:
-                tmp = await this.addScheduleMax3d(body.drawCode, body.drawTime)
+                tmp = await this.addScheduleMax3d(parseInt(body.drawCode.toString()), body.drawTime)
             case LotteryType.Max3DPlus:
-                tmp = await this.addScheduleMax3d(body.drawCode, body.drawTime)
+                tmp = await this.addScheduleMax3d(parseInt(body.drawCode.toString()), body.drawTime)
             case LotteryType.Max3DPro:
-                tmp = await this.addScheduleMax3dPro(body.drawCode, body.drawTime)
+                tmp = await this.addScheduleMax3dPro(parseInt(body.drawCode.toString()), body.drawTime)
                 break;
 
             default:
