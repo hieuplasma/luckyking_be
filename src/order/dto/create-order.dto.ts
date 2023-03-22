@@ -22,8 +22,7 @@ export class CreateOrderMegaPowerDTO {
     numbers: any
 
     @IsNotEmpty()
-    @IsString()
-    periodCode: string
+    drawCode: number
 
     surcharge: number
 }
@@ -54,8 +53,7 @@ export class CreateOrderMax3dDTO {
 
 
     @IsNotEmpty()
-    @IsString()
-    periodCode: string
+    drawCode: number
 
     surcharge: number
 }
@@ -84,10 +82,8 @@ export class CreateOrderKenoDTO {
     @ArrayMinSize(1)
     bets: any
 
-
     @IsNotEmpty()
-    @IsString()
-    periodCode: string
+    drawCode: number
 
     surcharge: number
 }

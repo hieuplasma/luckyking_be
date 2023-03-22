@@ -44,8 +44,8 @@ export class OrderService {
                         type: body.lotteryType,
                         bets: amount,
                         status: OrderStatus.PENDING,
-                        periodCode: body.periodCode,
-                        periodTime: new Date(Date.now() + (3600 * 1000 * 24)),
+                        drawCode: body.drawCode,
+                        drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),
@@ -88,8 +88,8 @@ export class OrderService {
                         type: body.lotteryType,
                         bets: amount,
                         status: OrderStatus.PENDING,
-                        periodCode: body.periodCode,
-                        periodTime: new Date(Date.now() + (3600 * 1000 * 24)),
+                        drawCode: body.drawCode,
+                        drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),
@@ -132,8 +132,8 @@ export class OrderService {
                         type: body.lotteryType,
                         bets: amount,
                         status: OrderStatus.PENDING,
-                        periodCode: body.periodCode,
-                        periodTime: new Date(Date.now() + (3600 * 1000 * 24)),
+                        drawCode: body.drawCode,
+                        drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),

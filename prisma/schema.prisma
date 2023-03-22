@@ -68,8 +68,8 @@ model Lottery {
   Cart          Cart?         @relation(fields: [cartId], references: [id])
   cartId        String?
   NumberLottery NumberLotery?
-  periodCode    String? // Mã kỳ quay
-  periodTime    DateTime? // Thời gian quay
+  drawCode      Int? // Mã kỳ quay
+  drawTime      DateTime? // Thời gian quay
 }
 
 model Cart {
@@ -96,23 +96,23 @@ model Transaction {
 
 // Lich su mua hang: mua ve, tra thuong, nap tien, rut tien
 model Order {
-  id                String    @id @default(uuid())
+  id                String       @id @default(uuid())
   amount            Int // So tien
-  user              User      @relation(fields: [userId], references: [id])
+  user              User         @relation(fields: [userId], references: [id])
   userId            String
   description       String?
   Lottery           Lottery[]
   statusDescription String?
   status            OrderStatus?
-  creataAt          DateTime  @default(now())
+  creataAt          DateTime     @default(now())
   confirmAt         DateTime?
   confirmBy         String? // ma diem ban hang
   confrimUserId     String? // staffId neu nguoi ban hang confirm, userId neu nguoi dung tu confirm
   payment           String? //hinh thuc thanh tonan
   tradingCode       String? // ma giao dich (transactionId)
-  surcharge         Int?      @default(0) // phu phi
+  surcharge         Int?         @default(0) // phu phi
   dataPart          String? // 20230316 ngay dat don hang
-  method            String    @default("keep") // giu ho, ship ve
+  method            String       @default("keep") // giu ho, ship ve
 }
 
 model MoneyAccount {
@@ -141,6 +141,73 @@ model NumberLotery {
   numberSets   Int // số bộ số
   numberDetail Json // {boSo:[...], tienCuoc:int}
 }
+
+model ResultKeno {
+  id       String   @id @default(uuid())
+  drawn    Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode Int
+  drawTime DateTime
+  result   String? // Ket qua keno dang string 20 so ("1-2-3-..."), neu chua co ket qua tra ve null
+}
+
+model ResultMega {
+  id       String   @id @default(uuid())
+  drawn    Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode Int
+  drawTime DateTime
+  result   String? // Ket qua Mega dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
+}
+
+model ResultPower {
+  id            String   @id @default(uuid())
+  drawn         Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode      Int
+  drawTime      DateTime
+  result        String? // Ket qua Power dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  specialNumber Int? // So dac biet, neu chua co ket qua tra ve null
+}
+
+model ResultMax3d {
+  id          String   @id @default(uuid())
+  drawn       Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
+  type        String // max3d. max3dpro, max3dplus
+  drawCode    Int
+  drawTime    DateTime
+  first       String[] // 2 giai nhat, moi giai bo 3 so, chua co kq la mang khong co gia tri
+  second      String[] // 4 giai nhi
+  third       String[] // 6 giai 3
+  consolation String[] //8 giai khuyen khich
+}
+
+// model ResultMax3d {
+//   id          String   @id @default(uuid())
+//   drawCode    Int
+//   drawTime    DateTime
+//   first       String[] // 2 giai nhat, moi giai bo 3 so
+//   second      String[] // 4 giai nhi
+//   third       String[] // 6 giai 3
+//   consolation String[] //8 giai khuyen khich
+// }
+
+// model ResultMax3dPro {
+//   id          String   @id @default(uuid())
+//   drawCode    Int
+//   drawTime    DateTime
+//   first       String[] // 2 giai nhat, moi giai bo 3 so
+//   second      String[] // 4 giai nhi
+//   third       String[] // 6 giai 3
+//   consolation String[] //8 giai khuyen khich
+// }
+
+// model ResultMax3dPlus {
+//   id          String   @id @default(uuid())
+//   drawCode    Int
+//   drawTime    DateTime
+//   first       String[] // 1 giai nhat, moi giai bo 4 so
+//   second      String[] // 2 giai nhi
+//   third       String[] // 3 giai 3
+//   consolation String[] // 2 giai khuyen khich
+// }
 
 enum OrderStatus {
   PENDING // chưa xử lý

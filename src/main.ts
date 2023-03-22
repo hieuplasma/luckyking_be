@@ -1,3 +1,5 @@
+// process.env.TZ = 'Asia/Bangkok'; // Replace 'Asia/Bangkok' with your desired timezone value
+
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
