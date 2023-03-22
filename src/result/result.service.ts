@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LotteryType } from 'src/common/enum';
 import { getNearestTimeDay, getTimeToday } from 'src/common/utils';
@@ -266,6 +266,8 @@ export class ResultService {
 
     // Insert Schedule Manual
     async insertScheduleKeno(body: ScheduleKenoDTO) {
+        const check = this.prismaService.resultKeno.findFirst({ where: { drawCode: body.drawCode } })
+        if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
         const result = this.prismaService.resultKeno.create({
             data: {
                 drawn: false,
@@ -277,14 +279,20 @@ export class ResultService {
     }
 
     async insertScheduleMega(body: ScheduleKenoDTO) {
+        const check = this.prismaService.resultMega.findFirst({ where: { drawCode: body.drawCode } })
+        if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
         return await this.addScheduleMega(body.drawCode, body.drawTime)
     }
 
     async insertSchedulePower(body: ScheduleKenoDTO) {
+        const check = this.prismaService.resultPower.findFirst({ where: { drawCode: body.drawCode } })
+        if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
         return await this.addSchedulePower(body.drawCode, body.drawTime)
     }
 
     async insertScheduleMax3d(body: ScheduleMax3dDTO) {
+        const check = this.prismaService.resultMax3d.findFirst({ where: { drawCode: body.drawCode } })
+        if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
         let tmp
         switch (body.type) {
             case LotteryType.Max3D:
