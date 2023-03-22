@@ -3,7 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { LotteryType } from 'src/common/enum';
 import { getNearestTimeDay, getTimeToday } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO } from './dto';
+import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO } from './dto';
 
 @Injectable()
 export class ResultService {
@@ -49,13 +49,14 @@ export class ResultService {
     }
 
     private async addScheduleMega(drawCode: number, drawTime: Date) {
-        await this.prismaService.resultMega.create({
+        const tmp = await this.prismaService.resultMega.create({
             data: {
                 drawn: false,
                 drawCode: drawCode,
                 drawTime: drawTime
             }
         })
+        return tmp
     }
 
 
@@ -87,13 +88,14 @@ export class ResultService {
     }
 
     private async addSchedulePower(drawCode: number, drawTime: Date) {
-        await this.prismaService.resultPower.create({
+        const tmp = await this.prismaService.resultPower.create({
             data: {
                 drawn: false,
                 drawCode: drawCode,
                 drawTime: drawTime
             }
         })
+        return tmp
     }
 
     // Max3d, Max3d+:
@@ -103,7 +105,7 @@ export class ResultService {
     @Cron('0 5 * * 6')
     async addMax3dDrawSchedule() {
         const latestDraw = await this.prismaService.resultMax3d.findMany({
-            where: {type: LotteryType.Max3D},
+            where: { type: LotteryType.Max3D },
             orderBy: {
                 drawCode: 'desc'
             },
@@ -125,7 +127,7 @@ export class ResultService {
     }
 
     private async addScheduleMax3d(drawCode: number, drawTime: Date) {
-        await this.prismaService.resultMax3d.create({
+        const tmp = await this.prismaService.resultMax3d.create({
             data: {
                 drawn: false,
                 drawCode: drawCode,
@@ -133,6 +135,7 @@ export class ResultService {
                 type: LotteryType.Max3D
             }
         })
+        return tmp
     }
 
     // Max3d Pro:
@@ -142,7 +145,7 @@ export class ResultService {
     @Cron('0 4 * * 0')
     async addMax3dProDrawSchedule() {
         const latestDraw = await this.prismaService.resultMax3d.findMany({
-            where: {type: LotteryType.Max3DPro},
+            where: { type: LotteryType.Max3DPro },
             orderBy: {
                 drawCode: 'desc'
             },
@@ -164,7 +167,7 @@ export class ResultService {
     }
 
     private async addScheduleMax3dPro(drawCode: number, drawTime: Date) {
-        await this.prismaService.resultMax3d.create({
+        const tmp = await this.prismaService.resultMax3d.create({
             data: {
                 drawn: false,
                 drawCode: drawCode,
@@ -172,6 +175,7 @@ export class ResultService {
                 type: LotteryType.Max3DPro
             }
         })
+        return tmp
     }
 
     // Keno:
@@ -205,6 +209,7 @@ export class ResultService {
         }
     }
 
+    // Insert old result 
     async insertOldResultKeno(body: OldResultKenoDTO) {
         const result = this.prismaService.resultKeno.create({
             data: {
@@ -257,4 +262,43 @@ export class ResultService {
         })
         return result
     }
+    // ------ End --------
+
+    // Insert Schedule Manual
+    async insertScheduleKeno(body: ScheduleKenoDTO) {
+        const result = this.prismaService.resultKeno.create({
+            data: {
+                drawn: false,
+                drawCode: parseInt(body.drawCode.toString()),
+                drawTime: body.drawTime,
+            }
+        })
+        return result
+    }
+
+    async insertScheduleMega(body: ScheduleKenoDTO) {
+        return await this.addScheduleMega(body.drawCode, body.drawTime)
+    }
+
+    async insertSchedulePower(body: ScheduleKenoDTO) {
+        return await this.addSchedulePower(body.drawCode, body.drawTime)
+    }
+
+    async insertScheduleMax3d(body: ScheduleMax3dDTO) {
+        let tmp
+        switch (body.type) {
+            case LotteryType.Max3D:
+                tmp = await this.addScheduleMax3d(body.drawCode, body.drawTime)
+            case LotteryType.Max3DPlus:
+                tmp = await this.addScheduleMax3d(body.drawCode, body.drawTime)
+            case LotteryType.Max3DPro:
+                tmp = await this.addScheduleMax3dPro(body.drawCode, body.drawTime)
+                break;
+
+            default:
+                break;
+        }
+        return tmp
+    }
+    // ------ End -------
 }

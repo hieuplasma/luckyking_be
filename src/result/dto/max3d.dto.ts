@@ -9,7 +9,7 @@ export class OldResultMax3dDTO {
     drawTime: any
 
     @IsNotEmpty()
-    type: keyof typeof LotteryType
+    type: string
 
     @IsArray()
     @ArrayMinSize(1)
@@ -26,4 +26,15 @@ export class OldResultMax3dDTO {
     @IsArray()
     @ArrayMinSize(1)
     consolation: any
+}
+
+export class ScheduleMax3dDTO {
+    @IsNotEmpty()
+    drawCode: number
+
+    @IsNotEmpty()
+    drawTime: any
+
+    @IsNotEmpty()
+    type: string
 }
