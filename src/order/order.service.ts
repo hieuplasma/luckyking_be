@@ -44,7 +44,7 @@ export class OrderService {
                         type: body.lotteryType,
                         bets: amount,
                         status: OrderStatus.PENDING,
-                        drawCode: body.drawCode,
+                        drawCode: parseInt(body.drawCode.toString()),
                         drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
                             create: {
@@ -88,7 +88,7 @@ export class OrderService {
                         type: body.lotteryType,
                         bets: amount,
                         status: OrderStatus.PENDING,
-                        drawCode: body.drawCode,
+                        drawCode: parseInt(body.drawCode.toString()),
                         drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
                             create: {
@@ -132,7 +132,7 @@ export class OrderService {
                         type: body.lotteryType,
                         bets: amount,
                         status: OrderStatus.PENDING,
-                        drawCode: body.drawCode,
+                        drawCode: parseInt(body.drawCode.toString()),
                         drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
                             create: {
@@ -179,7 +179,7 @@ export class OrderService {
             where: { id: body.orderId }
         })
         if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
-    
+
         const newStatus = body.status ? body.status : OrderStatus.RETURNED
         let confirmBy = ""
         if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
@@ -241,7 +241,7 @@ export class OrderService {
                 tradingCode: transaction.id
             },
             where: { id: body.orderId },
-            include: { Lottery: true }
+            include: { Lottery: { include: { NumberLottery: true } } }
         })
         await this.prismaService.$transaction(
             orderConfirmed.Lottery.map((child) =>

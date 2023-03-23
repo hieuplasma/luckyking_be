@@ -18,3 +18,11 @@ export class ScheduleKenoDTO {
     @IsNotEmpty()
     drawTime: any
 }
+
+export class UpdateResultKenoDTO {
+    @IsNotEmpty()
+    drawCode: number
+
+    @IsNotEmpty()
+    result: string
+}

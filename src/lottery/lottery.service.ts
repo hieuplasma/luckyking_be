@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { NumberLotery } from '@prisma/client';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateImageDTO } from './dto';

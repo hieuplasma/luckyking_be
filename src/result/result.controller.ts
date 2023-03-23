@@ -1,9 +1,8 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
-import { ResultPower } from '@prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { OldResultKenoDTO, OldResultMax3dDTO, OldResultMegaDTO, OldResultPowerDTO, ScheduleKenoDTO, ScheduleMax3dDTO } from './dto';
+import { OldResultKenoDTO, OldResultMax3dDTO, OldResultMegaDTO, OldResultPowerDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO } from './dto';
 import { ResultService } from './result.service';
 
 @Controller('result')
@@ -129,6 +128,16 @@ export class ResultController {
     @Roles(Role.Staff, Role.Admin, Role.User)
     getSchedulePower(@Query('take') take: number, @Query('skip') skip: number) {
         return this.resultService.getSchedulePower(take, skip)
+    }
+    // ------ End ------
+
+
+    // Update Result 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('update/keno')
+    @Roles(Role.Staff, Role.Admin)
+    updateResultKeno(@GetUser() user , @Body() body: UpdateResultKenoDTO) {
+        return this.resultService.updateResultKeno(user,body)
     }
     // ------ End ------
 }

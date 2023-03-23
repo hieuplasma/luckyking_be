@@ -145,7 +145,7 @@ model NumberLotery {
 model ResultKeno {
   id       String   @id @default(uuid())
   drawn    Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
-  drawCode Int
+  drawCode Int      @unique
   drawTime DateTime
   result   String? // Ket qua keno dang string 20 so ("1-2-3-..."), neu chua co ket qua tra ve null
 }
@@ -153,7 +153,7 @@ model ResultKeno {
 model ResultMega {
   id       String   @id @default(uuid())
   drawn    Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
-  drawCode Int
+  drawCode Int      @unique
   drawTime DateTime
   result   String? // Ket qua Mega dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
 }
@@ -161,7 +161,7 @@ model ResultMega {
 model ResultPower {
   id            String   @id @default(uuid())
   drawn         Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
-  drawCode      Int
+  drawCode      Int      @unique
   drawTime      DateTime
   result        String? // Ket qua Power dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
   specialNumber Int? // So dac biet, neu chua co ket qua tra ve null
@@ -171,7 +171,7 @@ model ResultMax3d {
   id          String   @id @default(uuid())
   drawn       Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
   type        String // max3d. max3dpro, max3dplus
-  drawCode    Int
+  drawCode    Int      @unique
   drawTime    DateTime
   first       String[] // 2 giai nhat, moi giai bo 3 so, chua co kq la mang khong co gia tri
   second      String[] // 4 giai nhi

@@ -9,6 +9,7 @@ import { WalletEnum } from './enum';
 export class TransactionService {
     constructor(private prismaService: PrismaService) { }
 
+    // Transaction nap tien vao vi luckyking
     async rechargeMoney(transactionPerson: User, body: RechargeDTO) {
         if ((body.amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
         const user = await this.prismaService.user.findUnique({
@@ -45,6 +46,7 @@ export class TransactionService {
         return transaction
     }
 
+    // Transaction rut tien ve vi luckyking
     async withdrawToLuckyKing(user: User, body: WithDrawLuckyKingDTO) {
         if ((body.amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
         const wallet = await this.prismaService.rewardWallet.findUnique({
@@ -84,6 +86,7 @@ export class TransactionService {
         return transaction
     }
 
+    // Transaction mua ve, khong co controller
     async payForOrder(user, amount, payment, source, destination, transactionPersonId) {
         const wallet = await this.prismaService.moneyAccount.findUnique({
             where: { userId: user.id }
@@ -91,7 +94,7 @@ export class TransactionService {
         if (wallet.balance < amount) { throw new ForbiddenException("The balance is not enough") }
         const transaction = await this.prismaService.transaction.create({
             data: {
-                type: TransactionType.Recharge,
+                type: TransactionType.BuyLottery,
                 description: "Mua vé xổ số",
                 amount: parseInt(amount.toString()),
                 payment: payment,
@@ -114,9 +117,9 @@ export class TransactionService {
             }
         })
         const moneyAccount = await this.updateLucKyingBalance(user.id, amount, WalletEnum.Decrease)
-           //@ts-ignore
-           transaction.luckykingBalance = moneyAccount.balance
-           return transaction
+        //@ts-ignore
+        transaction.luckykingBalance = moneyAccount.balance
+        return transaction
     }
 
     async getListTransaction(user: User) {
@@ -126,14 +129,46 @@ export class TransactionService {
         return list
     }
 
-    async getListTransactionByUserId(userId) {
+    async getListTransactionByUserId(userId: string) {
         const list: Transaction[] = await this.prismaService.transaction.findMany({
             where: { userId: userId }
         })
-        // list.map(item => item.userId = userId)
         return list
     }
 
+    // Transaction tra thuong, khong co controller
+    async rewardLottery(userid: string, amount: number, transactionPersonId: string, lotteryType: string) {
+        const transaction = await this.prismaService.transaction.create({
+            data: {
+                type: TransactionType.Rewarded,
+                description: "Trả thưởng vé " + lotteryType,
+                amount: parseInt(amount.toString()),
+                payment: "Chuyền tiền vào ví nhận thưởng",
+                User: {
+                    connect: { id: userid }
+                },
+                source: "Trung tâm LuckyKing",
+                destination: "Ví nhận thưởng",
+                transactionPersonId: transactionPersonId
+            },
+            select: {
+                id: true,
+                type: true,
+                description: true,
+                amount: true,
+                payment: true,
+                User: true,
+                source: true,
+                destination: true,
+            }
+        })
+        const reward  = await this.updateRewardWalletBalance(userid, amount, WalletEnum.Increase)
+        //@ts-ignore
+        transaction.luckykingBalance = reward.balance
+        return transaction
+    }
+
+    // Private function 
     private async updateLucKyingBalance(userId, amount, type) {
         // Update so du trong tai khoan vi luckyking
         const moneyAccount = await this.prismaService.moneyAccount.update({
@@ -161,4 +196,5 @@ export class TransactionService {
         })
         return rewardWallet
     }
+    // ------ End -------
 }

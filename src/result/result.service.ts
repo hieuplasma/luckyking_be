@@ -1,14 +1,17 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { OrderStatus, User } from '@prisma/client';
+import { NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
-import { getNearestTimeDay, getTimeToday } from 'src/common/utils';
+import { caculateKenoBenefits, getNearestTimeDay, getTimeToday } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO } from './dto';
+import { TransactionService } from 'src/transaction/transaction.service';
+import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO } from './dto';
 
 @Injectable()
 export class ResultService {
 
-    constructor(private prismaService: PrismaService) { }
+    constructor(private prismaService: PrismaService, private transactionService: TransactionService) { }
     private readonly logger = new Logger(ResultService.name);
 
     // @Cron('0 25 11 * * *')
@@ -400,6 +403,51 @@ export class ResultService {
             skip: skip ? parseInt(skip.toString()) : 0
         })
         return schedule
+    }
+    // ------ End ------
+
+
+    // Update Result 
+    async updateResultKeno(transactionPerson: User, body: UpdateResultKenoDTO) {
+        const drawCode = parseInt(body.drawCode.toString())
+        const draw = await this.prismaService.resultKeno.findUnique({
+            where: { drawCode: drawCode }
+        })
+        if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
+        if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
+
+        // Cap nhat ket qua
+        const update = await this.prismaService.resultKeno.update({
+            where: { drawCode: drawCode },
+            data: { drawn: true, result: body.result }
+        })
+
+        // so ve va update ve
+        const listLottery = await this.prismaService.lottery.findMany({
+            where: { drawCode: drawCode, status: OrderStatus.CONFIRMED },
+            include: { NumberLottery: true }
+        })
+        listLottery.map(async lottery => {
+            // So ve xem trung khong
+            let benefits = caculateKenoBenefits(lottery, body.result)
+            if (benefits == 0) await this.prismaService.lottery.update({
+                data: { status: OrderStatus.NO_PRIZE, resultTime: update.drawTime },
+                where: { id: lottery.id }
+            })
+
+            // Neu trung thi tao transaction tra thuong
+            if (benefits > 0) {
+                await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPerson.id, LotteryType.Keno)
+                await this.prismaService.lottery.update({
+                    data: { status: OrderStatus.PAID, resultTime: update.drawTime },
+                    where: { id: lottery.id }
+                })
+            }
+
+            // Service ban notify cho nguoi dung o day .........
+        })
+
+        return update
     }
     // ------ End ------
 }
