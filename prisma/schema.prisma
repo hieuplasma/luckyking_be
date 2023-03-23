@@ -171,7 +171,7 @@ model ResultMax3d {
   id          String   @id @default(uuid())
   drawn       Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
   type        String // max3d. max3dpro, max3dplus
-  drawCode    Int      @unique
+  drawCode    Int      
   drawTime    DateTime
   first       String[] // 2 giai nhat, moi giai bo 3 so, chua co kq la mang khong co gia tri
   second      String[] // 4 giai nhi

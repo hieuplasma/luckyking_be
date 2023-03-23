@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { User } from '@prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
@@ -136,8 +137,22 @@ export class ResultController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('update/keno')
     @Roles(Role.Staff, Role.Admin)
-    updateResultKeno(@GetUser() user , @Body() body: UpdateResultKenoDTO) {
-        return this.resultService.updateResultKeno(user,body)
+    updateResultKeno(@GetUser() user: User, @Body() body: UpdateResultKenoDTO) {
+        return this.resultService.updateResultKeno(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('update/mega')
+    @Roles(Role.Staff, Role.Admin)
+    updateResultMega(@GetUser() user: User, @Body() body: UpdateResultKenoDTO) {
+        return this.resultService.updateResultMega(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('update/power')
+    @Roles(Role.Staff, Role.Admin)
+    updateResultPower(@GetUser() user: User, @Body() body: UpdateResultKenoDTO) {
+        return this.resultService.updateResultPower(user, body)
     }
     // ------ End ------
 }

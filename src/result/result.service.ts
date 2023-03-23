@@ -3,7 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { OrderStatus, User } from '@prisma/client';
 import { NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
-import { caculateKenoBenefits, getNearestTimeDay, getTimeToday } from 'src/common/utils';
+import { caculateKenoBenefits, caculateMegaBenefits, getNearestTimeDay, getTimeToday } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO } from './dto';
@@ -133,7 +133,7 @@ export class ResultService {
         const tmp = await this.prismaService.resultMax3d.create({
             data: {
                 drawn: false,
-                drawCode: drawCode,
+                drawCode: parseInt(drawCode.toString()),
                 drawTime: drawTime,
                 type: LotteryType.Max3D
             }
@@ -285,13 +285,13 @@ export class ResultService {
     async insertScheduleMega(body: ScheduleKenoDTO) {
         const check = await this.prismaService.resultMega.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
         if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
-        return await this.addScheduleMega(body.drawCode, body.drawTime)
+        return await this.addScheduleMega(parseInt(body.drawCode.toString()), body.drawTime)
     }
 
     async insertSchedulePower(body: ScheduleKenoDTO) {
         const check = await this.prismaService.resultPower.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
         if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
-        return await this.addSchedulePower(body.drawCode, body.drawTime)
+        return await this.addSchedulePower(parseInt(body.drawCode.toString()), body.drawTime)
     }
 
     async insertScheduleMax3d(body: ScheduleMax3dDTO) {
@@ -438,6 +438,90 @@ export class ResultService {
             // Neu trung thi tao transaction tra thuong
             if (benefits > 0) {
                 await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPerson.id, LotteryType.Keno)
+                await this.prismaService.lottery.update({
+                    data: { status: OrderStatus.PAID, resultTime: update.drawTime },
+                    where: { id: lottery.id }
+                })
+            }
+
+            // Service ban notify cho nguoi dung o day .........
+        })
+
+        return update
+    }
+
+    async updateResultMega(transactionPerson: User, body: UpdateResultKenoDTO) {
+        const drawCode = parseInt(body.drawCode.toString())
+        const draw = await this.prismaService.resultMega.findUnique({
+            where: { drawCode: drawCode }
+        })
+        if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
+        if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
+
+        // Cap nhat ket qua
+        const update = await this.prismaService.resultMega.update({
+            where: { drawCode: drawCode },
+            data: { drawn: true, result: body.result }
+        })
+
+        // so ve va update ve
+        const listLottery = await this.prismaService.lottery.findMany({
+            where: { drawCode: drawCode, status: OrderStatus.CONFIRMED },
+            include: { NumberLottery: true }
+        })
+        listLottery.map(async lottery => {
+            // So ve xem trung khong
+            let benefits = caculateMegaBenefits(lottery, body.result)
+            if (benefits == 0) await this.prismaService.lottery.update({
+                data: { status: OrderStatus.NO_PRIZE, resultTime: update.drawTime },
+                where: { id: lottery.id }
+            })
+
+            // Neu trung thi tao transaction tra thuong
+            if (benefits > 0) {
+                await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPerson.id, LotteryType.Mega)
+                await this.prismaService.lottery.update({
+                    data: { status: OrderStatus.PAID, resultTime: update.drawTime },
+                    where: { id: lottery.id }
+                })
+            }
+
+            // Service ban notify cho nguoi dung o day .........
+        })
+
+        return update
+    }
+
+    async updateResultPower(transactionPerson: User, body: UpdateResultKenoDTO) {
+        const drawCode = parseInt(body.drawCode.toString())
+        const draw = await this.prismaService.resultPower.findUnique({
+            where: { drawCode: drawCode }
+        })
+        if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
+        if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
+
+        // Cap nhat ket qua
+        const update = await this.prismaService.resultPower.update({
+            where: { drawCode: drawCode },
+            data: { drawn: true, result: body.result }
+        })
+
+        // so ve va update ve
+        const listLottery = await this.prismaService.lottery.findMany({
+            where: { drawCode: drawCode, status: OrderStatus.CONFIRMED },
+            include: { NumberLottery: true }
+        })
+        listLottery.map(async lottery => {
+            // So ve xem trung khong
+            let benefits = caculateKenoBenefits(lottery, body.result)
+            if (benefits == 0) await this.prismaService.lottery.update({
+                data: { status: OrderStatus.NO_PRIZE, resultTime: update.drawTime },
+                where: { id: lottery.id }
+            })
+
+            // Neu trung thi tao transaction tra thuong
+            if (benefits > 0) {
+                await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPerson.id, LotteryType.Power)
                 await this.prismaService.lottery.update({
                     data: { status: OrderStatus.PAID, resultTime: update.drawTime },
                     where: { id: lottery.id }
