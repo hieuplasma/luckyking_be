@@ -310,4 +310,96 @@ export class ResultService {
         return tmp
     }
     // ------ End -------
+
+    // View Result 
+    async getResultMax3d(type: string, take: number, skip: number) {
+        const now = new Date()
+        const schedule = await this.prismaService.resultMax3d.findMany({
+            where: { drawn: true, type: type, drawTime: { lt: now } },
+            orderBy: { drawCode: 'desc' },
+            take: take ? parseInt(take.toString()) : 10,
+            skip: skip ? parseInt(skip.toString()) : 0
+        })
+        return schedule
+    }
+
+    async getResultKeno(take: number, skip: number) {
+        const now = new Date()
+        const schedule = await this.prismaService.resultKeno.findMany({
+            where: { drawn: true, drawTime: { lt: now } },
+            orderBy: { drawCode: 'desc' },
+            take: take ? parseInt(take.toString()) : 20,
+            skip: skip ? parseInt(skip.toString()) : 0
+        })
+        return schedule
+    }
+
+    async getResultMega(take: number, skip: number) {
+        const now = new Date()
+        const schedule = await this.prismaService.resultMega.findMany({
+            where: { drawn: true, drawTime: { lt: now } },
+            orderBy: { drawCode: 'desc' },
+            take: take ? parseInt(take.toString()) : 10,
+            skip: skip ? parseInt(skip.toString()) : 0
+        })
+        return schedule
+    }
+
+    async getResultPower(take: number, skip: number) {
+        const now = new Date()
+        const schedule = await this.prismaService.resultPower.findMany({
+            where: { drawn: true, drawTime: { lt: now } },
+            orderBy: { drawCode: 'desc' },
+            take: take ? parseInt(take.toString()) : 10,
+            skip: skip ? parseInt(skip.toString()) : 0
+        })
+        return schedule
+    }
+    // ------ End -------
+
+    // Get Schedule 
+    async getScheduleMax3d(type: string, take: number, skip: number) {
+        const now = new Date()
+        const schedule = await this.prismaService.resultMax3d.findMany({
+            where: { drawn: false, type: type, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+            take: take ? parseInt(take.toString()) : 6,
+            skip: skip ? parseInt(skip.toString()) : 0
+        })
+        return schedule
+    }
+
+    async getScheduleKeno(take: number, skip: number) {
+        const now = new Date()
+        const schedule = await this.prismaService.resultKeno.findMany({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+            take: take ? parseInt(take.toString()) : 20,
+            skip: skip ? parseInt(skip.toString()) : 0
+        })
+        return schedule
+    }
+
+    async getScheduleMega(take: number, skip: number) {
+        const now = new Date()
+        const schedule = await this.prismaService.resultMega.findMany({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+            take: take ? parseInt(take.toString()) : 6,
+            skip: skip ? parseInt(skip.toString()) : 0
+        })
+        return schedule
+    }
+
+    async getSchedulePower(take: number, skip: number) {
+        const now = new Date()
+        const schedule = await this.prismaService.resultPower.findMany({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+            take: take ? parseInt(take.toString()) : 6,
+            skip: skip ? parseInt(skip.toString()) : 0
+        })
+        return schedule
+    }
+    // ------ End ------
 }

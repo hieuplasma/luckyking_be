@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ResultPower } from '@prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
@@ -71,5 +71,65 @@ export class ResultController {
     }
     // --------  End ----------
 
+
+    // View Result 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('keno')
+    @Roles(Role.Staff, Role.Admin, Role.User)
+    getResultKeno(@Query('take') take: number, @Query('skip') skip: number) {
+        return this.resultService.getResultKeno(take, skip)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('max3d')
+    @Roles(Role.Staff, Role.Admin, Role.User)
+    getResultmax3d(@Query('type') type: string, @Query('take') take: number, @Query('skip') skip: number) {
+        return this.resultService.getResultMax3d(type, take, skip)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('power')
+    @Roles(Role.Staff, Role.Admin, Role.User)
+    getResultPower(@Query('take') take: number, @Query('skip') skip: number) {
+        return this.resultService.getResultPower(take, skip)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('mega')
+    @Roles(Role.Staff, Role.Admin, Role.User)
+    getResultMega(@Query('take') take: number, @Query('skip') skip: number) {
+        return this.resultService.getResultMega(take, skip)
+    }
+    // ------ End -------
+
+    // Get Schedule 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('schedule/max3d')
+    @Roles(Role.Staff, Role.Admin, Role.User)
+    getScheduleMax3d(@Query('type') type: string, @Query('take') take: number, @Query('skip') skip: number) {
+        return this.resultService.getScheduleMax3d(type, take, skip)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('schedule/keno')
+    @Roles(Role.Staff, Role.Admin, Role.User)
+    getScheduleKeno(@Query('take') take: number, @Query('skip') skip: number) {
+        return this.resultService.getScheduleKeno(take, skip)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('schedule/mega')
+    @Roles(Role.Staff, Role.Admin, Role.User)
+    getScheduleMega(@Query('take') take: number, @Query('skip') skip: number) {
+        return this.resultService.getScheduleMega(take, skip)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('schedule/power')
+    @Roles(Role.Staff, Role.Admin, Role.User)
+    getSchedulePower(@Query('take') take: number, @Query('skip') skip: number) {
+        return this.resultService.getSchedulePower(take, skip)
+    }
+    // ------ End ------
 }
 
