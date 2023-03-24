@@ -21,8 +21,10 @@ export class OrderService {
         const balances = await this.userService.getAllWallet(user.id)
         const amount = parseInt(body.amount.toString())
         const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount)
-        if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
-        if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        if (body.status != OrderStatus.CART) {
+            if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
+            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        }
         let currentDate = new Date()
         let list = new LotteryNumber()
         body.numbers.map(item => {
@@ -34,7 +36,8 @@ export class OrderService {
                 user: {
                     connect: { id: user.id }
                 },
-                status: OrderStatus.PENDING,
+                //@ts-ignore
+                status: body.status ? body.status : OrderStatus.PENDING,
                 dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                 method: body.method,
                 surcharge: surcharge,
@@ -43,7 +46,8 @@ export class OrderService {
                         userId: user.id,
                         type: body.lotteryType,
                         bets: amount,
-                        status: OrderStatus.PENDING,
+                        //@ts-ignore
+                        status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
                         drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
@@ -54,7 +58,7 @@ export class OrderService {
                             }
                         }
                     }
-                }
+                },
             },
             include: { Lottery: { include: { NumberLottery: true } } }
         })
@@ -65,8 +69,10 @@ export class OrderService {
         const balances = await this.userService.getAllWallet(user.id)
         const amount = parseInt(body.amount.toString())
         const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount)
-        if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
-        if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        if (body.status != OrderStatus.CART) {
+            if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
+            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        }
         let currentDate = new Date()
         let list = new LotteryNumber()
         for (let i = 0; i < body.numbers.length; i++) {
@@ -78,7 +84,8 @@ export class OrderService {
                 user: {
                     connect: { id: user.id }
                 },
-                status: OrderStatus.PENDING,
+                //@ts-ignore
+                status: body.status ? body.status : OrderStatus.PENDING,
                 dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                 method: body.method,
                 surcharge: surcharge,
@@ -87,7 +94,8 @@ export class OrderService {
                         userId: user.id,
                         type: body.lotteryType,
                         bets: amount,
-                        status: OrderStatus.PENDING,
+                        //@ts-ignore
+                        status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
                         drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
@@ -109,8 +117,10 @@ export class OrderService {
         const balances = await this.userService.getAllWallet(user.id)
         const amount = parseInt(body.amount.toString())
         const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount)
-        if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
-        if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        if (body.status != OrderStatus.CART) {
+            if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
+            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        }
         let currentDate = new Date()
         let list = new LotteryNumber()
         for (let i = 0; i < body.numbers.length; i++) {
@@ -122,7 +132,8 @@ export class OrderService {
                 user: {
                     connect: { id: user.id }
                 },
-                status: OrderStatus.PENDING,
+                //@ts-ignore
+                status: body.status ? body.status : OrderStatus.PENDING,
                 dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                 method: body.method,
                 surcharge: surcharge,
@@ -131,7 +142,8 @@ export class OrderService {
                         userId: user.id,
                         type: body.lotteryType,
                         bets: amount,
-                        status: OrderStatus.PENDING,
+                        //@ts-ignore
+                        status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
                         drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
@@ -142,7 +154,8 @@ export class OrderService {
                             }
                         }
                     }
-                }
+                },
+                Cart: { connect: { id: body.cartId ? body.cartId : null } }
             },
             include: { Lottery: { include: { NumberLottery: true } } }
         })

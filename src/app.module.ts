@@ -8,6 +8,7 @@ import { TransactionModule } from './transaction/transaction.module';
 import { OrderModule } from './order/order.module';
 import { ResultModule } from './result/result.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     LotteryModule,
     TransactionModule,
     OrderModule,
-    ResultModule
+    ResultModule,
+    CartModule
   ],
 })
 export class AppModule { }

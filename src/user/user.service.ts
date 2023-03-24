@@ -46,11 +46,11 @@ export class UserService {
         return users
     }
 
-    async getAllWallet(userId) {
-        return this.getBalance(userId)
+    async getAllWallet(userId: string) {
+        return await this.getBalance(userId)
     }
 
-    private async getBalance(userId) {
+    private async getBalance(userId: string) {
         const moneyAccount = await this.prismaService.moneyAccount.findUnique({
             where: { userId: userId }
         })
