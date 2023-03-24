@@ -168,7 +168,7 @@ export function caculateMegaBenefits(lottery: any, resultString: string, jackPot
                 if (duplicate == 3) benefits = benefits + 13 * TRIEU + 65 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + 70 * TRIEU + 98 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 332 * TRIEU + 80 * MUOI_NGHIN
-                if (duplicate == 6) benefits = benefits + jackPot + 11449 * TRIEU
+                if (duplicate == 6) benefits = benefits + jackPot + 1149 * TRIEU
             default:
                 break;
         }
@@ -178,8 +178,142 @@ export function caculateMegaBenefits(lottery: any, resultString: string, jackPot
     return totalBenefits
 }
 
-export function caculatePowerBenefits(lottery: any, resultString: string, specialNumber: number) {
-    return 0
+export function caculatePowerBenefits(lottery: any, resultString: string, specialNumber: number, jackpot1: number, jackpot2: number) {
+    const result: number[] = resultString.split("-").map(Number)
+    let totalBenefits = 0;
+    const numberDetail: NumberDetail[] = JSON.parse(lottery.NumberLottery.numberDetail.toString())
+    const level = lottery.NumberLottery.level
+    numberDetail.map(item => {
+        let benefits = 0
+        const numbers: number[] = item.boSo.split("-").map(Number);
+        let duplicate = 0;
+        let bonus = false
+        numbers.map(number => {
+            if (result.includes(number)) duplicate++
+            if (specialNumber == number) bonus = true
+        })
+        if (bonus) {
+            switch (level) {
+                case 5:
+                    if (duplicate == 4) benefits = benefits + 2 * jackpot2 + 24 * TRIEU
+                    break;
+                case 6:
+                    if (duplicate == 5) benefits = benefits + jackpot2
+                    break;
+                case 7:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 42 * TRIEU + 50 * MUOI_NGHIN
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2
+                    break;
+                case 8:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 88 * TRIEU
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 247 * TRIEU + 50 * MUOI_NGHIN
+                    break
+                case 9:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 137 * TRIEU
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 503 * TRIEU + 50 * MUOI_NGHIN
+                    break;
+                case 10:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 190 * TRIEU
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 769 * TRIEU
+                    break;
+                case 11:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 247 * TRIEU + 50 * MUOI_NGHIN
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 1040 * TRIEU
+                    break;
+                case 12:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 310 * TRIEU
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 1330 * TRIEU
+                case 13:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 378 * TRIEU
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 1630 * TRIEU
+                case 14:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 452 * TRIEU
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 1940 * TRIEU
+                case 15:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 532 * TRIEU + 50 * MUOI_NGHIN
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 2270 * TRIEU
+                case 18:
+                    if (duplicate == 5) benefits = benefits + jackpot2 + 818 * TRIEU
+                    if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 3350 * TRIEU
+                default:
+                    break;
+            }
+        }
+        else switch (level) {
+            case 5:
+                if (duplicate == 2) benefits = benefits + 20 * MUOI_NGHIN
+                if (duplicate == 3) benefits = benefits + 3 * TRIEU + 85 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 104 * TRIEU
+                if (duplicate == 5) benefits = benefits + jackpot1 + jackpot2 + 1920 * TRIEU
+                break;
+            case 6:
+                if (duplicate == 3) benefits = benefits + 5 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 50 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 40 * TRIEU
+                if (duplicate == 6) benefits = benefits + jackpot1
+                break;
+            case 7:
+                if (duplicate == 3) benefits = benefits + 20 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + TRIEU + 70 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 82 * TRIEU + 50 * MUOI_NGHIN
+                if (duplicate == 6) benefits = benefits + jackpot1 + 240 * TRIEU
+                break;
+            case 8:
+                if (duplicate == 3) benefits = benefits + 50 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 3 * TRIEU + 80 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 128 * TRIEU
+                if (duplicate == 6) benefits = benefits + jackpot1 + 487 * TRIEU + 50 * MUOI_NGHIN
+                break
+            case 9:
+                if (duplicate == 3) benefits = benefits + 100 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 7 * TRIEU
+                if (duplicate == 5) benefits = benefits + 177 * TRIEU
+                if (duplicate == 6) benefits = benefits + jackpot1 + 743 * TRIEU + 10 * MUOI_NGHIN
+                break;
+            case 10:
+                if (duplicate == 3) benefits = benefits + TRIEU + 75 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 11 * TRIEU + 50 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 230 * TRIEU
+                if (duplicate == 6) benefits = benefits + jackpot1 + 1000 * TRIEU
+                break;
+            case 11:
+                if (duplicate == 3) benefits = benefits + 2 * TRIEU + 80 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 17 * TRIEU + 50 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 287 * TRIEU + 50 * MUOI_NGHIN
+                if (duplicate == 6) benefits = benefits + jackpot1 + 1280 * TRIEU
+                break;
+            case 12:
+                if (duplicate == 3) benefits = benefits + 4 * TRIEU + 20 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 25 * TRIEU + 20 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 350 * TRIEU
+                if (duplicate == 6) benefits = benefits + jackpot1 + 1570 * TRIEU
+            case 13:
+                if (duplicate == 3) benefits = benefits + 6 * TRIEU
+                if (duplicate == 4) benefits = benefits + 34 * TRIEU + 88 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 418 * TRIEU
+                if (duplicate == 6) benefits = benefits + jackpot1 + 1870 * TRIEU
+            case 14:
+                if (duplicate == 3) benefits = benefits + 8 * TRIEU + 25 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 46 * TRIEU + 5 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 492 * TRIEU + 20 * MUOI_NGHIN
+                if (duplicate == 6) benefits = benefits + jackpot1 + 2180 * TRIEU
+            case 15:
+                if (duplicate == 3) benefits = benefits + 11 * TRIEU
+                if (duplicate == 4) benefits = benefits + 60 * TRIEU + 50 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 572 * TRIEU + 50 * MUOI_NGHIN
+                if (duplicate == 6) benefits = benefits + jackpot1 + 2510 * TRIEU
+            case 18:
+                if (duplicate == 3) benefits = benefits + 22 * TRIEU + 75 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 118 * TRIEU + 30 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 858 * TRIEU + 80 * MUOI_NGHIN
+                if (duplicate == 6) benefits = benefits + jackpot1 + 3590 * TRIEU
+            default:
+                break;
+        }
+        // let tmp = Math.floor(parseInt(item.tienCuoc.toString()) / 10000) * benefits
+        totalBenefits = totalBenefits + benefits
+    })
+    return totalBenefits
 }
 
 export function serializeBigInt(obj: any) {

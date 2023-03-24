@@ -12,5 +12,15 @@ export class OldResultPowerDTO {
 
     @IsNotEmpty()
     specialNumber: number
+}
 
+export class UpdateResultPowerDTO {
+    @IsNotEmpty()
+    drawCode: number
+
+    @IsNotEmpty()
+    result: string
+
+    @IsNotEmpty()
+    specialNumber: number
 }

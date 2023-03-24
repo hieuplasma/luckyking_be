@@ -4,10 +4,10 @@ import { JackPot, OrderStatus, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
 import { NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
-import { caculateKenoBenefits, caculateMegaBenefits, getNearestTimeDay, getTimeToday, serializeBigInt } from 'src/common/utils';
+import { caculateKenoBenefits, caculateMegaBenefits, caculatePowerBenefits, getNearestTimeDay, getTimeToday, serializeBigInt } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionService } from 'src/transaction/transaction.service';
-import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, JackPotDTO } from './dto';
+import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, JackPotDTO, UpdateResultPowerDTO } from './dto';
 
 @Injectable()
 export class ResultService {
@@ -452,7 +452,6 @@ export class ResultService {
             data: { drawn: true, result: body.result }
         })
         const jackPot: JackPot = JSON.parse(await this.getJackPot())
-
         // so ve va update ve
         const listLottery = await this.prismaService.lottery.findMany({
             where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Mega },
@@ -467,45 +466,33 @@ export class ResultService {
         return update
     }
 
-    async updateResultPower(transactionPerson: User, body: UpdateResultKenoDTO) {
+    async updateResultPower(transactionPerson: User, body: UpdateResultPowerDTO) {
         const drawCode = parseInt(body.drawCode.toString())
         const draw = await this.prismaService.resultPower.findUnique({
             where: { drawCode: drawCode }
         })
         if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
         if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
-
         // Cap nhat ket qua
         const update = await this.prismaService.resultPower.update({
             where: { drawCode: drawCode },
             data: { drawn: true, result: body.result }
         })
-
+        const jackPot: JackPot = JSON.parse(await this.getJackPot())
         // so ve va update ve
         const listLottery = await this.prismaService.lottery.findMany({
-            where: { drawCode: drawCode, status: OrderStatus.CONFIRMED },
+            where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Power },
             include: { NumberLottery: true }
         })
         listLottery.map(async lottery => {
             // So ve xem trung khong
-            let benefits = caculateKenoBenefits(lottery, body.result)
-            if (benefits == 0) await this.prismaService.lottery.update({
-                data: { status: OrderStatus.NO_PRIZE, resultTime: update.drawTime },
-                where: { id: lottery.id }
-            })
-
-            // Neu trung thi tao transaction tra thuong
-            if (benefits > 0) {
-                await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPerson.id, LotteryType.Power)
-                await this.prismaService.lottery.update({
-                    data: { status: OrderStatus.PAID, resultTime: update.drawTime, benefits: benefits },
-                    where: { id: lottery.id }
-                })
-            }
-
-            // Service ban notify cho nguoi dung o day .........
+            let benefits = caculatePowerBenefits(
+                lottery, body.result,
+                parseInt(body.specialNumber.toString()),
+                parseInt(jackPot.JackPot1Power.toString()),
+                parseInt(jackPot.JackPot2Power.toString()))
+            this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
         })
-
         return update
     }
 
