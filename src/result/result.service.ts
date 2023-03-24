@@ -4,10 +4,10 @@ import { JackPot, OrderStatus, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
 import { NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
-import { caculateKenoBenefits, caculateMegaBenefits, caculatePowerBenefits, getNearestTimeDay, getTimeToday, serializeBigInt } from 'src/common/utils';
+import { caculateKenoBenefits, caculateMax3dBenefits, caculateMax3dProBenefits, caculateMax3PlusdBenefits, caculateMegaBenefits, caculatePowerBenefits, getNearestTimeDay, getTimeToday, serializeBigInt } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionService } from 'src/transaction/transaction.service';
-import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, JackPotDTO, UpdateResultPowerDTO } from './dto';
+import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, JackPotDTO, UpdateResultPowerDTO, UpdateResultMax3dDTO } from './dto';
 
 @Injectable()
 export class ResultService {
@@ -261,7 +261,7 @@ export class ResultService {
                 first: body.first,
                 second: body.second,
                 third: body.third,
-                consolation: body.consolation
+                special: body.special
             }
         })
         return result
@@ -409,6 +409,56 @@ export class ResultService {
 
 
     // Update Result 
+    async updateResultMax3d(transactionPerson: User, body: UpdateResultMax3dDTO) {
+        const drawCode = parseInt(body.drawCode.toString())
+        const draw = await this.prismaService.resultMax3d.findFirst({
+            where: { drawCode: drawCode, type: body.type }
+        })
+        if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
+        if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
+        // Cap nhat ket qua
+        const update = await this.prismaService.resultMax3d.update({
+            where: { id: draw.id },
+            data: {
+                drawn: true, special: body.special,
+                first: body.first, second: body.second, third: body.third
+            }
+        })
+        // so ve va update ve
+        let listLottery: any[]
+        if (body.type == LotteryType.Max3DPro)
+            listLottery = await this.prismaService.lottery.findMany({
+                where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: body.type },
+                include: { NumberLottery: true }
+            })
+        else {
+            listLottery = await this.prismaService.lottery.findMany({
+                where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: {in: [LotteryType.Max3D, LotteryType.Max3DPlus]} },
+                include: { NumberLottery: true }
+            })
+        }
+        listLottery.map(async lottery => {
+            let benefits = 0
+            switch (body.type) {
+                case LotteryType.Max3D:
+                    // So ve xem trung khong
+                    benefits = caculateMax3dBenefits(lottery, body.special, body.first, body.second, body.third)
+                    break;
+                case LotteryType.Max3DPlus:
+                    // So ve xem trung khong
+                    benefits = caculateMax3PlusdBenefits(lottery, body.special, body.first, body.second, body.third)
+                case LotteryType.Max3DPlus:
+                    // So ve xem trung khong
+                    benefits = caculateMax3dProBenefits(lottery, body.special, body.first, body.second, body.third)
+                default:
+                    break;
+            }
+            // Tra thuong
+            this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
+        })
+        return update
+    }
+
     async updateResultKeno(transactionPerson: User, body: UpdateResultKenoDTO) {
         const drawCode = parseInt(body.drawCode.toString())
         const draw = await this.prismaService.resultKeno.findUnique({
@@ -416,13 +466,11 @@ export class ResultService {
         })
         if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
         if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
-
         // Cap nhat ket qua
         const update = await this.prismaService.resultKeno.update({
             where: { drawCode: drawCode },
             data: { drawn: true, result: body.result }
         })
-
         // so ve va update ve
         const listLottery = await this.prismaService.lottery.findMany({
             where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Keno },
@@ -434,7 +482,6 @@ export class ResultService {
             // Tra thuong
             this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
         })
-
         return update
     }
 
@@ -476,7 +523,7 @@ export class ResultService {
         // Cap nhat ket qua
         const update = await this.prismaService.resultPower.update({
             where: { drawCode: drawCode },
-            data: { drawn: true, result: body.result }
+            data: { drawn: true, result: body.result, specialNumber: parseInt(body.specialNumber.toString()) }
         })
         const jackPot: JackPot = JSON.parse(await this.getJackPot())
         // so ve va update ve

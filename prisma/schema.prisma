@@ -168,19 +168,19 @@ model ResultPower {
 }
 
 model ResultMax3d {
-  id          String   @id @default(uuid())
-  drawn       Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
-  type        String // max3d. max3dpro, max3dplus
-  drawCode    Int
-  drawTime    DateTime
-  first       String[] // 2 giai nhat, moi giai bo 3 so, chua co kq la mang khong co gia tri
-  second      String[] // 4 giai nhi
-  third       String[] // 6 giai 3
-  consolation String[] //8 giai khuyen khich
+  id       String   @id @default(uuid())
+  drawn    Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
+  type     String // max3d. max3dpro, max3dplus
+  drawCode Int
+  drawTime DateTime
+  special  String[] // 2 giai dac biet
+  first    String[] // 4 giai nhat
+  second   String[] // 6 giai nhi
+  third    String[] // 8 giai 3
 }
 
 model JackPot {
-  id            String @id @default(uuid())
+  id            String  @id @default(uuid())
   JackPot1Power BigInt?
   JackPot2Power BigInt?
   JackPotMega   BigInt?

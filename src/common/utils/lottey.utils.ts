@@ -316,6 +316,56 @@ export function caculatePowerBenefits(lottery: any, resultString: string, specia
     return totalBenefits
 }
 
+export function caculateMax3dBenefits(lottery: any, special: string[], fitst: string[], second: string[], third: string[]) {
+    let totalBenefits = 0;
+    const numberDetail: NumberDetail[] = JSON.parse(lottery.NumberLottery.numberDetail.toString())
+    numberDetail.map(item => {
+        let benefits = 0
+        if (special.includes(item.boSo)) benefits = benefits + TRIEU
+        if (fitst.includes(item.boSo)) benefits = benefits + 35 * MUOI_NGHIN
+        if (second.includes(item.boSo)) benefits = benefits + 21 * MUOI_NGHIN
+        if (third.includes(item.boSo)) benefits = benefits + 10 * MUOI_NGHIN
+        let tmp = Math.floor(parseInt(item.tienCuoc.toString()) / 10000) * benefits
+        totalBenefits = totalBenefits + tmp
+    })
+    return totalBenefits
+}
+
+export function caculateMax3PlusdBenefits(lottery: any, special: string[], fitst: string[], second: string[], third: string[]) {
+    let totalBenefits = 0;
+    const numberDetail: NumberDetail[] = JSON.parse(lottery.NumberLottery.numberDetail.toString())
+    numberDetail.map(item => {
+        let benefits = 0
+        const numbers: string[] = item.boSo.split("-")
+        const number1 = numbers[0] + "-" + numbers[1] + "-" + numbers[2]
+        const number2 = numbers[3] + "-" + numbers[4] + "-" + numbers[5]
+        let duplicateSpecial = 0, duplicate1 = 0, duplicate2 = 0, duplicate3 = 0;
+
+        if (special.includes(number1)) duplicateSpecial++; if (special.includes(number2)) duplicateSpecial++;
+        if (fitst.includes(number1)) duplicate1++; if (fitst.includes(number2)) duplicate1++;
+        if (second.includes(number1)) duplicate2++; if (second.includes(number2)) duplicate2++;
+        if (third.includes(number1)) duplicate3++; if (third.includes(number2)) duplicate3++;
+
+        if (duplicateSpecial == 2) benefits = benefits + TY;
+        if (duplicate1 == 2) benefits = benefits + 40 * TRIEU;
+        if (duplicate2 == 2) benefits = benefits + 10 * TRIEU;
+        if (duplicate3 == 2) benefits = benefits + 5 * TRIEU;
+        if ((duplicateSpecial + duplicate1 + duplicate2 + duplicate3) >= 2) benefits = benefits + TRIEU;
+        if (duplicateSpecial == 1) benefits = benefits + 15 * MUOI_NGHIN;
+        if ((duplicate1 + duplicate2 + duplicate3) == 1) benefits = benefits + 4 * MUOI_NGHIN
+
+        let tmp = Math.floor(parseInt(item.tienCuoc.toString()) / 10000) * benefits
+        totalBenefits = totalBenefits + tmp
+    })
+    return totalBenefits
+}
+
+export function caculateMax3dProBenefits(lottery: any, special: string[], fitst: string[], second: string[], third: string[]) {
+    let totalBenefits = 0;
+    return totalBenefits
+}
+
+
 export function serializeBigInt(obj: any) {
     const returned = JSON.stringify(
         obj,

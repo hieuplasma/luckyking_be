@@ -25,7 +25,7 @@ export class OldResultMax3dDTO {
 
     @IsArray()
     @ArrayMinSize(1)
-    consolation: any
+    special: any
 }
 
 export class ScheduleMax3dDTO {
@@ -37,4 +37,28 @@ export class ScheduleMax3dDTO {
 
     @IsNotEmpty()
     type: string
+}
+
+export class UpdateResultMax3dDTO {
+    @IsNotEmpty()
+    drawCode: number
+
+    @IsNotEmpty()
+    type: string
+
+    @IsArray()
+    @ArrayMinSize(1)
+    first: any
+
+    @IsArray()
+    @ArrayMinSize(1)
+    second: any
+
+    @IsArray()
+    @ArrayMinSize(1)
+    third: any
+
+    @IsArray()
+    @ArrayMinSize(1)
+    special: any
 }

@@ -3,7 +3,7 @@ import { User } from '@prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { JackPotDTO, OldResultKenoDTO, OldResultMax3dDTO, OldResultMegaDTO, OldResultPowerDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, UpdateResultPowerDTO } from './dto';
+import { JackPotDTO, OldResultKenoDTO, OldResultMax3dDTO, OldResultMegaDTO, OldResultPowerDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, UpdateResultMax3dDTO, UpdateResultPowerDTO } from './dto';
 import { ResultService } from './result.service';
 
 @Controller('result')
@@ -134,6 +134,13 @@ export class ResultController {
 
 
     // Update Result 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('update/max3d')
+    @Roles(Role.Staff, Role.Admin)
+    updateResultMax3d(@GetUser() user: User, @Body() body: UpdateResultMax3dDTO) {
+        return this.resultService.updateResultMax3d(user, body)
+    }
+
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('update/keno')
     @Roles(Role.Staff, Role.Admin)
