@@ -65,18 +65,16 @@ model Lottery {
   userId        String
   Order         Order?        @relation(fields: [orderId], references: [id])
   orderId       String?
-  Cart          Cart?         @relation(fields: [cartId], references: [id])
-  cartId        String?
   NumberLottery NumberLotery?
   drawCode      Int? // Mã kỳ quay
   drawTime      DateTime? // Thời gian quay
 }
 
 model Cart {
-  id      String    @id @default(uuid())
-  User    User      @relation(fields: [userId], references: [id])
-  userId  String    @unique
-  Lottery Lottery[]
+  id     String  @id @default(uuid())
+  User   User    @relation(fields: [userId], references: [id])
+  userId String  @unique
+  Order  Order[]
 }
 
 // Lich su giao dich, bien dong so du, lich su thang, thua se dung api rut gon cua lich su giao dich
@@ -113,6 +111,8 @@ model Order {
   surcharge         Int?         @default(0) // phu phi
   dataPart          String? // 20230316 ngay dat don hang
   method            String       @default("keep") // giu ho, ship ve
+  Cart              Cart?        @relation(fields: [cartId], references: [id])
+  cartId            String?
 }
 
 model MoneyAccount {
@@ -171,12 +171,19 @@ model ResultMax3d {
   id          String   @id @default(uuid())
   drawn       Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
   type        String // max3d. max3dpro, max3dplus
-  drawCode    Int      
+  drawCode    Int
   drawTime    DateTime
   first       String[] // 2 giai nhat, moi giai bo 3 so, chua co kq la mang khong co gia tri
   second      String[] // 4 giai nhi
   third       String[] // 6 giai 3
   consolation String[] //8 giai khuyen khich
+}
+
+model JackPot {
+  id            String @id @default(uuid())
+  JackPot1Power BigInt?
+  JackPot2Power BigInt?
+  JackPotMega   BigInt?
 }
 
 // model ResultMax3d {
@@ -217,4 +224,5 @@ enum OrderStatus {
   WON // ve thang
   PAID // da tra thuong
   NO_PRIZE // khong trung thuong
+  CART // trong gio hang
 }

@@ -3,10 +3,10 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { OrderStatus, User } from '@prisma/client';
 import { NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
-import { caculateKenoBenefits, caculateMegaBenefits, getNearestTimeDay, getTimeToday } from 'src/common/utils';
+import { caculateKenoBenefits, caculateMegaBenefits, getNearestTimeDay, getTimeToday, serializeBigInt } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionService } from 'src/transaction/transaction.service';
-import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO } from './dto';
+import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, JackPotDTO } from './dto';
 
 @Injectable()
 export class ResultService {
@@ -439,7 +439,7 @@ export class ResultService {
             if (benefits > 0) {
                 await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPerson.id, LotteryType.Keno)
                 await this.prismaService.lottery.update({
-                    data: { status: OrderStatus.PAID, resultTime: update.drawTime },
+                    data: { status: OrderStatus.PAID, resultTime: update.drawTime, benefits: benefits },
                     where: { id: lottery.id }
                 })
             }
@@ -481,7 +481,7 @@ export class ResultService {
             if (benefits > 0) {
                 await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPerson.id, LotteryType.Mega)
                 await this.prismaService.lottery.update({
-                    data: { status: OrderStatus.PAID, resultTime: update.drawTime },
+                    data: { status: OrderStatus.PAID, resultTime: update.drawTime, benefits: benefits },
                     where: { id: lottery.id }
                 })
             }
@@ -523,7 +523,7 @@ export class ResultService {
             if (benefits > 0) {
                 await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPerson.id, LotteryType.Power)
                 await this.prismaService.lottery.update({
-                    data: { status: OrderStatus.PAID, resultTime: update.drawTime },
+                    data: { status: OrderStatus.PAID, resultTime: update.drawTime, benefits: benefits },
                     where: { id: lottery.id }
                 })
             }
@@ -532,6 +532,50 @@ export class ResultService {
         })
 
         return update
+    }
+    // ------ End ------
+
+    //Update JackPot
+    async updateJackPot(body: JackPotDTO) {
+        const oldJackPot = await this.prismaService.jackPot.findFirst({ where: {} })
+        if (oldJackPot) {
+            console.log('update')
+            // update
+            const jackpot1Power = body.jackpot1Power ? BigInt(body.jackpot1Power.toString()) : oldJackPot.JackPot1Power
+            const jackpot2Power = body.jackpot2Power ? BigInt(body.jackpot2Power.toString()) : oldJackPot.JackPot2Power
+            const jackPotMega = body.jackpotMega ? BigInt(body.jackpotMega.toString()) : oldJackPot.JackPotMega
+            const update = await this.prismaService.jackPot.update({
+                where: { id: oldJackPot.id },
+                data: {
+                    JackPot1Power: jackpot1Power,
+                    JackPot2Power: jackpot2Power,
+                    JackPotMega: jackPotMega
+                }, select: { JackPot1Power: true, JackPot2Power: true, JackPotMega: true }
+            })
+            return serializeBigInt(update)
+        }
+        else {
+            //create
+            console.log('create')
+            const jackpot1Power = body.jackpot1Power ? BigInt(body.jackpot1Power.toString()) : 0
+            const jackpot2Power = body.jackpot2Power ? BigInt(body.jackpot2Power.toString()) : 0
+            const jackPotMega = body.jackpotMega ? BigInt(body.jackpotMega.toString()) : 0
+            const create = await this.prismaService.jackPot.create({
+                data: {
+                    JackPot1Power: jackpot1Power,
+                    JackPot2Power: jackpot2Power,
+                    JackPotMega: jackPotMega
+                }, select: { JackPot1Power: true, JackPot2Power: true, JackPotMega: true }
+            })
+            return serializeBigInt(create)
+        }
+    }
+
+    async getJackPot() {
+        const jackpot = await this.prismaService.jackPot.findFirst({
+            select: {JackPot1Power: true, JackPot2Power: true, JackPotMega: true}
+        })
+        return serializeBigInt(jackpot)
     }
     // ------ End ------
 }
