@@ -29,6 +29,6 @@ export function getNearestTimeDay(day: number, hour: number, minute: number) {
 export class nDate extends Date {
     constructor() {
         super();
-        this.setTime((new Date().getTime() - new Date().getTimezoneOffset() * 60000))
+        // this.setTime((new Date().getTime() - new Date().getTimezoneOffset() * 60000))
       }
 }
