@@ -25,9 +25,9 @@ $ yarn install
 
 ## Prepare Environment
 
-Rename `.evn.example` to `.env`
-If run in debug mode: comment all # DB_HOST for docker
-If run in docker mode: comment all # DB_HOST for debug
+Rename `.evn.example` to `.env`  
+If run in debug mode: comment all # DB_HOST for docker  
+If run in docker mode: comment all # DB_HOST for debug  
 
 ```bash
 # create & run container for postgres SQL
@@ -59,11 +59,11 @@ $ npx prisma studio
 
 ## Deploy with MacOS
 
-Dowload ZenTermLite in Appstore
-Config: 
-IP: 103.162.31.84
-PORT: 26266
-Username/Password: luckyking/VptNC@2023
+Dowload ZenTermLite in Appstore  
+Config:  
+IP: 103.162.31.84  
+PORT: 26266  
+Username/Password: luckyking/VptNC@2023  
 
 Pull Project -> Rename `.evn.example` to `.env`
 
