@@ -1,11 +1,13 @@
+import { TIME_OFFSET } from "../constants/constants";
+
 export function getTimeToday(hour: number, minute: number) {
-    const now = new Date();
+    const now = new nDate();
     const today6am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
     return today6am
 }
 
 export function getNearestTimeDay(day: number, hour: number, minute: number) {
-    let currentDate = new Date();
+    let currentDate = new nDate();
 
     // Get the day of the week (0-6), where 0 = Sunday, 1 = Monday, etc.
     let currentDay = currentDate.getDay();
@@ -21,4 +23,12 @@ export function getNearestTimeDay(day: number, hour: number, minute: number) {
     let nextWednesday = new Date(currentDate.getTime() + (diff * 24 * 60 * 60 * 1000));
     nextWednesday.setHours(hour, minute, 0, 0);
     return nextWednesday
+}
+
+// Lay thoi gian gmt+7
+export class nDate extends Date {
+    constructor() {
+        super();
+        this.setTime((new Date().getTime() - new Date().getTimezoneOffset() * 60000))
+      }
 }

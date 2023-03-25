@@ -2,9 +2,9 @@ import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { JackPot, OrderStatus, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
-import { NumberDetail } from 'src/common/entity';
+import { TIMEZONE } from 'src/common/constants/constants';
 import { LotteryType } from 'src/common/enum';
-import { caculateKenoBenefits, caculateMax3dBenefits, caculateMax3dProBenefits, caculateMax3PlusdBenefits, caculateMegaBenefits, caculatePowerBenefits, getNearestTimeDay, getTimeToday, serializeBigInt } from 'src/common/utils';
+import { caculateKenoBenefits, caculateMax3dBenefits, caculateMax3dProBenefits, caculateMax3PlusdBenefits, caculateMegaBenefits, caculatePowerBenefits, getNearestTimeDay, getTimeToday, nDate, serializeBigInt } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, JackPotDTO, UpdateResultPowerDTO, UpdateResultMax3dDTO } from './dto';
@@ -15,13 +15,53 @@ export class ResultService {
     constructor(private prismaService: PrismaService, private transactionService: TransactionService) { }
     private readonly logger = new Logger(ResultService.name);
 
-    // @Cron('0 25 11 * * *')
-    // @Cron(CronExpression.EVERY_10_SECONDS)
-    // async test () {
-    //     const now = new Date()
-    //     this.logger.debug(now.getDay());
-    //     console.log(parseInt("00855"))
-    // }
+    @Cron('0 40 15 * * *', { timeZone: TIMEZONE })
+    async test() {
+        const now = new Date()
+        const nnow = new nDate()
+        this.logger.debug("logger.debug Date: " + now);
+        this.logger.debug("logger.debug nDate: " + nnow);
+        console.log("console.log Date: " + now)
+        console.log("console.log nDate: " + nnow)
+        await this.prismaService.resultMega.create({
+            data: {
+                drawn: false,
+                drawCode: 15401,
+                drawTime: now
+            },
+        })
+        await this.prismaService.resultMega.create({
+            data: {
+                drawn: false,
+                drawCode: 15402,
+                drawTime: nnow
+            },
+        })
+    }
+
+    @Cron('0 30 15 * * *', { timeZone: TIMEZONE })
+    async test2() {
+        const now = new Date()
+        const nnow = new nDate()
+        this.logger.debug("logger.debug Date: " + now);
+        this.logger.debug("logger.debug nDate: " + nnow);
+        console.log("console.log Date: " + now)
+        console.log("console.log nDate: " + nnow)
+        await this.prismaService.resultMega.create({
+            data: {
+                drawn: false,
+                drawCode: 15301,
+                drawTime: now
+            },
+        })
+        await this.prismaService.resultMega.create({
+            data: {
+                drawn: false,
+                drawCode: 15302,
+                drawTime: nnow
+            },
+        })
+    }
 
     // Kế hoạch adđ schedule: 
 
@@ -29,7 +69,7 @@ export class ResultService {
     // - Quay thưởng Từ 18h00 – 18h30 Thứ 4 - Thứ 6 - Chủ nhật 
     // - Khi khởi tạo dự án, insert sẵn lịch quay cho 3 tuần tiếp theo 
     // - Lập lịch mỗi (5:00 AM Thứ hai) hàng tuần add schedule cho tuần tiếp theo (luôn đi trước 3 tuần)
-    @Cron('0 5 * * 1')
+    @Cron('0 5 * * 1', { timeZone: TIMEZONE })
     async addMegaDrawSchedule() {
         const latestDraw = await this.prismaService.resultMega.findMany({
             orderBy: {
@@ -68,7 +108,7 @@ export class ResultService {
     // - Quay thưởng Từ 18h00 – 18h30 Thứ 3 - Thứ 5 - Thứ 7
     // - Khi khởi tạo dự án, insert sẵn lịch quay cho 3 tuần tiếp theo 
     // - Lập lịch mỗi (5:00 AM Chủ Nhật) hàng tuần add schedule cho tuần tiếp theo (luôn đi trước 3 tuần) 
-    @Cron('0 5 * * 0')
+    @Cron('0 5 * * 0', { timeZone: TIMEZONE })
     async addPowerDrawSchedule() {
         const latestDraw = await this.prismaService.resultPower.findMany({
             orderBy: {
@@ -106,7 +146,7 @@ export class ResultService {
     // - Quay thưởng Từ 18h00 – 18h30 Thứ 2 - Thứ 4 - Thứ 6
     // - Khi khởi tạo dự án, insert sẵn lịch quay cho 3 tuần tiếp theo 
     // - Lập lịch mỗi (5:00 AM Thứ 7) hàng tuần add schedule cho tuần tiếp theo (luôn đi trước 3 tuần) 
-    @Cron('0 5 * * 6')
+    @Cron('0 5 * * 6', { timeZone: TIMEZONE })
     async addMax3dDrawSchedule() {
         const latestDraw = await this.prismaService.resultMax3d.findMany({
             where: { type: LotteryType.Max3D },
@@ -146,7 +186,7 @@ export class ResultService {
     // - Quay thưởng Từ 18h00 – 18h30 Thứ 3 - Thứ 5 - Thứ 7
     // - Khi khởi tạo dự án, insert sẵn lịch quay cho 3 tuần tiếp theo 
     // - Lập lịch mỗi (4:00 AM Thứ hai) hàng tuần add schedule cho tuần tiếp theo (luôn đi trước 3 tuần) 
-    @Cron('0 4 * * 0')
+    @Cron('0 4 * * 0', { timeZone: TIMEZONE })
     async addMax3dProDrawSchedule() {
         const latestDraw = await this.prismaService.resultMax3d.findMany({
             where: { type: LotteryType.Max3DPro },
@@ -186,7 +226,7 @@ export class ResultService {
     // - Quay thưởng 5p 1 lần, từ 6h04 sáng đến 21h54 tối
     // - Khi khởi tạo dự án, insert sẵn lịch quay cho 3 ngày tiếp theo 
     // - Lập lịch mỗi (3:00 AM  hàng ngày) add schedule cho ngày tiếp theo (luôn đi trước 3 ngày) 
-    @Cron('0 3 * * *')
+    @Cron('0 3 * * *', { timeZone: TIMEZONE })
     async addKenoDrawSchedule() {
         const latestDraw = await this.prismaService.resultKeno.findMany({
             orderBy: {
@@ -271,7 +311,6 @@ export class ResultService {
     // Insert Schedule Manual
     async insertScheduleKeno(body: ScheduleKenoDTO) {
         const check = await this.prismaService.resultKeno.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
-        console.log(check)
         if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
         const result = await this.prismaService.resultKeno.create({
             data: {
@@ -317,7 +356,7 @@ export class ResultService {
 
     // View Result 
     async getResultMax3d(type: string, take: number, skip: number) {
-        const now = new Date()
+        const now = new nDate()
         const schedule = await this.prismaService.resultMax3d.findMany({
             where: { drawn: true, type: type, drawTime: { lt: now } },
             orderBy: { drawCode: 'desc' },
@@ -328,7 +367,7 @@ export class ResultService {
     }
 
     async getResultKeno(take: number, skip: number) {
-        const now = new Date()
+        const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findMany({
             where: { drawn: true, drawTime: { lt: now } },
             orderBy: { drawCode: 'desc' },
@@ -339,7 +378,7 @@ export class ResultService {
     }
 
     async getResultMega(take: number, skip: number) {
-        const now = new Date()
+        const now = new nDate()
         const schedule = await this.prismaService.resultMega.findMany({
             where: { drawn: true, drawTime: { lt: now } },
             orderBy: { drawCode: 'desc' },
@@ -350,7 +389,7 @@ export class ResultService {
     }
 
     async getResultPower(take: number, skip: number) {
-        const now = new Date()
+        const now = new nDate()
         const schedule = await this.prismaService.resultPower.findMany({
             where: { drawn: true, drawTime: { lt: now } },
             orderBy: { drawCode: 'desc' },
@@ -363,7 +402,7 @@ export class ResultService {
 
     // Get Schedule 
     async getScheduleMax3d(type: string, take: number, skip: number) {
-        const now = new Date()
+        const now = new nDate()
         const schedule = await this.prismaService.resultMax3d.findMany({
             where: { drawn: false, type: type, drawTime: { gt: now } },
             orderBy: { drawCode: 'asc' },
@@ -374,7 +413,7 @@ export class ResultService {
     }
 
     async getScheduleKeno(take: number, skip: number) {
-        const now = new Date()
+        const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findMany({
             where: { drawn: false, drawTime: { gt: now } },
             orderBy: { drawCode: 'asc' },
@@ -385,7 +424,7 @@ export class ResultService {
     }
 
     async getScheduleMega(take: number, skip: number) {
-        const now = new Date()
+        const now = new nDate()
         const schedule = await this.prismaService.resultMega.findMany({
             where: { drawn: false, drawTime: { gt: now } },
             orderBy: { drawCode: 'asc' },
@@ -396,7 +435,7 @@ export class ResultService {
     }
 
     async getSchedulePower(take: number, skip: number) {
-        const now = new Date()
+        const now = new nDate()
         const schedule = await this.prismaService.resultPower.findMany({
             where: { drawn: false, drawTime: { gt: now } },
             orderBy: { drawCode: 'asc' },
@@ -433,7 +472,7 @@ export class ResultService {
             })
         else {
             listLottery = await this.prismaService.lottery.findMany({
-                where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: {in: [LotteryType.Max3D, LotteryType.Max3DPlus]} },
+                where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: { in: [LotteryType.Max3D, LotteryType.Max3DPlus] } },
                 include: { NumberLottery: true }
             })
         }
@@ -460,6 +499,8 @@ export class ResultService {
     }
 
     async updateResultKeno(transactionPerson: User, body: UpdateResultKenoDTO) {
+        console.log(new nDate())
+        Logger.debug(new nDate())
         const drawCode = parseInt(body.drawCode.toString())
         const draw = await this.prismaService.resultKeno.findUnique({
             where: { drawCode: drawCode }
@@ -570,7 +611,6 @@ export class ResultService {
     async updateJackPot(body: JackPotDTO) {
         const oldJackPot = await this.prismaService.jackPot.findFirst({ where: {} })
         if (oldJackPot) {
-            console.log('update')
             // update
             const jackpot1Power = body.jackpot1Power ? BigInt(body.jackpot1Power.toString()) : oldJackPot.JackPot1Power
             const jackpot2Power = body.jackpot2Power ? BigInt(body.jackpot2Power.toString()) : oldJackPot.JackPot2Power
@@ -587,7 +627,6 @@ export class ResultService {
         }
         else {
             //create
-            console.log('create')
             const jackpot1Power = body.jackpot1Power ? BigInt(body.jackpot1Power.toString()) : 0
             const jackpot2Power = body.jackpot2Power ? BigInt(body.jackpot2Power.toString()) : 0
             const jackPotMega = body.jackpotMega ? BigInt(body.jackpotMega.toString()) : 0

@@ -4,7 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, ReturnOrderDTO } from './dto';
 import { Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
-import { caculateSurcharge } from 'src/common/utils';
+import { caculateSurcharge, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
 import { LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
@@ -25,7 +25,7 @@ export class OrderService {
             if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
             if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
         }
-        let currentDate = new Date()
+        let currentDate = new nDate()
         let list = new LotteryNumber()
         body.numbers.map(item => {
             list.add(new NumberDetail(item, "0"))
@@ -73,7 +73,7 @@ export class OrderService {
             if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
             if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
         }
-        let currentDate = new Date()
+        let currentDate = new nDate()
         let list = new LotteryNumber()
         for (let i = 0; i < body.numbers.length; i++) {
             await list.add(new NumberDetail(body.numbers[i], body.bets[i]))
@@ -121,7 +121,7 @@ export class OrderService {
             if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
             if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
         }
-        let currentDate = new Date()
+        let currentDate = new nDate()
         let list = new LotteryNumber()
         for (let i = 0; i < body.numbers.length; i++) {
             await list.add(new NumberDetail(body.numbers[i], body.bets[i]))
@@ -163,7 +163,6 @@ export class OrderService {
     }
 
     async getOrderById(orderId: string): Promise<Order> {
-        console.log(orderId)
         const order = await this.prismaService.order.findUnique({
             where: { id: orderId },
             include: { Lottery: { include: { NumberLottery: true } }, user: true }
@@ -200,7 +199,7 @@ export class OrderService {
             data: {
                 status: newStatus,
                 statusDescription: body.description,
-                confirmAt: new Date(),
+                confirmAt: new nDate(),
                 confirmBy: confirmBy,
                 confrimUserId: user.id,
             },
@@ -247,7 +246,7 @@ export class OrderService {
             data: {
                 status: newStatus,
                 statusDescription: body.description,
-                confirmAt: new Date(),
+                confirmAt: new nDate(),
                 confirmBy: confirmBy,
                 confrimUserId: user.id,
                 payment: payment,

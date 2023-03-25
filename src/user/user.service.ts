@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Role } from "src/common/enum";
+import { nDate } from "src/common/utils";
 import { User } from '../../node_modules/.prisma/client';
 import { PrismaService } from "../prisma/prisma.service";
 import { UserDTO } from "./dto/user.dto";
@@ -29,13 +30,13 @@ export class UserService {
                 fullName: body.fullName,
                 identify: body.identify,
                 address: body.address,
-                email: body.email
+                email: body.email,
+                updateAt: new nDate()
             },
             where: {
                 phoneNumber: me.phoneNumber
             }
         })
-        user.updateAt = new Date()
         delete user.hashedPassword
         return user
     }

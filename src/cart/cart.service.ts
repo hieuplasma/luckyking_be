@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Order, OrderStatus, User } from '@prisma/client';
+import { nDate } from 'src/common/utils';
 import { CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO } from 'src/order/dto';
 import { OrderService } from 'src/order/order.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -55,7 +56,7 @@ export class CartService {
         const order = await this.orderService.getOrderById(body.orderId)
         if ((order.amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
         if (balance < order.amount + order.surcharge) { throw new ForbiddenException("The balance is not enough") }
-        const now = new Date()
+        const now = new nDate()
         const update = await this.prismaService.order.update({
             where: { id: body.orderId },
             data: {

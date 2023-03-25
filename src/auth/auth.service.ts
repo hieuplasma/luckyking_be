@@ -5,6 +5,7 @@ import { AuthDTO, CheckAuthDTO, CreateStaffDTO, UpdatePassWordDTO } from "./dto"
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { Role, UserStatus } from "src/common/enum";
+import { nDate } from "src/common/utils";
 
 @Injectable({})
 export class AuthService {
@@ -40,10 +41,11 @@ export class AuthService {
                     phoneNumber: authDTO.phoneNumber,
                     hashedPassword: hashedPassword,
                     status: UserStatus.Acticve,
+                    updateAt: new nDate(),
                     Device: {
                         create: {
                             deviceId: authDTO.deviceId,
-                            lastLogin: new Date()
+                            lastLogin: new nDate()
                         }
                     },
                     role: Role.User,
@@ -94,7 +96,7 @@ export class AuthService {
         if (!deviceId) await this.prismaService.device.create({
             data: {
                 deviceId: authDTO.deviceId,
-                lastLogin: new Date(),
+                lastLogin: new nDate(),
                 user: {
                     connect: { id: user.id }
                 }
@@ -111,10 +113,11 @@ export class AuthService {
                     phoneNumber: createStaffDTO.phoneNumber,
                     hashedPassword: hashedPassword,
                     status: UserStatus.Acticve,
+                    updateAt: new nDate(),
                     Device: {
                         create: {
                             deviceId: createStaffDTO.deviceId,
-                            lastLogin: new Date()
+                            lastLogin: new nDate()
                         }
                     },
                     fullName: createStaffDTO.fullName,

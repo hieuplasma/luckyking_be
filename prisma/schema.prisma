@@ -22,7 +22,7 @@ model User {
   phoneNumber    String   @unique
   hashedPassword String
   fullName       String?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime @default(dbgenerated("now() at time zone 'GMT-7'"))
   updateAt       DateTime @updatedAt
   email          String?
   address        String?
@@ -53,7 +53,7 @@ model Device {
 model Lottery {
   id            String        @id @default(uuid())
   type          String // Cac loai ve Vietlot
-  buyTime       DateTime      @default(now())
+  buyTime       DateTime      @default(dbgenerated("now() at time zone 'GMT-7'"))
   resultTime    DateTime?
   deleteTime    DateTime?
   bets          Int           @default(0) // tien dat cuoc
@@ -86,7 +86,7 @@ model Transaction {
   payment             String   @default("") // Hinh thuc thanh toan
   User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId              String
-  createAt            DateTime @default(now())
+  createAt            DateTime @default(dbgenerated("now() at time zone 'GMT-7'"))
   source              String? // Mo ta nguon
   destination         String? // Mo ta dich den
   transactionPersonId String? // UserId cua nguoi thuc hien giao dich (admin)
@@ -102,7 +102,7 @@ model Order {
   Lottery           Lottery[]
   statusDescription String?
   status            OrderStatus?
-  creataAt          DateTime     @default(now())
+  creataAt          DateTime     @default(dbgenerated("now() at time zone 'GMT-7'"))
   confirmAt         DateTime?
   confirmBy         String? // ma diem ban hang
   confrimUserId     String? // staffId neu nguoi ban hang confirm, userId neu nguoi dung tu confirm
