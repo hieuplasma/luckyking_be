@@ -57,6 +57,7 @@ export class AuthService {
                     id: true,
                     phoneNumber: true,
                     createdAt: true,
+                    updateAt: true,
                     Device: true,
                     MoneyAccount: true,
                     RewardWallet: true
