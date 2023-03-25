@@ -15,7 +15,7 @@ export class ResultService {
     constructor(private prismaService: PrismaService, private transactionService: TransactionService) { }
     private readonly logger = new Logger(ResultService.name);
 
-    @Cron('0 40 15 * * *', { timeZone: TIMEZONE })
+    @Cron('0 37 16 * * *', { timeZone: TIMEZONE })
     async test() {
         const now = new Date()
         const nnow = new nDate()
@@ -23,6 +23,7 @@ export class ResultService {
         this.logger.debug("logger.debug nDate: " + nnow);
         console.log("console.log Date: " + now)
         console.log("console.log nDate: " + nnow)
+        console.log("console.log offset: " + now.getTimezoneOffset())
         await this.prismaService.resultMega.create({
             data: {
                 drawn: false,
