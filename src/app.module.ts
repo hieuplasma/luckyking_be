@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -9,6 +9,8 @@ import { OrderModule } from './order/order.module';
 import { ResultModule } from './result/result.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CartModule } from './cart/cart.module';
+import { PreAuthMiddleware } from './firebase/PreAuthMiddleware';
+import FirebaseApp from './firebase/firebase-app';
 
 @Module({
   imports: [
@@ -22,6 +24,14 @@ import { CartModule } from './cart/cart.module';
     OrderModule,
     ResultModule,
     CartModule
-  ]
+  ],
+  providers:[FirebaseApp]
 })
-export class AppModule { }
+export class AppModule { 
+  configure(consumer: MiddlewareConsumer): any {
+    consumer.apply(PreAuthMiddleware).forRoutes({
+      path: '/auth/verify-firebase',
+      method: RequestMethod.ALL,
+    });
+  }
+}

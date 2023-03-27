@@ -13,7 +13,7 @@ export class AuthService {
     constructor(
         private prismaService: PrismaService,
         private jwtService: JwtService,
-        private configService: ConfigService
+        private configService: ConfigService,
     ) { }
 
     async check(checkAuthDTO: CheckAuthDTO) {
@@ -152,6 +152,8 @@ export class AuthService {
     }
 
     async updatePassword(body: UpdatePassWordDTO) {
+        console.log(new Date())
+        console.log(new Date().toISOString())
         const hashedPassword = await argon.hash(body.newPassword)
         const user = await this.prismaService.user.findUnique({
             where: {

@@ -30,4 +30,9 @@ export class AuthController {
     updatePassword(@Body() body: UpdatePassWordDTO) {
         return this.authService.updatePassword(body)
     }
+
+    @Post("verify-firebase")
+    verifyFirebase(@Body() body: AuthDTO) {
+        console.log("lmao lmao:::", body)
+    }
 } 
