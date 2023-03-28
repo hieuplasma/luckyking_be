@@ -37,3 +37,13 @@ export class UpdatePassWordDTO {
     @IsString()
     newPassword: string
 }
+
+export class ForgotPassWordDTO {
+    @IsPhoneNumber('VN')
+    @IsNotEmpty()
+    phoneNumber: string
+
+    @IsNotEmpty()
+    @IsString()
+    newPassword: string
+}

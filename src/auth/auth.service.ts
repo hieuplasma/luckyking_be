@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "..//prisma/prisma.service";
 import * as argon from 'argon2';
-import { AuthDTO, CheckAuthDTO, CreateStaffDTO, UpdatePassWordDTO } from "./dto";
+import { AuthDTO, CheckAuthDTO, CreateStaffDTO, ForgotPassWordDTO, UpdatePassWordDTO } from "./dto";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { Role, UserStatus } from "src/common/enum";
@@ -167,6 +167,22 @@ export class AuthService {
         )
         if (!passwordMatched) return { errorMessage: "Wrong password", errorCode: "LG001" }
 
+        const update = await this.prismaService.user.update({
+            where: { phoneNumber: body.phoneNumber },
+            data: { hashedPassword: hashedPassword },
+            select: { phoneNumber: true, updateAt: true }
+        })
+        return update
+    }
+
+    async forgotPassword(body: ForgotPassWordDTO) {
+        const hashedPassword = await argon.hash(body.newPassword)
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                phoneNumber: body.phoneNumber
+            }
+        })
+        if (!user) { throw new ForbiddenException("User not found") }
         const update = await this.prismaService.user.update({
             where: { phoneNumber: body.phoneNumber },
             data: { hashedPassword: hashedPassword },

@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { AuthDTO, CheckAuthDTO, CreateStaffDTO, UpdatePassWordDTO } from "./dto";
+import { AuthDTO, CheckAuthDTO, CreateStaffDTO, ForgotPassWordDTO, UpdatePassWordDTO } from "./dto";
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) {
@@ -11,7 +11,7 @@ export class AuthController {
         return this.authService.check(body)
     }
 
-    @Post("register")
+    @Post("sercure/register")
     register(@Body() body: AuthDTO) {
         return this.authService.register(body)
     }
@@ -29,6 +29,11 @@ export class AuthController {
     @Post("update-password")
     updatePassword(@Body() body: UpdatePassWordDTO) {
         return this.authService.updatePassword(body)
+    }
+
+    @Post("update-password")
+    forgotPassword(@Body() body: ForgotPassWordDTO) {
+        return this.authService.forgotPassword(body)
     }
 
     @Post("verify-firebase")

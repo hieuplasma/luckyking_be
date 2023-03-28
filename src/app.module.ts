@@ -30,7 +30,7 @@ import FirebaseApp from './firebase/firebase-app';
 export class AppModule { 
   configure(consumer: MiddlewareConsumer): any {
     consumer.apply(PreAuthMiddleware).forRoutes({
-      path: '/auth/verify-firebase',
+      path: '/auth/sercure/*',
       method: RequestMethod.ALL,
     });
   }
