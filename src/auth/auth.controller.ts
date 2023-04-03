@@ -11,6 +11,11 @@ export class AuthController {
         return this.authService.check(body)
     }
 
+    @Post("register")
+    registerCheate(@Body() body: AuthDTO) {
+        return this.authService.register(body)
+    }
+
     @Post("sercure/register")
     register(@Body() body: AuthDTO) {
         return this.authService.register(body)

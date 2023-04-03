@@ -6,8 +6,9 @@ export function getTimeToday(hour: number, minute: number) {
     return today6am
 }
 
-export function getNearestTimeDay(day: number, hour: number, minute: number) {
-    let currentDate = new nDate();
+export function getNearestTimeDay(current: Date, day: number, hour: number, minute: number) {
+    // let currentDate = new nDate();
+    let currentDate = current
 
     // Get the day of the week (0-6), where 0 = Sunday, 1 = Monday, etc.
     let currentDay = currentDate.getDay();
@@ -30,5 +31,5 @@ export class nDate extends Date {
     constructor() {
         super();
         // this.setTime((new Date().getTime() - new Date().getTimezoneOffset() * 60000))
-      }
+    }
 }

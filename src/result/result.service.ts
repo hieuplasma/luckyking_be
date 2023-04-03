@@ -15,54 +15,54 @@ export class ResultService {
     constructor(private prismaService: PrismaService, private transactionService: TransactionService) { }
     private readonly logger = new Logger(ResultService.name);
 
-    @Cron('0 37 16 * * *', { timeZone: TIMEZONE })
-    async test() {
-        const now = new Date()
-        const nnow = new nDate()
-        this.logger.debug("logger.debug Date: " + now);
-        this.logger.debug("logger.debug nDate: " + nnow);
-        console.log("console.log Date: " + now)
-        console.log("console.log nDate: " + nnow)
-        console.log("console.log offset: " + now.getTimezoneOffset())
-        await this.prismaService.resultMega.create({
-            data: {
-                drawn: false,
-                drawCode: 15401,
-                drawTime: now
-            },
-        })
-        await this.prismaService.resultMega.create({
-            data: {
-                drawn: false,
-                drawCode: 15402,
-                drawTime: nnow
-            },
-        })
-    }
+    // @Cron('0 37 16 * * *', { timeZone: TIMEZONE })
+    // async test() {
+    //     const now = new Date()
+    //     const nnow = new nDate()
+    //     this.logger.debug("logger.debug Date: " + now);
+    //     this.logger.debug("logger.debug nDate: " + nnow);
+    //     console.log("console.log Date: " + now)
+    //     console.log("console.log nDate: " + nnow)
+    //     console.log("console.log offset: " + now.getTimezoneOffset())
+    //     await this.prismaService.resultMega.create({
+    //         data: {
+    //             drawn: false,
+    //             drawCode: 15401,
+    //             drawTime: now
+    //         },
+    //     })
+    //     await this.prismaService.resultMega.create({
+    //         data: {
+    //             drawn: false,
+    //             drawCode: 15402,
+    //             drawTime: nnow
+    //         },
+    //     })
+    // }
 
-    @Cron('0 30 15 * * *', { timeZone: TIMEZONE })
-    async test2() {
-        const now = new Date()
-        const nnow = new nDate()
-        this.logger.debug("logger.debug Date: " + now);
-        this.logger.debug("logger.debug nDate: " + nnow);
-        console.log("console.log Date: " + now)
-        console.log("console.log nDate: " + nnow)
-        await this.prismaService.resultMega.create({
-            data: {
-                drawn: false,
-                drawCode: 15301,
-                drawTime: now
-            },
-        })
-        await this.prismaService.resultMega.create({
-            data: {
-                drawn: false,
-                drawCode: 15302,
-                drawTime: nnow
-            },
-        })
-    }
+    // @Cron('0 30 15 * * *', { timeZone: TIMEZONE })
+    // async test2() {
+    //     const now = new Date()
+    //     const nnow = new nDate()
+    //     this.logger.debug("logger.debug Date: " + now);
+    //     this.logger.debug("logger.debug nDate: " + nnow);
+    //     console.log("console.log Date: " + now)
+    //     console.log("console.log nDate: " + nnow)
+    //     await this.prismaService.resultMega.create({
+    //         data: {
+    //             drawn: false,
+    //             drawCode: 15301,
+    //             drawTime: now
+    //         },
+    //     })
+    //     await this.prismaService.resultMega.create({
+    //         data: {
+    //             drawn: false,
+    //             drawCode: 15302,
+    //             drawTime: nnow
+    //         },
+    //     })
+    // }
 
     // Kế hoạch adđ schedule: 
 
@@ -79,17 +79,18 @@ export class ResultService {
             take: 1
         });
         let latestCode = latestDraw[0].drawCode
+        let latestTimeDraw = latestDraw[0].drawTime
         // thu 4
         latestCode++
-        let newTime = getNearestTimeDay(3, 18, 0)
+        let newTime = getNearestTimeDay(latestTimeDraw, 3, 11, 0)
         this.addScheduleMega(latestCode, newTime)
         // thu 6
         latestCode++
-        newTime = getNearestTimeDay(5, 18, 0)
+        newTime = getNearestTimeDay(latestTimeDraw, 5, 11, 0)
         this.addScheduleMega(latestCode, newTime)
         // chu nhat
         latestCode++
-        newTime = getNearestTimeDay(0, 18, 0)
+        newTime = getNearestTimeDay(latestTimeDraw, 0, 11, 0)
         this.addScheduleMega(latestCode, newTime)
     }
 
@@ -118,17 +119,18 @@ export class ResultService {
             take: 1
         });
         let latestCode = latestDraw[0].drawCode
+        let latestTimeDraw = latestDraw[0].drawTime
         // thu 3
         latestCode++
-        let newTime = getNearestTimeDay(2, 18, 0)
+        let newTime = getNearestTimeDay(latestTimeDraw, 2, 11, 0)
         this.addSchedulePower(latestCode, newTime)
         // thu 5
         latestCode++
-        newTime = getNearestTimeDay(4, 18, 0)
+        newTime = getNearestTimeDay(latestTimeDraw, 4, 11, 0)
         this.addSchedulePower(latestCode, newTime)
         // thu 7
         latestCode++
-        newTime = getNearestTimeDay(6, 18, 0)
+        newTime = getNearestTimeDay(latestTimeDraw, 6, 11, 0)
         this.addSchedulePower(latestCode, newTime)
     }
 
@@ -157,17 +159,18 @@ export class ResultService {
             take: 1
         });
         let latestCode = latestDraw[0].drawCode
+        let latestTimeDraw = latestDraw[0].drawTime
         // thu 3
         latestCode++
-        let newTime = getNearestTimeDay(1, 18, 0)
+        let newTime = getNearestTimeDay(latestTimeDraw, 1, 11, 0)
         this.addScheduleMax3d(latestCode, newTime)
         // thu 5
         latestCode++
-        newTime = getNearestTimeDay(3, 18, 0)
+        newTime = getNearestTimeDay(latestTimeDraw, 3, 11, 0)
         this.addScheduleMax3d(latestCode, newTime)
         // thu 7
         latestCode++
-        newTime = getNearestTimeDay(5, 18, 0)
+        newTime = getNearestTimeDay(latestTimeDraw, 5, 11, 0)
         this.addScheduleMax3d(latestCode, newTime)
     }
 
@@ -197,17 +200,18 @@ export class ResultService {
             take: 1
         });
         let latestCode = latestDraw[0].drawCode
+        let latestTimeDraw = latestDraw[0].drawTime
         // thu 3
         latestCode++
-        let newTime = getNearestTimeDay(2, 18, 0)
+        let newTime = getNearestTimeDay(latestTimeDraw, 2, 11, 0)
         this.addScheduleMax3dPro(latestCode, newTime)
         // thu 5
         latestCode++
-        newTime = getNearestTimeDay(4, 18, 0)
+        newTime = getNearestTimeDay(latestTimeDraw, 4, 11, 0)
         this.addScheduleMax3dPro(latestCode, newTime)
         // thu 7
         latestCode++
-        newTime = getNearestTimeDay(6, 18, 0)
+        newTime = getNearestTimeDay(latestTimeDraw, 6, 11, 0)
         this.addScheduleMax3dPro(latestCode, newTime)
     }
 
@@ -237,9 +241,14 @@ export class ResultService {
         });
         let check = true
         let newDrawCode = latestDraw[0].drawCode
-        const time5h59Today = getTimeToday(5, 59)
-        let newTime = time5h59Today
-        const time21h54Today = getTimeToday(21, 54)
+        const now = new Date().getTime()
+        let newTime = new Date(now + 2 * 3600 * 1000 - 60 * 1000) // get time 5h59
+        let time21h54Today = new Date(now + 18 * 3600 * 1000 + 4 * 60 * 1000)  // get time 21h54
+        newTime.setSeconds(0)
+        time21h54Today.setSeconds(0)
+        // const time5h59Today = getTimeToday(5, 59)
+        // let newTime = time5h59Today
+        // const time21h54Today = getTimeToday(21, 54)
         while (check) {
             newDrawCode++
             newTime = new Date(newTime.getTime() + 5 * 60000);
