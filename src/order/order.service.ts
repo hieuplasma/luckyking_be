@@ -30,6 +30,16 @@ export class OrderService {
         body.numbers.map(item => {
             list.add(new NumberDetail(item, "0"))
         })
+
+        const transaction = await this.transactionService.payForOrder(
+            user,
+            amount + surcharge,
+            LUCKY_KING_PAYMENT,
+            "Ví LuckyKing",
+            "Ví của nhà phát triển",
+            user.id
+        )
+
         const order = await this.prismaService.order.create({
             data: {
                 amount: amount,
@@ -41,6 +51,7 @@ export class OrderService {
                 dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                 method: body.method,
                 surcharge: surcharge,
+                tradingCode: transaction.id,
                 Lottery: {
                     create: {
                         userId: user.id,
@@ -62,6 +73,8 @@ export class OrderService {
             },
             include: { Lottery: { include: { NumberLottery: true } } }
         })
+        //@ts-ignore
+        order.transaction = transaction
         return order
     }
 
@@ -233,14 +246,14 @@ export class OrderService {
             if (!(item.imageBack || item.imageFront)) { throw new ForbiddenException("All lotteries must have image!") }
         })
 
-        const transaction = await this.transactionService.payForOrder(
-            order.user,
-            order.amount + order.surcharge,
-            payment,
-            "Ví LuckyKing",
-            "Ví của nhà phát triển",
-            user.id
-        )
+        // const transaction = await this.transactionService.payForOrder(
+        //     order.user,
+        //     order.amount + order.surcharge,
+        //     payment,
+        //     "Ví LuckyKing",
+        //     "Ví của nhà phát triển",
+        //     user.id
+        // )
 
         const orderConfirmed = await this.prismaService.order.update({
             data: {
@@ -250,7 +263,7 @@ export class OrderService {
                 confirmBy: confirmBy,
                 confrimUserId: user.id,
                 payment: payment,
-                tradingCode: transaction.id
+                // tradingCode: transaction.id
             },
             where: { id: body.orderId },
             include: { Lottery: { include: { NumberLottery: true } } }
@@ -264,7 +277,7 @@ export class OrderService {
             )
         )
         //@ts-ignore
-        orderConfirmed.transaction = transaction
+        // orderConfirmed.transaction = transaction
         return orderConfirmed
     }
 }
