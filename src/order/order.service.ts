@@ -60,7 +60,7 @@ export class OrderService {
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
-                        drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
+                        // drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),
@@ -110,7 +110,7 @@ export class OrderService {
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
-                        drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
+                        // drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),
@@ -158,7 +158,7 @@ export class OrderService {
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
-                        drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
+                        // drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),
@@ -168,7 +168,7 @@ export class OrderService {
                         }
                     }
                 },
-                Cart: { connect: { id: body.cartId ? body.cartId : null } }
+                // Cart: { connect: { id: body.cartId ? body.cartId : null } }
             },
             include: { Lottery: { include: { NumberLottery: true } } }
         })
@@ -238,7 +238,7 @@ export class OrderService {
         if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
 
         const newStatus = body.status ? body.status : OrderStatus.CONFIRMED
-        const payment = body.payment || LUCKY_KING_PAYMENT
+        // const payment = body.payment || LUCKY_KING_PAYMENT
         let confirmBy = ""
         if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
 
@@ -262,7 +262,7 @@ export class OrderService {
                 confirmAt: new nDate(),
                 confirmBy: confirmBy,
                 confrimUserId: user.id,
-                payment: payment,
+                // payment: payment,
                 // tradingCode: transaction.id
             },
             where: { id: body.orderId },

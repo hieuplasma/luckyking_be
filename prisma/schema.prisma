@@ -54,6 +54,7 @@ model Lottery {
   id            String        @id @default(uuid())
   type          String // Cac loai ve Vietlot
   buyTime       DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   resultTime    DateTime?
   deleteTime    DateTime?
   bets          Int           @default(0) // tien dat cuoc
@@ -68,13 +69,15 @@ model Lottery {
   NumberLottery NumberLotery?
   drawCode      Int? // Mã kỳ quay
   drawTime      DateTime? // Thời gian quay
+  Cart          Cart?         @relation(fields: [cartId], references: [id])
+  cartId        String?
 }
 
 model Cart {
-  id     String  @id @default(uuid())
-  User   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String  @unique
-  Order  Order[]
+  id      String    @id @default(uuid())
+  User    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String    @unique
+  Lottery Lottery[]
 }
 
 // Lich su giao dich, bien dong so du, lich su thang, thua se dung api rut gon cua lich su giao dich
@@ -111,8 +114,6 @@ model Order {
   surcharge         Int?         @default(0) // phu phi
   dataPart          String? // 20230316 ngay dat don hang
   method            String       @default("keep") // giu ho, ship ve
-  Cart              Cart?        @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  cartId            String?
 }
 
 model MoneyAccount {

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { LotteryService } from 'src/lottery/lottery.service';
 import { OrderService } from 'src/order/order.service';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { UserService } from 'src/user/user.service';
@@ -7,6 +8,6 @@ import { CartService } from './cart.service';
 
 @Module({
   controllers: [CartController],
-  providers: [CartService, OrderService, UserService, TransactionService]
+  providers: [CartService, UserService, LotteryService]
 })
 export class CartModule {}

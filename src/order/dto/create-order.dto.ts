@@ -9,8 +9,8 @@ class CreateOrder {
     @IsNotEmpty()
     amount: number
 
-    @IsEnum(OrderMethod)
-    @IsNotEmpty()
+    // @IsEnum(OrderMethod)
+    // @IsNotEmpty()
     method: string
 
     @IsNotEmpty()
