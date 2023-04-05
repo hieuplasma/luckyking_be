@@ -31,6 +31,7 @@ export class CartService {
                 bets: parseInt(body.amount.toString()),
                 status: status,
                 drawCode: parseInt(body.drawCode.toString()),
+                drawTime: body.drawTime || null,
                 NumberLottery: {
                     create: {
                         level: parseInt(body.level.toString()),
@@ -41,7 +42,8 @@ export class CartService {
                 Cart: {
                     connect: { id: cartId }
                 }
-            }
+            },
+            include: { NumberLottery: true }
         })
         return lottery
     }

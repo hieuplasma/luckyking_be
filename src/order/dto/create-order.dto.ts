@@ -27,6 +27,7 @@ class CreateOrder {
     surcharge: number
     status: string
     cartId: string
+    drawTime: Date
 }
 export class CreateOrderMegaPowerDTO extends CreateOrder{}
 
