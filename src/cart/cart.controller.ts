@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { Lottery, Order, User } from '../../node_modules/.prisma/client';
+import { Lottery, Order, User, NumberLotery, Cart } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
 import { CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO } from 'src/order/dto';
 import { CartService } from './cart.service';
-import { DeleteLotteryCartDTO } from './dto';
+import { DeleteLotteryCartDTO, DeleteNumberLotteryDTO } from './dto';
 
 @Controller('cart')
 export class CartController {
@@ -30,6 +30,20 @@ export class CartController {
     @Roles(Role.User)
     deleteOrderInCart(@GetUser() user: User, @Body() body: DeleteLotteryCartDTO) {
         return this.cartService.deleteLottery(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('delete-number')
+    @Roles(Role.User)
+    deleteNumber(@GetUser() user: User, @Body() body: DeleteNumberLotteryDTO) {
+        return this.cartService.deleteNumberLottery(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('empty')
+    @Roles(Role.User)
+    emptyCart(@GetUser() user: User): any {
+        return this.cartService.emptyCart(user)
     }
 
     // @UseGuards(MyJwtGuard, RolesGuard)

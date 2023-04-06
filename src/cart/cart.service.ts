@@ -1,12 +1,12 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Lottery, Order, OrderStatus, User } from '@prisma/client';
+import { Lottery, Order, OrderStatus, User, NumberLotery } from '@prisma/client';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
 import { nDate } from 'src/common/utils';
 import { CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO } from 'src/order/dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
-import { DeleteLotteryCartDTO } from './dto';
+import { DeleteLotteryCartDTO, DeleteNumberLotteryDTO } from './dto';
 
 @Injectable()
 export class CartService {
@@ -66,7 +66,28 @@ export class CartService {
         return del
     }
 
+    async deleteNumberLottery(user: User, body: DeleteNumberLotteryDTO) {
+        const find = await this.prismaService.numberLotery.findUnique({ where: { id: body.numberId } })
+        if (!find) throw new ForbiddenException("Record to delete does not exist")
+        const numberDetail: NumberDetail[] = JSON.parse(find.numberDetail.toString())
+        if (numberDetail.length == 1) return { errorMessage: "Vé chỉ có một bộ số", errorCode: "DEL001" }
+        numberDetail.splice(body.position, 1);
+        const update = await this.prismaService.numberLotery.update({
+            where: { id: body.numberId },
+            data: {
+                numberDetail: JSON.stringify(numberDetail),
+                numberSets: { decrement: 1 }
+            }
+        })
+        return update
+    }
 
+    async emptyCart(user: User) {
+        const cartId = await this.getCardId(user.id)
+        return await this.prismaService.lottery.deleteMany({
+            where: {cartId: cartId}
+        })
+    }
 
     // async addOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO) {
     //     body.status = OrderStatus.CART

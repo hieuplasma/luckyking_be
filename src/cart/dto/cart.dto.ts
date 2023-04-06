@@ -13,3 +13,12 @@ export class DeleteLotteryCartDTO {
     @IsNotEmpty()
     lotteryId: string
 }
+
+export class DeleteNumberLotteryDTO {
+    @IsString()
+    @IsNotEmpty()
+    numberId: string
+
+    @IsNotEmpty()
+    position: number
+}
