@@ -15,7 +15,7 @@ export function getNearestTimeDay(current: Date, day: number, hour: number, minu
     // Calculate the difference between the current day and 'day'
     let diff = day - currentDay;
 
-    if (diff < 0) {
+    if (diff <= 0) {
         // If the difference is negative, add 7 to get the next Wednesday
         diff += 7;
     }

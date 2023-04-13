@@ -9,35 +9,19 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, JackPotDTO, UpdateResultPowerDTO, UpdateResultMax3dDTO } from './dto';
 
+const TIME_DRAW = 18
 @Injectable()
 export class ResultService {
 
     constructor(private prismaService: PrismaService, private transactionService: TransactionService) { }
     private readonly logger = new Logger(ResultService.name);
 
-    // @Cron('0 37 16 * * *', { timeZone: TIMEZONE })
+    // @Cron(CronExpression.EVERY_10_SECONDS)
     // async test() {
     //     const now = new Date()
     //     const nnow = new nDate()
     //     this.logger.debug("logger.debug Date: " + now);
     //     this.logger.debug("logger.debug nDate: " + nnow);
-    //     console.log("console.log Date: " + now)
-    //     console.log("console.log nDate: " + nnow)
-    //     console.log("console.log offset: " + now.getTimezoneOffset())
-    //     await this.prismaService.resultMega.create({
-    //         data: {
-    //             drawn: false,
-    //             drawCode: 15401,
-    //             drawTime: now
-    //         },
-    //     })
-    //     await this.prismaService.resultMega.create({
-    //         data: {
-    //             drawn: false,
-    //             drawCode: 15402,
-    //             drawTime: nnow
-    //         },
-    //     })
     // }
 
     // @Cron('0 30 15 * * *', { timeZone: TIMEZONE })
@@ -82,16 +66,16 @@ export class ResultService {
         let latestTimeDraw = latestDraw[0].drawTime
         // thu 4
         latestCode++
-        let newTime = getNearestTimeDay(latestTimeDraw, 3, 11, 0)
-        this.addScheduleMega(latestCode, newTime)
+        let newTime = getNearestTimeDay(latestTimeDraw, 3, TIME_DRAW, 0)
+        await this.addScheduleMega(latestCode, newTime)
         // thu 6
         latestCode++
-        newTime = getNearestTimeDay(latestTimeDraw, 5, 11, 0)
-        this.addScheduleMega(latestCode, newTime)
+        newTime = getNearestTimeDay(latestTimeDraw, 5, TIME_DRAW, 0)
+        await this.addScheduleMega(latestCode, newTime)
         // chu nhat
         latestCode++
-        newTime = getNearestTimeDay(latestTimeDraw, 0, 11, 0)
-        this.addScheduleMega(latestCode, newTime)
+        newTime = getNearestTimeDay(latestTimeDraw, 0, TIME_DRAW, 0)
+        await this.addScheduleMega(latestCode, newTime)
     }
 
     private async addScheduleMega(drawCode: number, drawTime: Date) {
@@ -122,16 +106,16 @@ export class ResultService {
         let latestTimeDraw = latestDraw[0].drawTime
         // thu 3
         latestCode++
-        let newTime = getNearestTimeDay(latestTimeDraw, 2, 11, 0)
-        this.addSchedulePower(latestCode, newTime)
+        let newTime = getNearestTimeDay(latestTimeDraw, 2, TIME_DRAW, 0)
+        await this.addSchedulePower(latestCode, newTime)
         // thu 5
         latestCode++
-        newTime = getNearestTimeDay(latestTimeDraw, 4, 11, 0)
-        this.addSchedulePower(latestCode, newTime)
+        newTime = getNearestTimeDay(latestTimeDraw, 4, TIME_DRAW, 0)
+        await this.addSchedulePower(latestCode, newTime)
         // thu 7
         latestCode++
-        newTime = getNearestTimeDay(latestTimeDraw, 6, 11, 0)
-        this.addSchedulePower(latestCode, newTime)
+        newTime = getNearestTimeDay(latestTimeDraw, 6, TIME_DRAW, 0)
+        await this.addSchedulePower(latestCode, newTime)
     }
 
     private async addSchedulePower(drawCode: number, drawTime: Date) {
@@ -162,16 +146,16 @@ export class ResultService {
         let latestTimeDraw = latestDraw[0].drawTime
         // thu 3
         latestCode++
-        let newTime = getNearestTimeDay(latestTimeDraw, 1, 11, 0)
-        this.addScheduleMax3d(latestCode, newTime)
+        let newTime = getNearestTimeDay(latestTimeDraw, 1, TIME_DRAW, 0)
+        await this.addScheduleMax3d(latestCode, newTime)
         // thu 5
         latestCode++
-        newTime = getNearestTimeDay(latestTimeDraw, 3, 11, 0)
-        this.addScheduleMax3d(latestCode, newTime)
+        newTime = getNearestTimeDay(latestTimeDraw, 3, TIME_DRAW, 0)
+        await this.addScheduleMax3d(latestCode, newTime)
         // thu 7
         latestCode++
-        newTime = getNearestTimeDay(latestTimeDraw, 5, 11, 0)
-        this.addScheduleMax3d(latestCode, newTime)
+        newTime = getNearestTimeDay(latestTimeDraw, 5, TIME_DRAW, 0)
+        await this.addScheduleMax3d(latestCode, newTime)
     }
 
     private async addScheduleMax3d(drawCode: number, drawTime: Date) {
@@ -203,16 +187,16 @@ export class ResultService {
         let latestTimeDraw = latestDraw[0].drawTime
         // thu 3
         latestCode++
-        let newTime = getNearestTimeDay(latestTimeDraw, 2, 11, 0)
-        this.addScheduleMax3dPro(latestCode, newTime)
+        let newTime = getNearestTimeDay(latestTimeDraw, 2, TIME_DRAW, 0)
+        await this.addScheduleMax3dPro(latestCode, newTime)
         // thu 5
         latestCode++
-        newTime = getNearestTimeDay(latestTimeDraw, 4, 11, 0)
-        this.addScheduleMax3dPro(latestCode, newTime)
+        newTime = getNearestTimeDay(latestTimeDraw, 4, TIME_DRAW, 0)
+        await this.addScheduleMax3dPro(latestCode, newTime)
         // thu 7
         latestCode++
-        newTime = getNearestTimeDay(latestTimeDraw, 6, 11, 0)
-        this.addScheduleMax3dPro(latestCode, newTime)
+        newTime = getNearestTimeDay(latestTimeDraw, 6, TIME_DRAW, 0)
+        await this.addScheduleMax3dPro(latestCode, newTime)
     }
 
     private async addScheduleMax3dPro(drawCode: number, drawTime: Date) {
@@ -302,7 +286,7 @@ export class ResultService {
     }
 
     async insertOldResultMax3d(body: OldResultMax3dDTO) {
-        const result = this.prismaService.resultMax3d.create({
+        const result = await this.prismaService.resultMax3d.create({
             data: {
                 drawn: true,
                 drawCode: parseInt(body.drawCode.toString()),
