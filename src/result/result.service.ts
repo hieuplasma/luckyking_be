@@ -226,8 +226,8 @@ export class ResultService {
         let check = true
         let newDrawCode = latestDraw[0].drawCode
         const now = new Date().getTime()
-        let newTime = new Date(now + 2 * 3600 * 1000 - 60 * 1000) // get time 5h59
-        let time21h54Today = new Date(now + 18 * 3600 * 1000 + 4 * 60 * 1000)  // get time 21h54
+        let newTime = new Date(now + 3 * 3600 * 1000 - 60 * 1000) // get time 5h59
+        let time21h54Today = new Date(now + 18 * 3600 * 1000 + 54 * 60 * 1000)  // get time 21h54
         newTime.setSeconds(0)
         time21h54Today.setSeconds(0)
         // const time5h59Today = getTimeToday(5, 59)
