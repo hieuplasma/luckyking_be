@@ -1,5 +1,12 @@
 import { TIME_OFFSET } from "../constants/constants";
 
+export function dateConvert(param: Date) {
+    const date = param.getDate()
+    const month = param.getMonth() + 1
+    const year = param.getFullYear()
+    return (date < 10 ? "0" + date : '' + date) + "_" + (month < 10 ? "0" + month : '' + month) + "_" + year
+}
+
 export function getTimeToday(hour: number, minute: number) {
     const now = new nDate();
     const today6am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
