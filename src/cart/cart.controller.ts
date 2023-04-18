@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { Lottery, Order, User, NumberLotery, Cart } from '../../node_modules/.prisma/client';
+import { Lottery, Order, User, NumberLottery, Cart } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
@@ -29,21 +29,22 @@ export class CartController {
     @Post('delete')
     @Roles(Role.User)
     deleteOrderInCart(@GetUser() user: User, @Body() body: DeleteLotteryCartDTO) {
-        return this.cartService.deleteLottery(user, body)
+        const { lotteryId } = body;
+        return this.cartService.deleteLottery(user, lotteryId)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('delete-number')
     @Roles(Role.User)
     deleteNumber(@GetUser() user: User, @Body() body: DeleteNumberLotteryDTO) {
-        return this.cartService.deleteNumberLottery(user, body)
+        return this.cartService.deleteNumber(user, body)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('empty')
     @Roles(Role.User)
-    emptyCart(@GetUser() user: User): any {
-        return this.cartService.emptyCart(user)
+    deleteAllLottery(@GetUser() user: User): any {
+        return this.cartService.deleteAllLottery(user)
     }
 
     // @UseGuards(MyJwtGuard, RolesGuard)

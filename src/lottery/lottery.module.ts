@@ -4,6 +4,7 @@ import { LotteryController } from './lottery.controller';
 
 @Module({
   providers: [LotteryService],
-  controllers: [LotteryController]
+  controllers: [LotteryController],
+  exports: [LotteryService]
 })
-export class LotteryModule {}
+export class LotteryModule { }

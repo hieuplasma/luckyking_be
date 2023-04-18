@@ -51,25 +51,25 @@ model Device {
 }
 
 model Lottery {
-  id            String        @id @default(uuid())
+  id            String         @id @default(uuid())
   type          String // Cac loai ve Vietlot
-  buyTime       DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  buyTime       DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   resultTime    DateTime?
   deleteTime    DateTime?
-  bets          Int           @default(0) // tien dat cuoc
-  benefits      Int?          @default(0) // tien an duoc
+  bets          Int            @default(0) // tien dat cuoc
+  benefits      Int?           @default(0) // tien an duoc
   status        OrderStatus?
   imageFront    String? // Link anh ve ma truoc
   imageBack     String? // Link anh ve mat sau
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
-  Order         Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Order         Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId       String?
-  NumberLottery NumberLotery?
+  NumberLottery NumberLottery?
   drawCode      Int? // Mã kỳ quay
   drawTime      DateTime? // Thời gian quay
-  Cart          Cart?         @relation(fields: [cartId], references: [id])
+  Cart          Cart?          @relation(fields: [cartId], references: [id])
   cartId        String?
 }
 
@@ -134,7 +134,7 @@ model RewardWallet {
   userId     String  @unique
 }
 
-model NumberLotery {
+model NumberLottery {
   id           String  @id @default(uuid())
   Lottery      Lottery @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
   lotteryId    String  @unique

@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -11,9 +12,13 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CartModule } from './cart/cart.module';
 import { PreAuthMiddleware } from './firebase/PreAuthMiddleware';
 import FirebaseApp from './firebase/firebase-app';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads/images'),
+    }),
     ConfigModule.forRoot({isGlobal:true}),
     ScheduleModule.forRoot(),
     AuthModule,

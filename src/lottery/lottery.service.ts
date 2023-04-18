@@ -1,13 +1,60 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { createWriteStream } from 'fs';
+import { Lottery, OrderStatus } from '@prisma/client';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
-import { dateConvert } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateImageDTO } from './dto';
+import { CreateLotteryDTO, UpdateImageDTO } from './dto';
 
 @Injectable()
 export class LotteryService {
     constructor(private prismaService: PrismaService) { }
+
+    async getLotteryById(lotteryId: string): Promise<Lottery> {
+        const lotteryInfo = await this.prismaService.lottery.findUnique({
+            where: { id: lotteryId },
+        })
+
+        return lotteryInfo;
+    }
+
+    async createLottery(createLotteryData: CreateLotteryDTO) {
+        const { NumberLottery, cartId, bets, drawCode, drawTime, status, type, userId } = createLotteryData;
+        const { level, numberDetail, numberSets } = NumberLottery;
+
+        const lottery = await this.prismaService.lottery.create({
+            data: {
+                user: {
+                    connect: { id: userId }
+                },
+                type,
+                bets,
+                status,
+                drawCode,
+                drawTime: drawTime || null,
+                NumberLottery: {
+                    create: {
+                        level,
+                        numberSets,
+                        numberDetail,
+                    }
+                },
+                Cart: {
+                    connect: { id: cartId }
+                }
+            },
+            include: { NumberLottery: true }
+        })
+
+        return lottery
+    }
+
+    async getLotteriesByCartId(cartId: string): Promise<Lottery[]> {
+        const Lotteries = await this.prismaService.lottery.findMany({
+            where: { cartId, status: OrderStatus.CART },
+            include: { NumberLottery: true }
+        })
+
+        return Lotteries;
+    }
 
     async updateImage(body: UpdateImageDTO, imgFront: Express.Multer.File, imgBack: Express.Multer.File) {
         const images = await this.prismaService.lottery.findUnique({
@@ -16,23 +63,31 @@ export class LotteryService {
         })
 
         if (images) {
-            const filename = 'src/lottery/images/' + dateConvert(new Date()) + "_front_" + body.lotteryId + '.png';
-            const ws = createWriteStream(filename)
-            ws.write(imgFront.buffer)
-
-            const filename2 = 'src/lottery/images/' + dateConvert(new Date()) + "_back_" + body.lotteryId + '.png';
-            const ws2 = createWriteStream(filename2)
-            ws2.write(imgBack.buffer)
             const update = await this.prismaService.lottery.update({
                 data: {
-                    imageFront: body.imageFront || images.imageFront,
-                    imageBack: body.imageBack || images.imageBack
+                    imageFront: imgFront ? `/${imgFront.filename}` : images.imageFront,
+                    imageBack: imgBack ? `/${imgBack.filename}` : images.imageBack
                 },
                 where: { id: body.lotteryId }
             })
             return update
         }
         else throw new ForbiddenException("Vé sổ xố này không còn tồn tại nữa")
+    }
+
+    async deleteLottery(lotteryId: string): Promise<Lottery> {
+        const find = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } })
+        if (!find) throw new ForbiddenException("Record to delete does not exist")
+        const del = await this.prismaService.lottery.delete({
+            where: { id: lotteryId }
+        })
+        return del
+    }
+
+    async deleteLotteryByCartId(cartId: string) {
+        return await this.prismaService.lottery.deleteMany({
+            where: { cartId }
+        })
     }
 
     async calculateTotalBets(lotteryId: string) {
