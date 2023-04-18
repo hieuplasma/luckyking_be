@@ -1,6 +1,9 @@
 import { Lottery } from '../../../node_modules/.prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import { NumberDetail } from '../entity';
 import { LotteryType } from "../enum";
+import { dateConvert } from './time.utils';
+
 
 export function caculateSurcharge(amount: number) {
     let surcharge = amount * 2 / 100;
@@ -372,4 +375,9 @@ export function serializeBigInt(obj: any) {
         (key, value) => (typeof value === 'bigint' ? value.toString() : value)
     )
     return returned
+}
+
+
+export function fileNameConvert(id: string) {
+    return dateConvert(new Date()) + '_' + id + '_' + uuidv4();
 }

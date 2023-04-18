@@ -4,7 +4,7 @@ import { diskStorage } from 'multer';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { dateConvert } from 'src/common/utils';
+import { fileNameConvert } from 'src/common/utils';
 import { UpdateImageDTO } from './dto';
 import { LotteryService } from './lottery.service';
 
@@ -24,18 +24,18 @@ export class LotteryController {
     @Get(':lotteryId')
     async getLotteryById(@Param('lotteryId') lotteryId: string) {
         return await this.lotteryService.getLotteryById(lotteryId)
-    } 
+    }
 
     @Post('update-image')
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'imgFront', maxCount: 1 },
         { name: 'imgBack', maxCount: 1 },
-    ], {
+    ], {
         storage: diskStorage({
             destination: 'uploads/images',
             filename(req, file, callback) {
                 const ext = file.originalname.split('.').pop();
-                const fileName = `${dateConvert(new Date())}_${file.fieldname}_${req.body.lotteryId}.${ext}`;
+                const fileName = `${fileNameConvert(req.body.lotteryId)}.${ext}`;
                 callback(null, fileName)
             },
         })

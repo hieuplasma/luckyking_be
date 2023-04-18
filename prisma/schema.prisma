@@ -134,7 +134,7 @@ model RewardWallet {
   userId     String  @unique
 }
 
-model NumberLotery {
+model NumberLottery {
   id           String  @id @default(uuid())
   Lottery      Lottery @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
   lotteryId    String  @unique

@@ -4,7 +4,7 @@ export function dateConvert(param: Date) {
     const date = param.getDate()
     const month = param.getMonth() + 1
     const year = param.getFullYear()
-    return (date < 10 ? "0" + date : '' + date) + "_" + (month < 10 ? "0" + month : '' + month) + "_" + year
+    return year + (month < 10 ? "0" + month : '' + month) + (date < 10 ? "0" + date : '' + date);
 }
 
 export function getTimeToday(hour: number, minute: number) {

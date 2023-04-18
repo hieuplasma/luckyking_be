@@ -3,6 +3,9 @@ import { Lottery, Order, OrderStatus, User, NumberLotery } from '@prisma/client'
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
 import { nDate } from 'src/common/utils';
+import { CreateLotteryDTO } from 'src/lottery/dto';
+import { LotteryService } from 'src/lottery/lottery.service';
+import { NumberLotteryService } from 'src/numberLottery/numberLottery.service';
 import { CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO } from 'src/order/dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
@@ -12,7 +15,9 @@ import { DeleteLotteryCartDTO, DeleteNumberLotteryDTO } from './dto';
 export class CartService {
     constructor(
         private prismaService: PrismaService,
-        private userService: UserService
+        private userService: UserService,
+        private lotteryService: LotteryService,
+        private numberLotteryService: NumberLotteryService
     ) { }
 
     async addLotteryPowerMega(user: User, body: CreateOrderMegaPowerDTO) {
@@ -22,71 +27,48 @@ export class CartService {
         body.numbers.map((item: any) => {
             list.add(new NumberDetail(item, "0"))
         })
-        const lottery = await this.prismaService.lottery.create({
-            data: {
-                user: {
-                    connect: { id: user.id }
-                },
-                type: body.lotteryType,
-                bets: parseInt(body.amount.toString()),
-                status: status,
-                drawCode: parseInt(body.drawCode.toString()),
-                drawTime: body.drawTime || null,
-                NumberLottery: {
-                    create: {
-                        level: parseInt(body.level.toString()),
-                        numberSets: body.numbers.length,
-                        numberDetail: list.convertToJSon()
-                    }
-                },
-                Cart: {
-                    connect: { id: cartId }
-                }
+
+        const createLotteryData: CreateLotteryDTO = {
+            userId: user.id,
+            type: body.lotteryType,
+            bets: parseInt(body.amount.toString()),
+            status,
+            drawCode: parseInt(body.drawCode.toString()),
+            drawTime: body.drawTime || null,
+            NumberLottery: {
+                level: parseInt(body.level.toString()),
+                numberSets: body.numbers.length,
+                numberDetail: list.convertToJSon()
             },
-            include: { NumberLottery: true }
-        })
+            cartId,
+        }
+
+        const lottery = await this.lotteryService.createLottery(createLotteryData);
+
         return lottery
     }
 
     async getLotteryFromCart(user: User): Promise<Lottery[]> {
         const cartId = await this.getCardId(user.id)
-        const list = await this.prismaService.lottery.findMany({
-            where: { cartId: cartId, status: OrderStatus.CART },
-            include: { NumberLottery: true }
-        })
-        return list
+        const list = await this.lotteryService.getLotteriesByCartId(cartId);
+
+        return list;
     }
 
-    async deleteLottery(user: User, body: DeleteLotteryCartDTO) {
-        const find = await this.prismaService.lottery.findUnique({ where: { id: body.lotteryId } })
-        if (!find) throw new ForbiddenException("Record to delete does not exist")
-        const del = await this.prismaService.lottery.delete({
-            where: { id: body.lotteryId }
-        })
-        return del
+    async deleteLottery(user: User, lotteryId: string) {
+        const deletedLottery = await this.lotteryService.deleteLottery(lotteryId);
+
+        return deletedLottery;
     }
 
-    async deleteNumberLottery(user: User, body: DeleteNumberLotteryDTO) {
-        const find = await this.prismaService.numberLotery.findUnique({ where: { id: body.numberId } })
-        if (!find) throw new ForbiddenException("Record to delete does not exist")
-        const numberDetail: NumberDetail[] = JSON.parse(find.numberDetail.toString())
-        if (numberDetail.length == 1) return { errorMessage: "Vé chỉ có một bộ số", errorCode: "DEL001" }
-        numberDetail.splice(body.position, 1);
-        const update = await this.prismaService.numberLotery.update({
-            where: { id: body.numberId },
-            data: {
-                numberDetail: JSON.stringify(numberDetail),
-                numberSets: { decrement: 1 }
-            }
-        })
-        return update
+    async deleteNumber(user: User, body: DeleteNumberLotteryDTO) {
+        const { numberId, position } = body;
+        return await this.numberLotteryService.deleteNumberDetail(numberId, position)
     }
 
-    async emptyCart(user: User) {
+    async deleteAllLottery(user: User) {
         const cartId = await this.getCardId(user.id)
-        return await this.prismaService.lottery.deleteMany({
-            where: {cartId: cartId}
-        })
+        return await this.lotteryService.deleteLotteryByCartId(cartId)
     }
 
     // async addOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO) {
