@@ -10,7 +10,7 @@ export class NumberLotteryService {
     async deleteNumberDetail(numberLotteryId: string, position: number) {
         console.log('deleting...')
 
-        const find = await this.prismaService.numberLotery.findUnique({ where: { id: numberLotteryId } })
+        const find = await this.prismaService.numberLottery.findUnique({ where: { id: numberLotteryId } })
         if (!find) throw new ForbiddenException("Record to delete does not exist")
 
         const numberDetail: NumberDetail[] = JSON.parse(find.numberDetail.toString())
@@ -18,7 +18,7 @@ export class NumberLotteryService {
         if (numberDetail.length == 1) return { errorMessage: "Vé chỉ có một bộ số", errorCode: "DEL001" }
         numberDetail.splice(position, 1);
 
-        const updatedNumberLottery = await this.prismaService.numberLotery.update({
+        const updatedNumberLottery = await this.prismaService.numberLottery.update({
             where: { id: numberLotteryId },
             data: {
                 numberDetail: JSON.stringify(numberDetail),

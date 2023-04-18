@@ -60,7 +60,7 @@ export class OrderService {
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
-                        // drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
+                        drawTime: body.drawTime,
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),

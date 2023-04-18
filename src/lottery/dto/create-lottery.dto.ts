@@ -3,7 +3,7 @@ import { Type } from "class-transformer";
 import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsObject, IsString, ValidateNested } from "class-validator";
 import { LotteryType } from "src/common/enum";
 
-class NumberLoteryDTO {
+class NumberLotteryDTO {
     @IsNumber()
     level: number;
 
@@ -37,8 +37,8 @@ export class CreateLotteryDTO {
 
     @IsObject()
     @ValidateNested()
-    @Type(() => NumberLoteryDTO)
-    NumberLottery: NumberLoteryDTO
+    @Type(() => NumberLotteryDTO)
+    NumberLottery: NumberLotteryDTO
 
     @IsString()
     @IsNotEmpty()

@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Lottery, Order, OrderStatus, User, NumberLotery } from '@prisma/client';
+import { Lottery, Order, OrderStatus, User, NumberLottery } from '@prisma/client';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
 import { nDate } from 'src/common/utils';
