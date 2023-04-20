@@ -1,8 +1,10 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Lottery, OrderStatus } from '@prisma/client';
+import { Lottery, OrderStatus, User } from '@prisma/client';
+import { LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateLotteryDTO, UpdateImageDTO } from './dto';
+import { UpdateImageDTO } from './dto';
+import { ICreateLottery } from './interfaces';
 
 @Injectable()
 export class LotteryService {
@@ -16,8 +18,8 @@ export class LotteryService {
         return lotteryInfo;
     }
 
-    async createLottery(createLotteryData: CreateLotteryDTO) {
-        const { NumberLottery, cartId, bets, drawCode, drawTime, status, type, userId } = createLotteryData;
+    async createLottery(createLotteryData: ICreateLottery) {
+        const { NumberLottery, cartId, orderId, amount, drawCode, drawTime, status, type, userId } = createLotteryData;
         const { level, numberDetail, numberSets } = NumberLottery;
 
         const lottery = await this.prismaService.lottery.create({
@@ -26,7 +28,7 @@ export class LotteryService {
                     connect: { id: userId }
                 },
                 type,
-                bets,
+                amount,
                 status,
                 drawCode,
                 drawTime: drawTime || null,
@@ -39,9 +41,28 @@ export class LotteryService {
                 },
                 Cart: {
                     connect: { id: cartId }
-                }
+                },
             },
             include: { NumberLottery: true }
+        })
+
+        return lottery
+    }
+
+    async createLotteryFromCart(user: User, lotteryId: string, orderId: string) {
+        const lottery = await this.prismaService.lottery.update({
+            where: {
+                id: lotteryId,
+            },
+            data: {
+                Order: {
+                    connect: { id: orderId }
+                },
+                Cart: {
+                    disconnect: true,
+                },
+                status: OrderStatus.PENDING,
+            }
         })
 
         return lottery
@@ -100,7 +121,7 @@ export class LotteryService {
         console.log(detail)
         const numberDetail: NumberDetail[] = JSON.parse(detail.toString())
         console.log(numberDetail)
-        numberDetail.map(item => total = total + parseInt(item.tienCuoc))
+        numberDetail.map(item => total = total + item.tienCuoc)
         console.log(total)
     }
 

@@ -1,14 +1,49 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { ArrayMinSize, IsArray, IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { LotteryType } from "src/common/enum";
 
-// export class DeleteOrderCartDTO {
+export class CreateCart {
+    @IsEnum(LotteryType)
+    @IsNotEmpty()
+    lotteryType: string
 
-//     @IsString()
-//     @IsNotEmpty()
-//     orderId: string
-// }
+    @IsNumber()
+    @IsNotEmpty()
+    level: number
+
+    @IsArray()
+    @IsString({ each: true })
+    @ArrayMinSize(1)
+    numbers: any
+
+    @IsArray()
+    @IsNotEmpty()
+    @ArrayMinSize(1)
+    drawCode: number[];
+
+    drawTime: Date[]
+
+    @IsString()
+    @IsOptional()
+    cartId: string
+}
+
+export class CreateCartMegaPowerDTO extends CreateCart { }
+
+export class CreateCartMax3dDTO extends CreateCart {
+    @IsArray()
+    @ArrayMinSize(1)
+    @IsOptional()
+    bets: any
+}
+
+export class CreateCartKenoDTO extends CreateCart {
+    @IsArray()
+    @ArrayMinSize(1)
+    @IsOptional()
+    bets: any
+}
 
 export class DeleteLotteryCartDTO {
-
     @IsString()
     @IsNotEmpty()
     lotteryId: string

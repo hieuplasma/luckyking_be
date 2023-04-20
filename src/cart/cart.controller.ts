@@ -1,11 +1,10 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { Lottery, Order, User, NumberLottery, Cart } from '../../node_modules/.prisma/client';
+import { Lottery, User, NumberLottery } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO } from 'src/order/dto';
 import { CartService } from './cart.service';
-import { DeleteLotteryCartDTO, DeleteNumberLotteryDTO } from './dto';
+import { CreateCartKenoDTO, CreateCartMax3dDTO, CreateCartMegaPowerDTO, DeleteLotteryCartDTO, DeleteNumberLotteryDTO } from './dto';
 
 @Controller('cart')
 export class CartController {
@@ -14,8 +13,22 @@ export class CartController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('add-power-mega')
     @Roles(Role.User)
-    addLotteryPowerMega(@GetUser() user: User, @Body() body: CreateOrderMegaPowerDTO): Promise<Lottery> {
+    addLotteryPowerMega(@GetUser() user: User, @Body() body: CreateCartMegaPowerDTO): Promise<Lottery> {
         return this.cartService.addLotteryPowerMega(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('add-keno')
+    @Roles(Role.User)
+    addLotteryKeno(@GetUser() user: User, @Body() body: CreateCartKenoDTO): Promise<Lottery> {
+        return this.cartService.addLotteryKeno(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('add-max3d')
+    @Roles(Role.User)
+    addLotteryMax3d(@GetUser() user: User, @Body() body: CreateCartMax3dDTO): Promise<Lottery> {
+        return this.cartService.addLotteryMax3D(user, body)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
@@ -36,8 +49,11 @@ export class CartController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('delete-number')
     @Roles(Role.User)
-    deleteNumber(@GetUser() user: User, @Body() body: DeleteNumberLotteryDTO) {
-        return this.cartService.deleteNumber(user, body)
+    deleteNumber(@GetUser() user: User, @Body() body: DeleteNumberLotteryDTO): Promise<NumberLottery | {
+        errorMessage: string;
+        errorCode: string;
+    }> {
+        return this.cartService.deleteNumber(user, body);
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)

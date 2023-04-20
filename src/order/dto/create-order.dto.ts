@@ -1,13 +1,12 @@
-import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsString } from "class-validator";
+import { ArrayMinSize, IsArray, IsDate, IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
 import { LotteryType, OrderMethod } from "src/common/enum";
 
 class CreateOrder {
+    lotteryId: string;
+
     @IsEnum(LotteryType)
     @IsNotEmpty()
     lotteryType: string
-
-    @IsNotEmpty()
-    amount: number
 
     // @IsEnum(OrderMethod)
     // @IsNotEmpty()
@@ -21,15 +20,18 @@ class CreateOrder {
     @ArrayMinSize(1)
     numbers: any
 
+    @IsArray()
     @IsNotEmpty()
-    drawCode: number
+    @ArrayMinSize(1)
+    drawCode: number[];
+
+    drawTime: Date[]
 
     surcharge: number
     status: string
     cartId: string
-    drawTime: Date
 }
-export class CreateOrderMegaPowerDTO extends CreateOrder{}
+export class CreateOrderMegaPowerDTO extends CreateOrder { }
 
 export class CreateOrderMax3dDTO extends CreateOrder {
     @IsArray()
@@ -37,8 +39,11 @@ export class CreateOrderMax3dDTO extends CreateOrder {
     bets: any
 }
 
-export class CreateOrderKenoDTO extends CreateOrder {
-    @IsArray()
-    @ArrayMinSize(1)
-    bets: any
+export class CreateOrderKenoDTO extends CreateOrder { }
+
+export class CreateOrderFromCartDTO {
+    lotteryIds: string[];
+
+    @IsEnum(OrderMethod)
+    method?: keyof typeof OrderMethod;
 }

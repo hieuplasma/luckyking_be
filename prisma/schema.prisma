@@ -57,7 +57,8 @@ model Lottery {
   updatedAt     DateTime       @updatedAt
   resultTime    DateTime?
   deleteTime    DateTime?
-  bets          Int            @default(0) // tien dat cuoc
+  bets          Int[]
+  amount        Int            @default(0) // tong tien dat cuoc
   benefits      Int?           @default(0) // tien an duoc
   status        OrderStatus?
   imageFront    String? // Link anh ve ma truoc
@@ -67,8 +68,8 @@ model Lottery {
   Order         Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId       String?
   NumberLottery NumberLottery?
-  drawCode      Int? // Mã kỳ quay
-  drawTime      DateTime? // Thời gian quay
+  drawCode      Int[] // Mã kỳ quay
+  drawTime      DateTime[] // Thời gian quay
   Cart          Cart?          @relation(fields: [cartId], references: [id])
   cartId        String?
 }

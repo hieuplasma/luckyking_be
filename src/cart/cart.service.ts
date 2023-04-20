@@ -1,15 +1,15 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Lottery, Order, OrderStatus, User, NumberLottery } from '@prisma/client';
+import { DEFAULT_BET } from 'src/common/constants';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
 import { nDate } from 'src/common/utils';
-import { CreateLotteryDTO } from 'src/lottery/dto';
+import { ICreateLottery } from 'src/lottery/interfaces';
 import { LotteryService } from 'src/lottery/lottery.service';
 import { NumberLotteryService } from 'src/numberLottery/numberLottery.service';
-import { CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO } from 'src/order/dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
-import { DeleteLotteryCartDTO, DeleteNumberLotteryDTO } from './dto';
+import { CreateCartKenoDTO, CreateCartMegaPowerDTO, DeleteLotteryCartDTO, DeleteNumberLotteryDTO } from './dto';
 
 @Injectable()
 export class CartService {
@@ -20,21 +20,27 @@ export class CartService {
         private numberLotteryService: NumberLotteryService
     ) { }
 
-    async addLotteryPowerMega(user: User, body: CreateOrderMegaPowerDTO) {
+    async addLotteryPowerMega(user: User, body: CreateCartMegaPowerDTO) {
         const status = OrderStatus.CART
-        const cartId = await this.getCardId(user.id)
+        const cartId = await this.getCardId(user.id);
+        const { drawCode, drawTime, lotteryType } = body;
+        let amount = 0;
         let list = new LotteryNumber()
+
         body.numbers.map((item: any) => {
-            list.add(new NumberDetail(item, "0"))
+            list.add(new NumberDetail(item, DEFAULT_BET));
+            amount += DEFAULT_BET;
         })
 
-        const createLotteryData: CreateLotteryDTO = {
+        amount *= drawCode.length;
+
+        const createLotteryData: ICreateLottery = {
             userId: user.id,
-            type: body.lotteryType,
-            bets: parseInt(body.amount.toString()),
+            type: lotteryType,
+            amount,
             status,
-            drawCode: parseInt(body.drawCode.toString()),
-            drawTime: body.drawTime || null,
+            drawCode,
+            drawTime: drawTime || null,
             NumberLottery: {
                 level: parseInt(body.level.toString()),
                 numberSets: body.numbers.length,
@@ -61,14 +67,85 @@ export class CartService {
         return deletedLottery;
     }
 
-    async deleteNumber(user: User, body: DeleteNumberLotteryDTO) {
+    async deleteNumber(user: User, body: DeleteNumberLotteryDTO): Promise<NumberLottery | {
+        errorMessage: string;
+        errorCode: string;
+    }> {
         const { numberId, position } = body;
-        return await this.numberLotteryService.deleteNumberDetail(numberId, position)
+        return await this.numberLotteryService.deleteNumberDetail(numberId, position);
     }
 
     async deleteAllLottery(user: User) {
         const cartId = await this.getCardId(user.id)
         return await this.lotteryService.deleteLotteryByCartId(cartId)
+    }
+
+    async addLotteryKeno(user: User, body: CreateCartKenoDTO) {
+        const status = OrderStatus.CART
+        const cartId = await this.getCardId(user.id)
+        const { drawCode, drawTime, lotteryType } = body;
+        let list = new LotteryNumber();
+        let amount = 0;
+
+        body.numbers.map((item: any, index: number) => {
+            list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
+            amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
+        })
+
+        amount *= drawCode.length;
+
+        const createLotteryData: ICreateLottery = {
+            userId: user.id,
+            type: lotteryType,
+            amount,
+            status,
+            drawCode,
+            drawTime: drawTime || null,
+            NumberLottery: {
+                level: parseInt(body.level.toString()),
+                numberSets: body.numbers.length,
+                numberDetail: list.convertToJSon()
+            },
+            cartId,
+        }
+
+        const lottery = await this.lotteryService.createLottery(createLotteryData);
+
+        return lottery
+    }
+
+    async addLotteryMax3D(user: User, body: CreateCartKenoDTO) {
+        const status = OrderStatus.CART
+        const cartId = await this.getCardId(user.id)
+        const { drawCode, drawTime, lotteryType } = body;
+        let amount = 0;
+        let list = new LotteryNumber();
+
+        body.numbers.map((item: any, index: number) => {
+            list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
+            amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
+        })
+
+        amount *= drawCode.length;
+
+        const createLotteryData: ICreateLottery = {
+            userId: user.id,
+            type: lotteryType,
+            amount,
+            status,
+            drawCode,
+            drawTime: drawTime || null,
+            NumberLottery: {
+                level: parseInt(body.level.toString()),
+                numberSets: body.numbers.length,
+                numberDetail: list.convertToJSon()
+            },
+            cartId,
+        }
+
+        const lottery = await this.lotteryService.createLottery(createLotteryData);
+
+        return lottery
     }
 
     // async addOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO) {

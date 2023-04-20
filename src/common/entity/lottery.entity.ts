@@ -1,7 +1,7 @@
 export class NumberDetail {
     boSo: string = ""
-    tienCuoc: string = "0"
-    constructor(boSo: string, tienCuoc: string) {
+    tienCuoc: number = 0
+    constructor(boSo: string, tienCuoc: number) {
         this.boSo = boSo
         this.tienCuoc = tienCuoc
     }
@@ -12,8 +12,8 @@ export class LotteryNumber {
     constructor() {
         this.list = []
     }
-   async add(obj: NumberDetail) {
-       this.list.push(obj)
+    add(obj: NumberDetail) {
+        this.list.push(obj)
     }
     convertToJSon() {
         return JSON.stringify(this.list)
