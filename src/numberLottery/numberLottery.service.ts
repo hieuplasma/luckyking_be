@@ -8,8 +8,6 @@ export class NumberLotteryService {
     constructor(private prismaService: PrismaService) { }
 
     async deleteNumberDetail(numberLotteryId: string, position: number) {
-        console.log('deleting...')
-
         const find = await this.prismaService.numberLottery.findUnique({ where: { id: numberLotteryId } })
         if (!find) throw new ForbiddenException("Record to delete does not exist")
 

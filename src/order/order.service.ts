@@ -1,35 +1,46 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
+import { Lottery, Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, ReturnOrderDTO } from './dto';
-import { Role } from 'src/common/enum';
+import { OrderMethod, Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
-import { LUCKY_KING_PAYMENT } from 'src/common/constants';
+import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
+import { LotteryService } from 'src/lottery/lottery.service';
+import { ICreateLottery } from 'src/lottery/interfaces';
 
 @Injectable()
 export class OrderService {
     constructor(
         private prismaService: PrismaService,
         private userService: UserService,
-        private transactionService: TransactionService
+        private transactionService: TransactionService,
+        private lotteryService: LotteryService
     ) { }
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
-        const amount = parseInt(body.amount.toString())
-        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount)
-        if (body.status != OrderStatus.CART) {
-            if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
-            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
-        }
+        const { drawCode, drawTime, lotteryType, lotteryId } = body;
+        const cartId = await this.getCardId(user.id);
+
         let currentDate = new nDate()
         let list = new LotteryNumber()
-        body.numbers.map(item => {
-            list.add(new NumberDetail(item, "0"))
-        })
+        let amount = 0;
+
+        for (const item of body.numbers) {
+            list.add(new NumberDetail(item, DEFAULT_BET));
+            amount += DEFAULT_BET;
+        }
+
+        amount *= drawCode.length;
+
+        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount);
+
+        if (body.status !== OrderStatus.CART) {
+            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        }
 
         const transaction = await this.transactionService.payForOrder(
             user,
@@ -56,7 +67,7 @@ export class OrderService {
                     create: {
                         userId: user.id,
                         type: body.lotteryType,
-                        bets: amount,
+                        amount,
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
@@ -80,17 +91,35 @@ export class OrderService {
 
     async createOrderMax3d(user: User, body: CreateOrderMax3dDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
-        const amount = parseInt(body.amount.toString())
-        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount)
-        if (body.status != OrderStatus.CART) {
-            if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
-            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
-        }
+        const { drawCode, drawTime, lotteryType, lotteryId, bets } = body;
+        const cartId = await this.getCardId(user.id);
+
         let currentDate = new nDate()
         let list = new LotteryNumber()
+        let amount = 0;
+
         for (let i = 0; i < body.numbers.length; i++) {
-            await list.add(new NumberDetail(body.numbers[i], body.bets[i]))
+            list.add(new NumberDetail(body.numbers[i], parseInt(body.bets[i]) || DEFAULT_BET));
+            amount += parseInt(body.bets[i]) || DEFAULT_BET;
         }
+
+        amount *= drawCode.length;
+
+        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount)
+
+        if (body.status !== OrderStatus.CART) {
+            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        }
+
+        const transaction = await this.transactionService.payForOrder(
+            user,
+            amount + surcharge,
+            LUCKY_KING_PAYMENT,
+            "Ví LuckyKing",
+            "Ví của nhà phát triển",
+            user.id
+        )
+
         const order = await this.prismaService.order.create({
             data: {
                 amount: amount,
@@ -102,15 +131,17 @@ export class OrderService {
                 dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                 method: body.method,
                 surcharge: surcharge,
+                tradingCode: transaction.id,
                 Lottery: {
                     create: {
                         userId: user.id,
                         type: body.lotteryType,
-                        bets: amount,
+                        amount,
+                        bets,
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
-                        // drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
+                        drawTime: body.drawTime,
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),
@@ -119,26 +150,46 @@ export class OrderService {
                             }
                         }
                     }
-                }
+                },
             },
             include: { Lottery: { include: { NumberLottery: true } } }
         })
+        //@ts-ignore
+        order.transaction = transaction
         return order
     }
 
     async createOrderKeno(user: User, body: CreateOrderKenoDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
-        const amount = parseInt(body.amount.toString())
-        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount)
-        if (body.status != OrderStatus.CART) {
-            if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
-            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
-        }
+        const { drawCode, drawTime, lotteryType } = body;
+        const cartId = await this.getCardId(user.id);
+
         let currentDate = new nDate()
         let list = new LotteryNumber()
-        for (let i = 0; i < body.numbers.length; i++) {
-            await list.add(new NumberDetail(body.numbers[i], body.bets[i]))
+        let amount = 0;
+
+        for (const item of body.numbers) {
+            list.add(new NumberDetail(item, DEFAULT_BET));
+            amount += DEFAULT_BET;
         }
+
+        amount *= drawCode.length;
+
+        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount)
+
+        if (body.status !== OrderStatus.CART) {
+            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        }
+
+        const transaction = await this.transactionService.payForOrder(
+            user,
+            amount + surcharge,
+            LUCKY_KING_PAYMENT,
+            "Ví LuckyKing",
+            "Ví của nhà phát triển",
+            user.id
+        )
+
         const order = await this.prismaService.order.create({
             data: {
                 amount: amount,
@@ -150,15 +201,16 @@ export class OrderService {
                 dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                 method: body.method,
                 surcharge: surcharge,
+                tradingCode: transaction.id,
                 Lottery: {
                     create: {
                         userId: user.id,
-                        type: body.lotteryType,
-                        bets: amount,
+                        type: lotteryType,
+                        amount,
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
                         drawCode: parseInt(body.drawCode.toString()),
-                        // drawTime: new Date(Date.now() + (3600 * 1000 * 24)),
+                        drawTime: drawTime,
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),
@@ -168,11 +220,74 @@ export class OrderService {
                         }
                     }
                 },
-                // Cart: { connect: { id: body.cartId ? body.cartId : null } }
             },
             include: { Lottery: { include: { NumberLottery: true } } }
         })
+        //@ts-ignore
+        order.transaction = transaction
         return order
+    }
+
+    async createOrderFromCart(user: User, lotteryIds: string[], method: keyof typeof OrderMethod) {
+        let totalMoney = 0;
+        for (const lotteryId of lotteryIds) {
+            const lottery = await this.lotteryService.getLotteryById(lotteryId);
+            if (!lottery) continue;
+
+            const { amount } = lottery;
+            const surcharge = caculateSurcharge(amount);
+
+            totalMoney += amount + surcharge;
+        }
+
+        const balances = await this.userService.getAllWallet(user.id);
+
+        if (totalMoney > balances.luckykingBalance) {
+            throw new ForbiddenException("The balance is not enough");
+        }
+
+        const orders: Order[] = [];
+        for (const lotteryId of lotteryIds) {
+            const lottery = await this.lotteryService.getLotteryById(lotteryId);
+            if (!lottery || lottery.status !== OrderStatus.CART) continue;
+
+            // await this.prismaService.$transaction(async (tx) => {
+            const { amount } = lottery;
+            const surcharge = caculateSurcharge(amount);
+
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                amount + surcharge,
+                LUCKY_KING_PAYMENT,
+                "Ví LuckyKing",
+                "Ví của nhà phát triển",
+                user.id
+            )
+
+            const currentDate = new nDate()
+
+            const order = await this.prismaService.order.create({
+                data: {
+                    amount: amount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: OrderStatus.PENDING,
+                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    method: method || OrderMethod.Keep,
+                    surcharge: surcharge,
+                    tradingCode: transaction.id,
+                }
+            });
+
+            await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id);
+
+            orders.push(order)
+            // })
+        }
+
+        return orders;
     }
 
     async getOrderById(orderId: string): Promise<Order> {
@@ -279,6 +394,14 @@ export class OrderService {
         //@ts-ignore
         // orderConfirmed.transaction = transaction
         return orderConfirmed
+    }
+
+    private async getCardId(userId: string) {
+        const cart = await this.prismaService.user.findUnique({
+            where: { id: userId },
+            select: { Cart: true },
+        })
+        return cart.Cart.id
     }
 }
 
