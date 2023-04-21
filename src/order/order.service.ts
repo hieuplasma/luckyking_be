@@ -168,9 +168,9 @@ export class OrderService {
         let list = new LotteryNumber()
         let amount = 0;
 
-        for (const item of body.numbers) {
-            list.add(new NumberDetail(item, DEFAULT_BET));
-            amount += DEFAULT_BET;
+        for (let i = 0; i < body.numbers.length; i++) {
+            list.add(new NumberDetail(body.numbers[i], parseInt(body.bets[i]) || DEFAULT_BET));
+            amount += parseInt(body.bets[i]) || DEFAULT_BET;
         }
 
         amount *= drawCode.length;
@@ -229,16 +229,23 @@ export class OrderService {
     }
 
     async createOrderFromCart(user: User, lotteryIds: string[], method: keyof typeof OrderMethod) {
-        let totalMoney = 0;
+        let totalAmount = 0;
+        const lotteryIdsToCreate = []; // Only create lottery with status as cart
+
         for (const lotteryId of lotteryIds) {
             const lottery = await this.lotteryService.getLotteryById(lotteryId);
-            if (!lottery) continue;
+            if (!lottery || lottery.status !== OrderStatus.CART) continue;
+
+            lotteryIdsToCreate.push(lotteryId);
 
             const { amount } = lottery;
-            const surcharge = caculateSurcharge(amount);
-
-            totalMoney += amount + surcharge;
+            totalAmount += amount;
         }
+
+        if (lotteryIdsToCreate.length === 0) throw new ForbiddenException("No lottery to order");
+
+        const surcharge = caculateSurcharge(totalAmount);
+        const totalMoney = totalAmount + surcharge;
 
         const balances = await this.userService.getAllWallet(user.id);
 
@@ -246,48 +253,39 @@ export class OrderService {
             throw new ForbiddenException("The balance is not enough");
         }
 
-        const orders: Order[] = [];
-        for (const lotteryId of lotteryIds) {
-            const lottery = await this.lotteryService.getLotteryById(lotteryId);
-            if (!lottery || lottery.status !== OrderStatus.CART) continue;
+        let order: Order;   // Will add $transaction in a future
+        // await this.prismaService.$transaction(async (tx) => {
+        const transaction = await this.transactionService.payForOrder(
+            user,
+            totalMoney,
+            LUCKY_KING_PAYMENT,
+            "Ví LuckyKing",
+            "Ví của nhà phát triển",
+            user.id
+        )
 
-            // await this.prismaService.$transaction(async (tx) => {
-            const { amount } = lottery;
-            const surcharge = caculateSurcharge(amount);
+        const currentDate = new nDate()
 
-            const transaction = await this.transactionService.payForOrder(
-                user,
-                amount + surcharge,
-                LUCKY_KING_PAYMENT,
-                "Ví LuckyKing",
-                "Ví của nhà phát triển",
-                user.id
-            )
+        order = await this.prismaService.order.create({
+            data: {
+                amount: totalAmount,
+                user: {
+                    connect: { id: user.id }
+                },
+                //@ts-ignore
+                status: OrderStatus.PENDING,
+                dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                method: method || OrderMethod.Keep,
+                surcharge: surcharge,
+                tradingCode: transaction.id,
+            }
+        });
 
-            const currentDate = new nDate()
-
-            const order = await this.prismaService.order.create({
-                data: {
-                    amount: amount,
-                    user: {
-                        connect: { id: user.id }
-                    },
-                    //@ts-ignore
-                    status: OrderStatus.PENDING,
-                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
-                    method: method || OrderMethod.Keep,
-                    surcharge: surcharge,
-                    tradingCode: transaction.id,
-                }
-            });
-
+        for (const lotteryId of lotteryIdsToCreate) {
             await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id);
-
-            orders.push(order)
-            // })
         }
-
-        return orders;
+        // )}
+        return order;
     }
 
     async getOrderById(orderId: string): Promise<Order> {
@@ -298,7 +296,7 @@ export class OrderService {
         return order
     }
 
-    async getListOrder(me: User, status: keyof typeof OrderStatus): Promise<Order[]> {
+    async getListOrderByUser(me: User, status: keyof typeof OrderStatus): Promise<Order[]> {
         const orders = await this.prismaService.order.findMany({
             where: { AND: { userId: me.id, status: status } },
             include: { Lottery: { include: { NumberLottery: true } } }
@@ -306,10 +304,16 @@ export class OrderService {
         return orders
     }
 
-    async getAllPendingOrder(): Promise<Order[]> {
+    async getAllOrder(status: keyof typeof OrderStatus): Promise<Order[]> {
+        const query: { [key: string]: string } = {};
+
+        if (status) {
+            query.status = status;
+        }
+
         const orders = await this.prismaService.order.findMany({
-            where: { status: OrderStatus.PENDING },
-            include: { Lottery: { include: { NumberLottery: true } } }
+            where: query,
+            include: { Lottery: { include: { NumberLottery: true } }, user: true }
         })
         return orders
     }

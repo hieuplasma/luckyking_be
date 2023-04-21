@@ -33,7 +33,7 @@ export class OrderController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('add-multi')
     @Roles(Role.User)
-    createOderFromCart(@GetUser() user: User, @Body() body: CreateOrderFromCartDTO): Promise<Order[]> {
+    createOderFromCart(@GetUser() user: User, @Body() body: CreateOrderFromCartDTO): Promise<Order> {
         const { lotteryIds, method } = body;
         return this.orderService.createOrderFromCart(user, lotteryIds, method);
     }
@@ -42,8 +42,8 @@ export class OrderController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-all')
     @Roles(Role.User)
-    getListOrder(@GetUser() user: User, @Query('status') status: keyof typeof OrderStatus): Promise<Order[]> {
-        return this.orderService.getListOrder(user, status)
+    getListOrderByUser(@GetUser() user: User, @Query('status') status: keyof typeof OrderStatus): Promise<Order[]> {
+        return this.orderService.getListOrderByUser(user, status)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
@@ -55,10 +55,10 @@ export class OrderController {
 
 
     @UseGuards(MyJwtGuard, RolesGuard)
-    @Get('get-pending')
+    @Get('get-all-order')
     @Roles(Role.Staff)
-    getAllPendingOrder(): Promise<Order[]> {
-        return this.orderService.getAllPendingOrder()
+    getAllOrder(@Query('status') status: keyof typeof OrderStatus): Promise<Order[]> {
+        return this.orderService.getAllOrder(status)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)

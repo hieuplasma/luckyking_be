@@ -39,7 +39,11 @@ export class CreateOrderMax3dDTO extends CreateOrder {
     bets: any
 }
 
-export class CreateOrderKenoDTO extends CreateOrder { }
+export class CreateOrderKenoDTO extends CreateOrder {
+    @IsArray()
+    @ArrayMinSize(1)
+    bets: any
+}
 
 export class CreateOrderFromCartDTO {
     lotteryIds: string[];

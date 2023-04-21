@@ -19,6 +19,7 @@ datasource db {
 model User {
   // @@map("users") //users is table's name in postgres SQL
   id             String   @id @default(uuid())
+  displayId      Int?     @default(autoincrement())
   phoneNumber    String   @unique
   hashedPassword String
   fullName       String?
@@ -52,6 +53,7 @@ model Device {
 
 model Lottery {
   id            String         @id @default(uuid())
+  displayId     Int?           @default(autoincrement())
   type          String // Cac loai ve Vietlot
   buyTime       DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -84,6 +86,7 @@ model Cart {
 // Lich su giao dich, bien dong so du, lich su thang, thua se dung api rut gon cua lich su giao dich
 model Transaction {
   id                  String   @id @default(uuid())
+  displayId           Int?     @default(autoincrement())
   type                String // nap tien, rut tien, nhan thuong
   description         String   @default("")
   amount              Int      @default(0) // so tien 
@@ -99,6 +102,7 @@ model Transaction {
 // Lich su mua hang: mua ve, tra thuong, nap tien, rut tien
 model Order {
   id                String       @id @default(uuid())
+  displayId         Int?         @default(autoincrement())
   amount            Int // So tien
   user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String

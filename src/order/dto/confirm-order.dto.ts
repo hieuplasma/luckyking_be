@@ -1,5 +1,5 @@
 import { OrderStatus } from '../../../node_modules/.prisma/client'
-import { IsEnum, IsNotEmpty } from "class-validator"
+import { IsEnum, IsNotEmpty, IsOptional } from "class-validator"
 
 type OrderType = keyof typeof OrderStatus;
 
@@ -15,7 +15,8 @@ export class ReturnOrderDTO {
 
 export class ConfirmOrderDTO {
     @IsEnum(OrderStatus)
-    status: OrderStatus
+    @IsOptional()
+    status?: OrderStatus
 
     @IsNotEmpty()
     orderId: string
