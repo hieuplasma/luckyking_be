@@ -22,8 +22,7 @@ export class OrderService {
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
-        const { drawCode, drawTime, lotteryType, lotteryId } = body;
-        const cartId = await this.getCardId(user.id);
+        const { drawCode, drawTime } = body;
 
         let currentDate = new nDate()
         let list = new LotteryNumber()
@@ -70,8 +69,8 @@ export class OrderService {
                         amount,
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
-                        drawCode: parseInt(body.drawCode.toString()),
-                        drawTime: body.drawTime,
+                        drawCode,
+                        drawTime,
                         NumberLottery: {
                             create: {
                                 level: parseInt(body.level.toString()),
@@ -91,8 +90,7 @@ export class OrderService {
 
     async createOrderMax3d(user: User, body: CreateOrderMax3dDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
-        const { drawCode, drawTime, lotteryType, lotteryId, bets } = body;
-        const cartId = await this.getCardId(user.id);
+        const { drawCode, bets } = body;
 
         let currentDate = new nDate()
         let list = new LotteryNumber()
@@ -140,7 +138,7 @@ export class OrderService {
                         bets,
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
-                        drawCode: parseInt(body.drawCode.toString()),
+                        drawCode,
                         drawTime: body.drawTime,
                         NumberLottery: {
                             create: {
@@ -209,7 +207,7 @@ export class OrderService {
                         amount,
                         //@ts-ignore
                         status: body.status ? body.status : OrderStatus.PENDING,
-                        drawCode: parseInt(body.drawCode.toString()),
+                        drawCode,
                         drawTime: drawTime,
                         NumberLottery: {
                             create: {
@@ -354,7 +352,9 @@ export class OrderService {
             where: { id: body.orderId },
             include: { user: true, Lottery: true }
         })
-        if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
+
+        if (order.status === OrderStatus.PENDING) { throw new ForbiddenException("Order is not locked") }
+        if (order.status != OrderStatus.LOCK) { throw new ForbiddenException("Order is aleady resolved!") }
 
         const newStatus = body.status ? body.status : OrderStatus.CONFIRMED
         // const payment = body.payment || LUCKY_KING_PAYMENT
@@ -364,6 +364,54 @@ export class OrderService {
         order.Lottery.map(item => {
             if (!(item.imageBack || item.imageFront)) { throw new ForbiddenException("All lotteries must have image!") }
         })
+
+        // const transaction = await this.transactionService.payForOrder(
+        //     order.user,
+        //     order.amount + order.surcharge,
+        //     payment,
+        //     "Ví LuckyKing",
+        //     "Ví của nhà phát triển",
+        //     user.id
+        // )
+
+        const orderConfirmed = await this.prismaService.order.update({
+            data: {
+                status: newStatus,
+                statusDescription: body.description,
+                confirmAt: new nDate(),
+                confirmBy: confirmBy,
+                confrimUserId: user.id,
+                // payment: payment,
+                // tradingCode: transaction.id
+            },
+            where: { id: body.orderId },
+            include: { Lottery: { include: { NumberLottery: true } } }
+        })
+        await this.prismaService.$transaction(
+            orderConfirmed.Lottery.map((child) =>
+                this.prismaService.lottery.update({
+                    where: { id: child.id },
+                    data: { status: newStatus },
+                })
+            )
+        )
+        //@ts-ignore
+        // orderConfirmed.transaction = transaction
+        return orderConfirmed
+    }
+
+    async lockOrder(user: User, body: ConfirmOrderDTO): Promise<Order> {
+        const order = await this.prismaService.order.findUnique({
+            where: { id: body.orderId },
+            include: { user: true, Lottery: true }
+        })
+
+        if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
+
+        const newStatus = body.status ? body.status : OrderStatus.LOCK
+        // const payment = body.payment || LUCKY_KING_PAYMENT
+        let confirmBy = ""
+        if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
 
         // const transaction = await this.transactionService.payForOrder(
         //     order.user,
