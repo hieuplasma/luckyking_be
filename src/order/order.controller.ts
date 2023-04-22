@@ -47,9 +47,9 @@ export class OrderController {
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
-    @Get('get-by-id')
+    @Get('get-by-id/:orderId')
     @Roles(Role.User, Role.Staff, Role.Admin)
-    getOrderById(@Query('orderId') orderId: string): Promise<Order> {
+    getOrderById(@Param('orderId') orderId: string): Promise<Order> {
         return this.orderService.getOrderById(orderId)
     }
 
@@ -73,5 +73,12 @@ export class OrderController {
     @Roles(Role.Staff)
     confirmOrder(@GetUser() user: User, @Body() body: ConfirmOrderDTO) {
         return this.orderService.confirmOrder(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('lock')
+    @Roles(Role.Staff)
+    lockOrder(@GetUser() user: User, @Body() body: ConfirmOrderDTO) {
+        return this.orderService.lockOrder(user, body)
     }
 }
