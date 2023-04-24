@@ -20,14 +20,14 @@ export class CartController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('add-keno')
     @Roles(Role.User)
-    addLotteryKeno(@GetUser() user: User, @Body() body: CreateCartKenoDTO): Promise<Lottery> {
+    addLotteryKeno(@GetUser() user: User, @Body() body: CreateCartKenoDTO): Promise<Lottery[]> {
         return this.cartService.addLotteryKeno(user, body)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('add-max3d')
     @Roles(Role.User)
-    addLotteryMax3d(@GetUser() user: User, @Body() body: CreateCartMax3dDTO): Promise<Lottery> {
+    addLotteryMax3d(@GetUser() user: User, @Body() body: CreateCartMax3dDTO): Promise<Lottery[]> {
         return this.cartService.addLotteryMax3D(user, body)
     }
 
