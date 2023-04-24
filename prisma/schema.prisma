@@ -93,7 +93,7 @@ model Transaction {
   payment             String   @default("") // Hinh thuc thanh toan
   User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId              String
-  createAt            DateTime @default(now())
+  createdAt           DateTime @default(now())
   source              String? // Mo ta nguon
   destination         String? // Mo ta dich den
   transactionPersonId String? // UserId cua nguoi thuc hien giao dich (admin)
@@ -106,11 +106,12 @@ model Order {
   amount            Int // So tien
   user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String
+  ticketType        String?      @default("basic")
   description       String?
   Lottery           Lottery[]
   statusDescription String?
   status            OrderStatus?
-  creataAt          DateTime     @default(now())
+  createdAt         DateTime     @default(now())
   confirmAt         DateTime?
   confirmBy         String? // ma diem ban hang
   confrimUserId     String? // staffId neu nguoi ban hang confirm, userId neu nguoi dung tu confirm
