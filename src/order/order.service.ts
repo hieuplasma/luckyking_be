@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Lottery, Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, ReturnOrderDTO } from './dto';
-import { OrderMethod, Role } from 'src/common/enum';
+import { LotteryType, OrderMethod, Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
@@ -272,6 +272,7 @@ export class OrderService {
                 },
                 //@ts-ignore
                 status: body.status ? body.status : OrderStatus.PENDING,
+                ticketType: "keno",
                 dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                 method: body.method,
                 surcharge: surcharge,
@@ -379,11 +380,14 @@ export class OrderService {
         return orders
     }
 
-    async getAllOrder(status: keyof typeof OrderStatus): Promise<Order[]> {
+    async getAllOrder(status: keyof typeof OrderStatus, ticketType: string): Promise<Order[]> {
         const query: { [key: string]: string } = {};
 
         if (status) {
             query.status = status;
+        }
+        if (ticketType) {
+            query.ticketType = ticketType;
         }
 
         const orders = await this.prismaService.order.findMany({
