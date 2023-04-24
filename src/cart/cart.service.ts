@@ -84,68 +84,96 @@ export class CartService {
         const status = OrderStatus.CART
         const cartId = await this.getCardId(user.id)
         const { drawCode, drawTime, lotteryType } = body;
-        let list = new LotteryNumber();
-        let amount = 0;
+        const numbers = [...body.numbers];
+        const setOfNumbers = [];
+        let i = 0;
 
-        body.numbers.map((item: any, index: number) => {
-            list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
-            amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
-        })
-
-        amount *= drawCode.length;
-
-        const createLotteryData: ICreateLottery = {
-            userId: user.id,
-            type: lotteryType,
-            amount,
-            status,
-            drawCode,
-            drawTime: drawTime || null,
-            NumberLottery: {
-                level: parseInt(body.level.toString()),
-                numberSets: body.numbers.length,
-                numberDetail: list.convertToJSon()
-            },
-            cartId,
+        while (numbers.length) {
+            setOfNumbers[i] = setOfNumbers[i] ? setOfNumbers[i] : [];
+            setOfNumbers[i].push(numbers.shift())
+            if (setOfNumbers[i].length === 6) i++;
         }
 
-        const lottery = await this.lotteryService.createLottery(createLotteryData);
+        const lotteries = [];
+        for (const lotteryNumbers of setOfNumbers) {
+            let amount = 0;
+            let list = new LotteryNumber();
 
-        return lottery
+            lotteryNumbers.map((item: any, index: number) => {
+                list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
+                amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
+            })
+
+            amount *= drawCode.length;
+
+            const createLotteryData: ICreateLottery = {
+                userId: user.id,
+                type: lotteryType,
+                amount,
+                status,
+                drawCode,
+                drawTime: drawTime || null,
+                NumberLottery: {
+                    level: parseInt(body.level.toString()),
+                    numberSets: lotteryNumbers.length,
+                    numberDetail: list.convertToJSon()
+                },
+                cartId,
+            }
+
+            const lottery = await this.lotteryService.createLottery(createLotteryData);
+            lotteries.push(lottery)
+        }
+
+        return lotteries
     }
 
     async addLotteryMax3D(user: User, body: CreateCartKenoDTO) {
         const status = OrderStatus.CART
         const cartId = await this.getCardId(user.id)
         const { drawCode, drawTime, lotteryType } = body;
-        let amount = 0;
-        let list = new LotteryNumber();
+        const numbers = [...body.numbers];
+        const setOfNumbers = [];
+        let i = 0;
 
-        body.numbers.map((item: any, index: number) => {
-            list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
-            amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
-        })
-
-        amount *= drawCode.length;
-
-        const createLotteryData: ICreateLottery = {
-            userId: user.id,
-            type: lotteryType,
-            amount,
-            status,
-            drawCode,
-            drawTime: drawTime || null,
-            NumberLottery: {
-                level: parseInt(body.level.toString()),
-                numberSets: body.numbers.length,
-                numberDetail: list.convertToJSon()
-            },
-            cartId,
+        while (numbers.length) {
+            setOfNumbers[i] = setOfNumbers[i] ? setOfNumbers[i] : [];
+            setOfNumbers[i].push(numbers.shift())
+            if (setOfNumbers[i].length === 6) i++;
         }
 
-        const lottery = await this.lotteryService.createLottery(createLotteryData);
+        const lotteries = [];
+        for (const lotteryNumbers of setOfNumbers) {
+            let amount = 0;
+            let list = new LotteryNumber();
 
-        return lottery
+            lotteryNumbers.map((item: any, index: number) => {
+                list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
+                amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
+            })
+
+            amount *= drawCode.length;
+
+            const createLotteryData: ICreateLottery = {
+                userId: user.id,
+                type: lotteryType,
+                amount,
+                status,
+                drawCode,
+                drawTime: drawTime || null,
+                NumberLottery: {
+                    level: parseInt(body.level.toString()),
+                    numberSets: lotteryNumbers.length,
+                    numberDetail: list.convertToJSon()
+                },
+                cartId,
+            }
+
+            const lottery = await this.lotteryService.createLottery(createLotteryData);
+            lotteries.push(lottery);
+        }
+
+        return lotteries
     }
 
     // async addOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO) {

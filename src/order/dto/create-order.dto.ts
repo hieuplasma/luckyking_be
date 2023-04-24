@@ -2,8 +2,6 @@ import { ArrayMinSize, IsArray, IsDate, IsEnum, IsNotEmpty, IsNumber, IsString }
 import { LotteryType, OrderMethod } from "src/common/enum";
 
 class CreateOrder {
-    lotteryId: string;
-
     @IsEnum(LotteryType)
     @IsNotEmpty()
     lotteryType: string
