@@ -13,7 +13,7 @@ export class CartController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('add-power-mega')
     @Roles(Role.User)
-    addLotteryPowerMega(@GetUser() user: User, @Body() body: CreateCartMegaPowerDTO): Promise<Lottery> {
+    addLotteryPowerMega(@GetUser() user: User, @Body() body: CreateCartMegaPowerDTO): Promise<Lottery[]> {
         return this.cartService.addLotteryPowerMega(user, body)
     }
 

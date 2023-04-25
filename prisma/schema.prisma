@@ -70,8 +70,8 @@ model Lottery {
   Order         Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId       String?
   NumberLottery NumberLottery?
-  drawCode      Int[] // Mã kỳ quay
-  drawTime      DateTime[] // Thời gian quay
+  drawCode      Int // Mã kỳ quay
+  drawTime      DateTime // Thời gian quay
   Cart          Cart?          @relation(fields: [cartId], references: [id])
   cartId        String?
 }
