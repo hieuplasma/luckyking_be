@@ -461,12 +461,12 @@ export class ResultService {
         let listLottery: any[]
         if (body.type == LotteryType.Max3DPro)
             listLottery = await this.prismaService.lottery.findMany({
-                where: { drawCode: { has: drawCode }, status: OrderStatus.CONFIRMED, type: body.type },
+                where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: body.type },
                 include: { NumberLottery: true }
             })
         else {
             listLottery = await this.prismaService.lottery.findMany({
-                where: { drawCode: { has: drawCode }, status: OrderStatus.CONFIRMED, type: { in: [LotteryType.Max3D, LotteryType.Max3DPlus] } },
+                where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: { in: [LotteryType.Max3D, LotteryType.Max3DPlus] } },
                 include: { NumberLottery: true }
             })
         }
@@ -508,7 +508,7 @@ export class ResultService {
         })
         // so ve va update ve
         const listLottery = await this.prismaService.lottery.findMany({
-            where: { drawCode: { has: drawCode }, status: OrderStatus.CONFIRMED, type: LotteryType.Keno },
+            where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Keno },
             include: { NumberLottery: true }
         })
         listLottery.map(async lottery => {
@@ -536,7 +536,7 @@ export class ResultService {
         const jackPot: JackPot = JSON.parse(await this.getJackPot())
         // so ve va update ve
         const listLottery = await this.prismaService.lottery.findMany({
-            where: { drawCode: { has: drawCode }, status: OrderStatus.CONFIRMED, type: LotteryType.Mega },
+            where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Mega },
             include: { NumberLottery: true }
         })
         listLottery.map(async lottery => {

@@ -22,28 +22,66 @@ export class OrderService {
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
-        const { drawCode, drawTime } = body;
+        const { drawCode, drawTime, lotteryType } = body;
 
-        let currentDate = new nDate()
-        let list = new LotteryNumber()
-        let amount = 0;
+        const currentDate = new nDate()
+        let totalAmount = 0;
 
-        for (const item of body.numbers) {
-            list.add(new NumberDetail(item, DEFAULT_BET));
-            amount += DEFAULT_BET;
+        const numbers = [...body.numbers];
+        const setOfNumbers = [];
+        let i = 0;
+
+        while (numbers.length) {
+            setOfNumbers[i] = setOfNumbers[i] ? setOfNumbers[i] : [];
+            setOfNumbers[i].push(numbers.shift())
+            if (setOfNumbers[i].length === 6) i++;
         }
 
-        amount *= drawCode.length;
+        const lotteries = [];
 
-        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(amount);
+        for (const lotteryNumbers of setOfNumbers) {
+            let amount = 0;
+            let list = new LotteryNumber();
 
+            for (let i = 0; i < lotteryNumbers.length; i++) {
+                list.add(new NumberDetail(lotteryNumbers[i], DEFAULT_BET));
+                amount += DEFAULT_BET;
+            }
+
+            for (let i = 0; i < drawCode.length; i++) {
+                totalAmount += amount;
+
+                const lottery = {
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    type: lotteryType,
+                    amount,
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    drawCode: drawCode[i],
+                    drawTime: drawTime[i],
+                    NumberLottery: {
+                        create: {
+                            level: parseInt(body.level.toString()),
+                            numberSets: lotteryNumbers.length,
+                            numberDetail: list.convertToJSon()
+                        }
+                    }
+                }
+
+                lotteries.push(lottery)
+            }
+        }
+
+        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
         if (body.status !== OrderStatus.CART) {
-            if (balances.luckykingBalance < amount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+            if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
         }
 
         const transaction = await this.transactionService.payForOrder(
             user,
-            amount + surcharge,
+            totalAmount + surcharge,
             LUCKY_KING_PAYMENT,
             "Ví LuckyKing",
             "Ví của nhà phát triển",
@@ -52,7 +90,7 @@ export class OrderService {
 
         const order = await this.prismaService.order.create({
             data: {
-                amount: amount,
+                amount: totalAmount,
                 user: {
                     connect: { id: user.id }
                 },
@@ -62,29 +100,30 @@ export class OrderService {
                 method: body.method,
                 surcharge: surcharge,
                 tradingCode: transaction.id,
-                Lottery: {
-                    create: {
-                        userId: user.id,
-                        type: body.lotteryType,
-                        amount,
-                        //@ts-ignore
-                        status: body.status ? body.status : OrderStatus.PENDING,
-                        drawCode,
-                        drawTime,
-                        NumberLottery: {
-                            create: {
-                                level: parseInt(body.level.toString()),
-                                numberSets: body.numbers.length,
-                                numberDetail: list.convertToJSon()
-                            }
-                        }
-                    }
-                },
             },
             include: { Lottery: { include: { NumberLottery: true } } }
         })
+
+        const lotteryToReturn = []
+        for (const lotteryData of lotteries) {
+            const lottery = await this.prismaService.lottery.create({
+                data: {
+                    ...lotteryData,
+                    Order: {
+                        connect: { id: order.id }
+                    }
+                },
+                include: { NumberLottery: true }
+            })
+
+            lotteryToReturn.push(lottery)
+        }
+
         //@ts-ignore
-        order.transaction = transaction
+        order.transaction = transaction;
+        //@ts-ignore
+        order.Lottery = lotteryToReturn;
+
         return order
     }
 
@@ -116,30 +155,31 @@ export class OrderService {
                 amount += parseInt(bets[i]) || DEFAULT_BET;
             }
 
-            amount *= drawCode.length;
-            totalAmount += amount;
+            for (let i = 0; i < drawCode.length; i++) {
+                totalAmount += amount;
 
-            const lottery = {
-                user: {
-                    connect: { id: user.id }
-                },
-                type: lotteryType,
-                amount,
-                bets,
-                //@ts-ignore
-                status: body.status ? body.status : OrderStatus.PENDING,
-                drawCode,
-                drawTime,
-                NumberLottery: {
-                    create: {
-                        level: parseInt(body.level.toString()),
-                        numberSets: lotteryNumbers.length,
-                        numberDetail: list.convertToJSon()
+                const lottery = {
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    type: lotteryType,
+                    amount,
+                    bets,
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    drawCode: drawCode[i],
+                    drawTime: drawTime[i],
+                    NumberLottery: {
+                        create: {
+                            level: parseInt(body.level.toString()),
+                            numberSets: lotteryNumbers.length,
+                            numberDetail: list.convertToJSon()
+                        }
                     }
                 }
-            }
 
-            lotteries.push(lottery)
+                lotteries.push(lottery)
+            }
         }
 
         const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
@@ -224,30 +264,32 @@ export class OrderService {
                 amount += parseInt(bets[i]) || DEFAULT_BET;
             }
 
-            amount *= drawCode.length;
-            totalAmount += amount;
+            for (let i = 0; i < drawCode.length; i++) {
+                totalAmount += amount;
 
-            const lottery = {
-                user: {
-                    connect: { id: user.id }
-                },
-                type: lotteryType,
-                amount,
-                bets,
-                //@ts-ignore
-                status: body.status ? body.status : OrderStatus.PENDING,
-                drawCode,
-                drawTime,
-                NumberLottery: {
-                    create: {
-                        level: parseInt(body.level.toString()),
-                        numberSets: lotteryNumbers.length,
-                        numberDetail: list.convertToJSon()
+                const lottery = {
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    type: lotteryType,
+                    amount,
+                    bets,
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    drawCode: drawCode[i],
+                    drawTime: drawTime[i],
+                    NumberLottery: {
+                        create: {
+                            level: parseInt(body.level.toString()),
+                            numberSets: lotteryNumbers.length,
+                            numberDetail: list.convertToJSon()
+                        }
                     }
                 }
+
+                lotteries.push(lottery)
             }
 
-            lotteries.push(lottery)
         }
 
         const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
@@ -527,14 +569,6 @@ export class OrderService {
         //@ts-ignore
         // orderConfirmed.transaction = transaction
         return orderConfirmed
-    }
-
-    private async getCardId(userId: string) {
-        const cart = await this.prismaService.user.findUnique({
-            where: { id: userId },
-            select: { Cart: true },
-        })
-        return cart.Cart.id
     }
 }
 

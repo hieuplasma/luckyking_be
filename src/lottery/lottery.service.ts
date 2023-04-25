@@ -31,7 +31,7 @@ export class LotteryService {
                 amount,
                 status,
                 drawCode,
-                drawTime: drawTime || null,
+                drawTime,
                 NumberLottery: {
                     create: {
                         level,

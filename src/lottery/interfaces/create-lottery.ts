@@ -18,9 +18,9 @@ export interface ICreateLottery {
 
     status: OrderStatus;
 
-    drawCode: number[];
+    drawCode: number;
 
-    drawTime: Date[];
+    drawTime: Date;
 
     NumberLottery: INumberLottery;
 
