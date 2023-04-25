@@ -1,15 +1,13 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Lottery, Order, OrderStatus, User, NumberLottery } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
+import { Lottery, OrderStatus, User, NumberLottery } from '@prisma/client';
 import { DEFAULT_BET } from 'src/common/constants';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
-import { LotteryType } from 'src/common/enum';
-import { nDate } from 'src/common/utils';
 import { ICreateLottery } from 'src/lottery/interfaces';
 import { LotteryService } from 'src/lottery/lottery.service';
 import { NumberLotteryService } from 'src/numberLottery/numberLottery.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
-import { CreateCartKenoDTO, CreateCartMegaPowerDTO, DeleteLotteryCartDTO, DeleteNumberLotteryDTO } from './dto';
+import { CreateCartKenoDTO, CreateCartMegaPowerDTO, DeleteNumberLotteryDTO } from './dto';
 
 @Injectable()
 export class CartService {
@@ -35,35 +33,38 @@ export class CartService {
         }
 
         const lotteries = [];
-        for (const lotteryNumbers of setOfNumbers) {
-            let amount = 0;
-            let list = new LotteryNumber();
 
-            lotteryNumbers.map((item: any) => {
-                list.add(new NumberDetail(item, DEFAULT_BET));
-                amount += DEFAULT_BET;
-            })
+        await this.prismaService.$transaction(async (tx) => {
+            for (const lotteryNumbers of setOfNumbers) {
+                let amount = 0;
+                let list = new LotteryNumber();
 
-            for (let i = 0; i < drawCode.length; i++) {
-                const createLotteryData: ICreateLottery = {
-                    userId: user.id,
-                    type: lotteryType,
-                    amount,
-                    status,
-                    drawCode: drawCode[i],
-                    drawTime: drawTime[i],
-                    NumberLottery: {
-                        level: parseInt(body.level.toString()),
-                        numberSets: lotteryNumbers.length,
-                        numberDetail: list.convertToJSon()
-                    },
-                    cartId,
+                lotteryNumbers.map((item: any) => {
+                    list.add(new NumberDetail(item, DEFAULT_BET));
+                    amount += DEFAULT_BET;
+                })
+
+                for (let i = 0; i < drawCode.length; i++) {
+                    const createLotteryData: ICreateLottery = {
+                        userId: user.id,
+                        type: lotteryType,
+                        amount,
+                        status,
+                        drawCode: drawCode[i],
+                        drawTime: drawTime[i],
+                        NumberLottery: {
+                            level: parseInt(body.level.toString()),
+                            numberSets: lotteryNumbers.length,
+                            numberDetail: list.convertToJSon()
+                        },
+                        cartId,
+                    }
+
+                    const lottery = await this.lotteryService.createLottery(createLotteryData, tx);
+                    lotteries.push(lottery)
                 }
-
-                const lottery = await this.lotteryService.createLottery(createLotteryData);
-                lotteries.push(lottery)
             }
-        }
+        })
 
         return lotteries
     }
@@ -109,35 +110,38 @@ export class CartService {
         }
 
         const lotteries = [];
-        for (const lotteryNumbers of setOfNumbers) {
-            let amount = 0;
-            let list = new LotteryNumber();
 
-            lotteryNumbers.map((item: any, index: number) => {
-                list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
-                amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
-            })
+        await this.prismaService.$transaction(async (tx) => {
+            for (const lotteryNumbers of setOfNumbers) {
+                let amount = 0;
+                let list = new LotteryNumber();
 
-            for (let i = 0; i < drawCode.length; i++) {
-                const createLotteryData: ICreateLottery = {
-                    userId: user.id,
-                    type: lotteryType,
-                    amount,
-                    status,
-                    drawCode: drawCode[i],
-                    drawTime: drawTime[i],
-                    NumberLottery: {
-                        level: parseInt(body.level.toString()),
-                        numberSets: lotteryNumbers.length,
-                        numberDetail: list.convertToJSon()
-                    },
-                    cartId,
+                lotteryNumbers.map((item: any, index: number) => {
+                    list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
+                    amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
+                })
+
+                for (let i = 0; i < drawCode.length; i++) {
+                    const createLotteryData: ICreateLottery = {
+                        userId: user.id,
+                        type: lotteryType,
+                        amount,
+                        status,
+                        drawCode: drawCode[i],
+                        drawTime: drawTime[i],
+                        NumberLottery: {
+                            level: parseInt(body.level.toString()),
+                            numberSets: lotteryNumbers.length,
+                            numberDetail: list.convertToJSon()
+                        },
+                        cartId,
+                    }
+
+                    const lottery = await this.lotteryService.createLottery(createLotteryData, tx);
+                    lotteries.push(lottery)
                 }
-
-                const lottery = await this.lotteryService.createLottery(createLotteryData);
-                lotteries.push(lottery)
             }
-        }
+        })
 
         return lotteries
     }
@@ -157,35 +161,38 @@ export class CartService {
         }
 
         const lotteries = [];
-        for (const lotteryNumbers of setOfNumbers) {
-            let amount = 0;
-            let list = new LotteryNumber();
 
-            lotteryNumbers.map((item: any, index: number) => {
-                list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
-                amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
-            })
+        await this.prismaService.$transaction(async (tx) => {
+            for (const lotteryNumbers of setOfNumbers) {
+                let amount = 0;
+                let list = new LotteryNumber();
 
-            for (let i = 0; i < drawCode.length; i++) {
-                const createLotteryData: ICreateLottery = {
-                    userId: user.id,
-                    type: lotteryType,
-                    amount,
-                    status,
-                    drawCode: drawCode[i],
-                    drawTime: drawTime[i],
-                    NumberLottery: {
-                        level: parseInt(body.level.toString()),
-                        numberSets: lotteryNumbers.length,
-                        numberDetail: list.convertToJSon()
-                    },
-                    cartId,
+                lotteryNumbers.map((item: any, index: number) => {
+                    list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
+                    amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
+                })
+
+                for (let i = 0; i < drawCode.length; i++) {
+                    const createLotteryData: ICreateLottery = {
+                        userId: user.id,
+                        type: lotteryType,
+                        amount,
+                        status,
+                        drawCode: drawCode[i],
+                        drawTime: drawTime[i],
+                        NumberLottery: {
+                            level: parseInt(body.level.toString()),
+                            numberSets: lotteryNumbers.length,
+                            numberDetail: list.convertToJSon()
+                        },
+                        cartId,
+                    }
+
+                    const lottery = await this.lotteryService.createLottery(createLotteryData, tx);
+                    lotteries.push(lottery);
                 }
-
-                const lottery = await this.lotteryService.createLottery(createLotteryData);
-                lotteries.push(lottery);
             }
-        }
+        })
 
         return lotteries
     }

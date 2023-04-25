@@ -87,12 +87,15 @@ export class TransactionService {
     }
 
     // Transaction mua ve, khong co controller
-    async payForOrder(user, amount, payment, source, destination, transactionPersonId) {
+    async payForOrder(user, amount, payment, source, destination, transactionPersonId, session?) {
+        const prismaService = session ? session : this.prismaService;
+
         const wallet = await this.prismaService.moneyAccount.findUnique({
             where: { userId: user.id }
         })
+
         if (wallet.balance < amount) { throw new ForbiddenException("The balance is not enough") }
-        const transaction = await this.prismaService.transaction.create({
+        const transaction = await prismaService.transaction.create({
             data: {
                 type: TransactionType.BuyLottery,
                 description: "Mua vé xổ số",
@@ -116,7 +119,7 @@ export class TransactionService {
                 destination: true,
             }
         })
-        const moneyAccount = await this.updateLucKyingBalance(user.id, amount, WalletEnum.Decrease)
+        const moneyAccount = await this.updateLucKyingBalance(user.id, amount, WalletEnum.Decrease, session)
         //@ts-ignore
         transaction.luckykingBalance = moneyAccount.balance
         return transaction
@@ -162,16 +165,17 @@ export class TransactionService {
                 destination: true,
             }
         })
-        const reward  = await this.updateRewardWalletBalance(userid, amount, WalletEnum.Increase)
+        const reward = await this.updateRewardWalletBalance(userid, amount, WalletEnum.Increase)
         //@ts-ignore
         transaction.luckykingBalance = reward.balance
         return transaction
     }
 
     // Private function 
-    private async updateLucKyingBalance(userId, amount, type) {
+    private async updateLucKyingBalance(userId, amount, type, session?) {
+        const prismaService = session ? session : this.prismaService;
         // Update so du trong tai khoan vi luckyking
-        const moneyAccount = await this.prismaService.moneyAccount.update({
+        const moneyAccount = await prismaService.moneyAccount.update({
             data: {
                 balance: { increment: (type == WalletEnum.Increase ? 1 : -1) * parseInt(amount.toString()) }
             },
