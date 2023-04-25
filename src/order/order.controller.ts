@@ -42,8 +42,10 @@ export class OrderController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-all')
     @Roles(Role.User)
-    getListOrderByUser(@GetUser() user: User, @Query('status') status: keyof typeof OrderStatus): Promise<Order[]> {
-        return this.orderService.getListOrderByUser(user, status)
+    getListOrderByUser(
+        @GetUser() user: User, @Query('status') status: keyof typeof OrderStatus,
+        @Query('ticketType') ticketType: string): Promise<Order[]> {
+        return this.orderService.getListOrderByUser(user, status, ticketType)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
