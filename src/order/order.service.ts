@@ -372,9 +372,9 @@ export class OrderService {
         return order
     }
 
-    async getListOrderByUser(me: User, status: keyof typeof OrderStatus): Promise<Order[]> {
+    async getListOrderByUser(me: User, status: keyof typeof OrderStatus, ticketType: string): Promise<Order[]> {
         const orders = await this.prismaService.order.findMany({
-            where: { AND: { userId: me.id, status: status } },
+            where: { AND: { userId: me.id, status, ticketType } },
             include: { Lottery: { include: { NumberLottery: true } } }
         })
         return orders
