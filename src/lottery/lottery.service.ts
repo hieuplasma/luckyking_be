@@ -22,7 +22,7 @@ export class LotteryService {
 
         const prismaService = session ? session : this.prismaService;
 
-        const { NumberLottery, cartId, amount, drawCode, drawTime, status, type, userId } = createLotteryData;
+        const { NumberLottery, cartId, amount, bets, drawCode, drawTime, status, type, userId } = createLotteryData;
         const { level, numberDetail, numberSets } = NumberLottery;
 
         const lottery = await prismaService.lottery.create({
@@ -32,6 +32,7 @@ export class LotteryService {
                 },
                 type,
                 amount,
+                bets,
                 status,
                 drawCode,
                 drawTime,

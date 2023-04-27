@@ -21,7 +21,7 @@ export class CartService {
     async addLotteryPowerMega(user: User, body: CreateCartMegaPowerDTO) {
         const status = OrderStatus.CART
         const cartId = await this.getCardId(user.id);
-        const { drawCode, drawTime, lotteryType } = body;
+        const { drawCode, drawTime, lotteryType, bets } = body;
         const numbers = [...body.numbers];
         const setOfNumbers = [];
         let i = 0;
@@ -39,16 +39,18 @@ export class CartService {
                 let amount = 0;
                 let list = new LotteryNumber();
 
-                lotteryNumbers.map((item: any) => {
-                    list.add(new NumberDetail(item, DEFAULT_BET));
-                    amount += DEFAULT_BET;
+                lotteryNumbers.map((item: any, index: number) => {
+                    list.add(new NumberDetail(item, bets ? parseInt(bets[index]) : DEFAULT_BET));
+                    amount += bets ? parseInt(bets[index]) : DEFAULT_BET;
                 })
+
 
                 for (let i = 0; i < drawCode.length; i++) {
                     const createLotteryData: ICreateLottery = {
                         userId: user.id,
                         type: lotteryType,
                         amount,
+                        bets,
                         status,
                         drawCode: drawCode[i],
                         drawTime: drawTime[i],
@@ -126,6 +128,7 @@ export class CartService {
                         userId: user.id,
                         type: lotteryType,
                         amount,
+                        bets: body.bets,
                         status,
                         drawCode: drawCode[i],
                         drawTime: drawTime[i],
@@ -177,6 +180,7 @@ export class CartService {
                         userId: user.id,
                         type: lotteryType,
                         amount,
+                        bets: body.bets,
                         status,
                         drawCode: drawCode[i],
                         drawTime: drawTime[i],
