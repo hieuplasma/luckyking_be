@@ -3,7 +3,7 @@ import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO, ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderFromCartDTO } from './dto';
+import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO, ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderFromCartDTO, lockMultiOrderDTO } from './dto';
 import { OrderService } from './order.service';
 
 @Controller('order')
@@ -83,7 +83,7 @@ export class OrderController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('lock')
     @Roles(Role.Staff)
-    lockOrder(@GetUser() user: User, @Body() body: ConfirmOrderDTO) {
+    lockOrder(@GetUser() user: User, @Body() body: lockMultiOrderDTO) {
         return this.orderService.lockOrder(user, body)
     }
 }

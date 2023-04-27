@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, ReturnOrderDTO } from './dto';
+import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, ReturnOrderDTO } from './dto';
 import { OrderMethod, Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, nDate } from 'src/common/utils';
@@ -21,7 +21,7 @@ export class OrderService {
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
-        const { drawCode, drawTime, lotteryType } = body;
+        const { drawCode, drawTime, bets, lotteryType } = body;
 
         const currentDate = new nDate()
         let totalAmount = 0;
@@ -43,8 +43,8 @@ export class OrderService {
             let list = new LotteryNumber();
 
             for (let i = 0; i < lotteryNumbers.length; i++) {
-                list.add(new NumberDetail(lotteryNumbers[i], DEFAULT_BET));
-                amount += DEFAULT_BET;
+                list.add(new NumberDetail(lotteryNumbers[i], parseInt(bets[i]) || DEFAULT_BET));
+                amount += parseInt(bets[i]) || DEFAULT_BET;
             }
 
             for (let i = 0; i < drawCode.length; i++) {
@@ -56,6 +56,7 @@ export class OrderService {
                     },
                     type: lotteryType,
                     amount,
+                    bets,
                     //@ts-ignore
                     status: body.status ? body.status : OrderStatus.PENDING,
                     drawCode: drawCode[i],
@@ -155,7 +156,7 @@ export class OrderService {
             let list = new LotteryNumber();
 
             for (let i = 0; i < lotteryNumbers.length; i++) {
-                list.add(new NumberDetail(lotteryNumbers[i], parseInt(body.bets[i]) || DEFAULT_BET));
+                list.add(new NumberDetail(lotteryNumbers[i], parseInt(bets[i]) || DEFAULT_BET));
                 amount += parseInt(bets[i]) || DEFAULT_BET;
             }
 
@@ -268,7 +269,7 @@ export class OrderService {
             let list = new LotteryNumber();
 
             for (let i = 0; i < lotteryNumbers.length; i++) {
-                list.add(new NumberDetail(lotteryNumbers[i], parseInt(body.bets[i]) || DEFAULT_BET));
+                list.add(new NumberDetail(lotteryNumbers[i], parseInt(bets[i]) || DEFAULT_BET));
                 amount += parseInt(bets[i]) || DEFAULT_BET;
             }
 
@@ -539,52 +540,49 @@ export class OrderService {
         return orderConfirmed
     }
 
-    async lockOrder(user: User, body: ConfirmOrderDTO): Promise<Order> {
-        const order = await this.prismaService.order.findUnique({
-            where: { id: body.orderId },
-            include: { user: true, Lottery: true }
-        })
+    async lockOrder(user: User, { orderIds, description, payment }: lockMultiOrderDTO): Promise<Order[]> {
+        const lockedOrders = [];
 
-        if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
+        for (const orderId of orderIds) {
+            const order = await this.prismaService.order.findUnique({
+                where: { id: orderId },
+                include: { user: true, Lottery: true }
+            })
 
-        const newStatus = body.status ? body.status : OrderStatus.LOCK
-        // const payment = body.payment || LUCKY_KING_PAYMENT
-        let confirmBy = ""
-        if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
+            if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
 
-        // const transaction = await this.transactionService.payForOrder(
-        //     order.user,
-        //     order.amount + order.surcharge,
-        //     payment,
-        //     "Ví LuckyKing",
-        //     "Ví của nhà phát triển",
-        //     user.id
-        // )
+            // const payment = body.payment || LUCKY_KING_PAYMENT
+            let confirmBy = ""
+            if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
 
-        const orderConfirmed = await this.prismaService.order.update({
-            data: {
-                status: newStatus,
-                statusDescription: body.description,
-                confirmAt: new nDate(),
-                confirmBy: confirmBy,
-                confrimUserId: user.id,
-                // payment: payment,
-                // tradingCode: transaction.id
-            },
-            where: { id: body.orderId },
-            include: { Lottery: { include: { NumberLottery: true } } }
-        })
-        await this.prismaService.$transaction(
-            orderConfirmed.Lottery.map((child) =>
-                this.prismaService.lottery.update({
-                    where: { id: child.id },
-                    data: { status: newStatus },
-                })
+            const newStatus = OrderStatus.LOCK;
+
+            const lockedOrder = await this.prismaService.order.update({
+                data: {
+                    status: newStatus,
+                    statusDescription: description,
+                    confirmAt: new nDate(),
+                    confirmBy: confirmBy,
+                    confrimUserId: user.id,
+                    // payment: payment,
+                    // tradingCode: transaction.id
+                },
+                where: { id: orderId },
+                include: { Lottery: { include: { NumberLottery: true } } }
+            })
+            await this.prismaService.$transaction(
+                lockedOrder.Lottery.map((child) =>
+                    this.prismaService.lottery.update({
+                        where: { id: child.id },
+                        data: { status: newStatus },
+                    })
+                )
             )
-        )
-        //@ts-ignore
-        // orderConfirmed.transaction = transaction
-        return orderConfirmed
+
+            lockedOrders.push(lockedOrder)
+        }
+
+        return lockedOrders
     }
 }
 
