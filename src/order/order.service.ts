@@ -1,15 +1,14 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Lottery, Order, OrderStatus, User } from '../../node_modules/.prisma/client';
+import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, ReturnOrderDTO } from './dto';
-import { LotteryType, OrderMethod, Role } from 'src/common/enum';
+import { OrderMethod, Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
 import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { LotteryService } from 'src/lottery/lottery.service';
-import { ICreateLottery } from 'src/lottery/interfaces';
 
 @Injectable()
 export class OrderService {
@@ -17,7 +16,7 @@ export class OrderService {
         private prismaService: PrismaService,
         private userService: UserService,
         private transactionService: TransactionService,
-        private lotteryService: LotteryService
+        private lotteryService: LotteryService,
     ) { }
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
@@ -79,51 +78,56 @@ export class OrderService {
             if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
         }
 
-        const transaction = await this.transactionService.payForOrder(
-            user,
-            totalAmount + surcharge,
-            LUCKY_KING_PAYMENT,
-            "Ví LuckyKing",
-            "Ví của nhà phát triển",
-            user.id
-        )
+        let order: Order;
 
-        const order = await this.prismaService.order.create({
-            data: {
-                amount: totalAmount,
-                user: {
-                    connect: { id: user.id }
-                },
-                //@ts-ignore
-                status: body.status ? body.status : OrderStatus.PENDING,
-                dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
-                method: body.method,
-                surcharge: surcharge,
-                tradingCode: transaction.id,
-            },
-            include: { Lottery: { include: { NumberLottery: true } } }
-        })
+        await this.prismaService.$transaction(async (tx) => {
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalAmount + surcharge,
+                LUCKY_KING_PAYMENT,
+                "Ví LuckyKing",
+                "Ví của nhà phát triển",
+                user.id,
+                tx
+            )
 
-        const lotteryToReturn = []
-        for (const lotteryData of lotteries) {
-            const lottery = await this.prismaService.lottery.create({
+            order = await tx.order.create({
                 data: {
-                    ...lotteryData,
-                    Order: {
-                        connect: { id: order.id }
-                    }
+                    amount: totalAmount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    method: body.method,
+                    surcharge: surcharge,
+                    tradingCode: transaction.id,
                 },
-                include: { NumberLottery: true }
+                include: { Lottery: { include: { NumberLottery: true } } }
             })
 
-            lotteryToReturn.push(lottery)
-        }
+            const lotteryToReturn = []
+            for (const lotteryData of lotteries) {
+                const lottery = await tx.lottery.create({
+                    data: {
+                        ...lotteryData,
+                        Order: {
+                            connect: { id: order.id }
+                        }
+                    },
+                    include: { NumberLottery: true }
+                })
 
-        //@ts-ignore
-        order.transaction = transaction;
-        //@ts-ignore
-        order.Lottery = lotteryToReturn;
+                lotteryToReturn.push(lottery)
+            }
 
+            //@ts-ignore
+            order.transaction = transaction;
+            //@ts-ignore
+            order.Lottery = lotteryToReturn;
+
+        })
         return order
     }
 
@@ -187,51 +191,55 @@ export class OrderService {
             if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
         }
 
-        const transaction = await this.transactionService.payForOrder(
-            user,
-            totalAmount + surcharge,
-            LUCKY_KING_PAYMENT,
-            "Ví LuckyKing",
-            "Ví của nhà phát triển",
-            user.id
-        )
+        let order: Order;
 
-        const order = await this.prismaService.order.create({
-            data: {
-                amount: totalAmount,
-                user: {
-                    connect: { id: user.id }
-                },
-                //@ts-ignore
-                status: body.status ? body.status : OrderStatus.PENDING,
-                dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
-                method: body.method,
-                surcharge: surcharge,
-                tradingCode: transaction.id,
-            },
-            include: { Lottery: { include: { NumberLottery: true } } }
-        })
+        await this.prismaService.$transaction(async (tx) => {
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalAmount + surcharge,
+                LUCKY_KING_PAYMENT,
+                "Ví LuckyKing",
+                "Ví của nhà phát triển",
+                user.id,
+                tx
+            )
 
-        const lotteryToReturn = []
-        for (const lotteryData of lotteries) {
-            const lottery = await this.prismaService.lottery.create({
+            order = await tx.order.create({
                 data: {
-                    ...lotteryData,
-                    Order: {
-                        connect: { id: order.id }
-                    }
+                    amount: totalAmount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    method: body.method,
+                    surcharge: surcharge,
+                    tradingCode: transaction.id,
                 },
-                include: { NumberLottery: true }
+                include: { Lottery: { include: { NumberLottery: true } } }
             })
 
-            lotteryToReturn.push(lottery)
-        }
+            const lotteryToReturn = []
+            for (const lotteryData of lotteries) {
+                const lottery = await tx.lottery.create({
+                    data: {
+                        ...lotteryData,
+                        Order: {
+                            connect: { id: order.id }
+                        }
+                    },
+                    include: { NumberLottery: true }
+                })
 
-        //@ts-ignore
-        order.transaction = transaction;
-        //@ts-ignore
-        order.Lottery = lotteryToReturn;
+                lotteryToReturn.push(lottery)
+            }
 
+            //@ts-ignore
+            order.transaction = transaction;
+            //@ts-ignore
+            order.Lottery = lotteryToReturn;
+        })
         return order
     }
 
@@ -297,51 +305,57 @@ export class OrderService {
             if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
         }
 
-        const transaction = await this.transactionService.payForOrder(
-            user,
-            totalAmount + surcharge,
-            LUCKY_KING_PAYMENT,
-            "Ví LuckyKing",
-            "Ví của nhà phát triển",
-            user.id
-        )
 
-        const order = await this.prismaService.order.create({
-            data: {
-                amount: totalAmount,
-                user: {
-                    connect: { id: user.id }
-                },
-                //@ts-ignore
-                status: body.status ? body.status : OrderStatus.PENDING,
-                ticketType: "keno",
-                dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
-                method: body.method,
-                surcharge: surcharge,
-                tradingCode: transaction.id,
-            },
-            include: { Lottery: { include: { NumberLottery: true } } }
-        })
+        let order: Order;
 
-        const lotteryToReturn = []
-        for (const lotteryData of lotteries) {
-            const lottery = await this.prismaService.lottery.create({
+        await this.prismaService.$transaction(async (tx) => {
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalAmount + surcharge,
+                LUCKY_KING_PAYMENT,
+                "Ví LuckyKing",
+                "Ví của nhà phát triển",
+                user.id,
+                tx
+            )
+
+            order = await tx.order.create({
                 data: {
-                    ...lotteryData,
-                    Order: {
-                        connect: { id: order.id }
-                    }
+                    amount: totalAmount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    ticketType: "keno",
+                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    method: body.method,
+                    surcharge: surcharge,
+                    tradingCode: transaction.id,
                 },
-                include: { NumberLottery: true }
+                include: { Lottery: { include: { NumberLottery: true } } }
             })
 
-            lotteryToReturn.push(lottery)
-        }
+            const lotteryToReturn = []
+            for (const lotteryData of lotteries) {
+                const lottery = await tx.lottery.create({
+                    data: {
+                        ...lotteryData,
+                        Order: {
+                            connect: { id: order.id }
+                        }
+                    },
+                    include: { NumberLottery: true }
+                })
 
-        //@ts-ignore
-        order.transaction = transaction;
-        //@ts-ignore
-        order.Lottery = lotteryToReturn;
+                lotteryToReturn.push(lottery)
+            }
+
+            //@ts-ignore
+            order.transaction = transaction;
+            //@ts-ignore
+            order.Lottery = lotteryToReturn;
+        })
 
         return order
     }
@@ -371,38 +385,40 @@ export class OrderService {
             throw new ForbiddenException("The balance is not enough");
         }
 
-        let order: Order;   // Will add $transaction in a future
-        // await this.prismaService.$transaction(async (tx) => {
-        const transaction = await this.transactionService.payForOrder(
-            user,
-            totalMoney,
-            LUCKY_KING_PAYMENT,
-            "Ví LuckyKing",
-            "Ví của nhà phát triển",
-            user.id
-        )
+        let order: Order;
 
-        const currentDate = new nDate()
+        await this.prismaService.$transaction(async (tx) => {
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalMoney,
+                LUCKY_KING_PAYMENT,
+                "Ví LuckyKing",
+                "Ví của nhà phát triển",
+                user.id,
+                tx
+            )
 
-        order = await this.prismaService.order.create({
-            data: {
-                amount: totalAmount,
-                user: {
-                    connect: { id: user.id }
-                },
-                //@ts-ignore
-                status: OrderStatus.PENDING,
-                dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
-                method: method || OrderMethod.Keep,
-                surcharge: surcharge,
-                tradingCode: transaction.id,
+            const currentDate = new nDate()
+
+            order = await tx.order.create({
+                data: {
+                    amount: totalAmount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: OrderStatus.PENDING,
+                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    method: method || OrderMethod.Keep,
+                    surcharge: surcharge,
+                    tradingCode: transaction.id,
+                }
+            });
+
+            for (const lotteryId of lotteryIdsToCreate) {
+                await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id, tx);
             }
-        });
-
-        for (const lotteryId of lotteryIdsToCreate) {
-            await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id);
-        }
-        // )}
+        })
         return order;
     }
 

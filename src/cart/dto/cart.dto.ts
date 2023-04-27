@@ -18,6 +18,7 @@ export class CreateCart {
     @IsArray()
     @IsNotEmpty()
     @ArrayMinSize(1)
+    @IsNumber({}, { each: true })
     drawCode: number[];
 
     drawTime: Date[]

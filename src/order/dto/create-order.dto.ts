@@ -21,8 +21,12 @@ class CreateOrder {
     @IsArray()
     @IsNotEmpty()
     @ArrayMinSize(1)
+    @IsNumber({}, { each: true })
     drawCode: number[];
 
+    @IsArray()
+    @IsNotEmpty()
+    @ArrayMinSize(1)
     drawTime: Date[]
 
     surcharge: number
