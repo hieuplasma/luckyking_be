@@ -18,6 +18,7 @@ export class CreateCart {
     @IsArray()
     @IsNotEmpty()
     @ArrayMinSize(1)
+    @IsNumber({}, { each: true })
     drawCode: number[];
 
     drawTime: Date[]
@@ -27,7 +28,12 @@ export class CreateCart {
     cartId: string
 }
 
-export class CreateCartMegaPowerDTO extends CreateCart { }
+export class CreateCartMegaPowerDTO extends CreateCart {
+    @IsArray()
+    @ArrayMinSize(1)
+    @IsOptional()
+    bets: any
+}
 
 export class CreateCartMax3dDTO extends CreateCart {
     @IsArray()

@@ -1,15 +1,14 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Lottery, Order, OrderStatus, User } from '../../node_modules/.prisma/client';
+import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, ReturnOrderDTO } from './dto';
-import { LotteryType, OrderMethod, Role } from 'src/common/enum';
+import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, ReturnOrderDTO } from './dto';
+import { OrderMethod, Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
 import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { LotteryService } from 'src/lottery/lottery.service';
-import { ICreateLottery } from 'src/lottery/interfaces';
 
 @Injectable()
 export class OrderService {
@@ -17,117 +16,10 @@ export class OrderService {
         private prismaService: PrismaService,
         private userService: UserService,
         private transactionService: TransactionService,
-        private lotteryService: LotteryService
+        private lotteryService: LotteryService,
     ) { }
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
-        const balances = await this.userService.getAllWallet(user.id)
-        const { drawCode, drawTime, lotteryType } = body;
-
-        const currentDate = new nDate()
-        let totalAmount = 0;
-
-        const numbers = [...body.numbers];
-        const setOfNumbers = [];
-        let i = 0;
-
-        while (numbers.length) {
-            setOfNumbers[i] = setOfNumbers[i] ? setOfNumbers[i] : [];
-            setOfNumbers[i].push(numbers.shift())
-            if (setOfNumbers[i].length === 6) i++;
-        }
-
-        const lotteries = [];
-
-        for (const lotteryNumbers of setOfNumbers) {
-            let amount = 0;
-            let list = new LotteryNumber();
-
-            for (let i = 0; i < lotteryNumbers.length; i++) {
-                list.add(new NumberDetail(lotteryNumbers[i], DEFAULT_BET));
-                amount += DEFAULT_BET;
-            }
-
-            for (let i = 0; i < drawCode.length; i++) {
-                totalAmount += amount;
-
-                const lottery = {
-                    user: {
-                        connect: { id: user.id }
-                    },
-                    type: lotteryType,
-                    amount,
-                    //@ts-ignore
-                    status: body.status ? body.status : OrderStatus.PENDING,
-                    drawCode: drawCode[i],
-                    drawTime: drawTime[i],
-                    NumberLottery: {
-                        create: {
-                            level: parseInt(body.level.toString()),
-                            numberSets: lotteryNumbers.length,
-                            numberDetail: list.convertToJSon()
-                        }
-                    }
-                }
-
-                lotteries.push(lottery)
-            }
-        }
-
-        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
-        if (body.status !== OrderStatus.CART) {
-            if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
-        }
-
-        const transaction = await this.transactionService.payForOrder(
-            user,
-            totalAmount + surcharge,
-            LUCKY_KING_PAYMENT,
-            "Ví LuckyKing",
-            "Ví của nhà phát triển",
-            user.id
-        )
-
-        const order = await this.prismaService.order.create({
-            data: {
-                amount: totalAmount,
-                user: {
-                    connect: { id: user.id }
-                },
-                //@ts-ignore
-                status: body.status ? body.status : OrderStatus.PENDING,
-                dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
-                method: body.method,
-                surcharge: surcharge,
-                tradingCode: transaction.id,
-            },
-            include: { Lottery: { include: { NumberLottery: true } } }
-        })
-
-        const lotteryToReturn = []
-        for (const lotteryData of lotteries) {
-            const lottery = await this.prismaService.lottery.create({
-                data: {
-                    ...lotteryData,
-                    Order: {
-                        connect: { id: order.id }
-                    }
-                },
-                include: { NumberLottery: true }
-            })
-
-            lotteryToReturn.push(lottery)
-        }
-
-        //@ts-ignore
-        order.transaction = transaction;
-        //@ts-ignore
-        order.Lottery = lotteryToReturn;
-
-        return order
-    }
-
-    async createOrderMax3d(user: User, body: CreateOrderMax3dDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
         const { drawCode, drawTime, bets, lotteryType } = body;
 
@@ -151,7 +43,7 @@ export class OrderService {
             let list = new LotteryNumber();
 
             for (let i = 0; i < lotteryNumbers.length; i++) {
-                list.add(new NumberDetail(lotteryNumbers[i], parseInt(body.bets[i]) || DEFAULT_BET));
+                list.add(new NumberDetail(lotteryNumbers[i], parseInt(bets[i]) || DEFAULT_BET));
                 amount += parseInt(bets[i]) || DEFAULT_BET;
             }
 
@@ -187,51 +79,168 @@ export class OrderService {
             if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
         }
 
-        const transaction = await this.transactionService.payForOrder(
-            user,
-            totalAmount + surcharge,
-            LUCKY_KING_PAYMENT,
-            "Ví LuckyKing",
-            "Ví của nhà phát triển",
-            user.id
-        )
+        let order: Order;
 
-        const order = await this.prismaService.order.create({
-            data: {
-                amount: totalAmount,
-                user: {
-                    connect: { id: user.id }
-                },
-                //@ts-ignore
-                status: body.status ? body.status : OrderStatus.PENDING,
-                dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
-                method: body.method,
-                surcharge: surcharge,
-                tradingCode: transaction.id,
-            },
-            include: { Lottery: { include: { NumberLottery: true } } }
-        })
+        await this.prismaService.$transaction(async (tx) => {
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalAmount + surcharge,
+                LUCKY_KING_PAYMENT,
+                "Ví LuckyKing",
+                "Ví của nhà phát triển",
+                user.id,
+                tx
+            )
 
-        const lotteryToReturn = []
-        for (const lotteryData of lotteries) {
-            const lottery = await this.prismaService.lottery.create({
+            order = await tx.order.create({
                 data: {
-                    ...lotteryData,
-                    Order: {
-                        connect: { id: order.id }
-                    }
+                    amount: totalAmount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    method: body.method,
+                    surcharge: surcharge,
+                    tradingCode: transaction.id,
                 },
-                include: { NumberLottery: true }
+                include: { Lottery: { include: { NumberLottery: true } } }
             })
 
-            lotteryToReturn.push(lottery)
+            const lotteryToReturn = []
+            for (const lotteryData of lotteries) {
+                const lottery = await tx.lottery.create({
+                    data: {
+                        ...lotteryData,
+                        Order: {
+                            connect: { id: order.id }
+                        }
+                    },
+                    include: { NumberLottery: true }
+                })
+
+                lotteryToReturn.push(lottery)
+            }
+
+            //@ts-ignore
+            order.transaction = transaction;
+            //@ts-ignore
+            order.Lottery = lotteryToReturn;
+
+        })
+        return order
+    }
+
+    async createOrderMax3d(user: User, body: CreateOrderMax3dDTO): Promise<Order> {
+        const balances = await this.userService.getAllWallet(user.id)
+        const { drawCode, drawTime, bets, lotteryType } = body;
+
+        const currentDate = new nDate()
+        let totalAmount = 0;
+
+        const numbers = [...body.numbers];
+        const setOfNumbers = [];
+        let i = 0;
+
+        while (numbers.length) {
+            setOfNumbers[i] = setOfNumbers[i] ? setOfNumbers[i] : [];
+            setOfNumbers[i].push(numbers.shift())
+            if (setOfNumbers[i].length === 6) i++;
         }
 
-        //@ts-ignore
-        order.transaction = transaction;
-        //@ts-ignore
-        order.Lottery = lotteryToReturn;
+        const lotteries = [];
 
+        for (const lotteryNumbers of setOfNumbers) {
+            let amount = 0;
+            let list = new LotteryNumber();
+
+            for (let i = 0; i < lotteryNumbers.length; i++) {
+                list.add(new NumberDetail(lotteryNumbers[i], parseInt(bets[i]) || DEFAULT_BET));
+                amount += parseInt(bets[i]) || DEFAULT_BET;
+            }
+
+            for (let i = 0; i < drawCode.length; i++) {
+                totalAmount += amount;
+
+                const lottery = {
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    type: lotteryType,
+                    amount,
+                    bets,
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    drawCode: drawCode[i],
+                    drawTime: drawTime[i],
+                    NumberLottery: {
+                        create: {
+                            level: parseInt(body.level.toString()),
+                            numberSets: lotteryNumbers.length,
+                            numberDetail: list.convertToJSon()
+                        }
+                    }
+                }
+
+                lotteries.push(lottery)
+            }
+        }
+
+        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
+        if (body.status !== OrderStatus.CART) {
+            if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+        }
+
+        let order: Order;
+
+        await this.prismaService.$transaction(async (tx) => {
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalAmount + surcharge,
+                LUCKY_KING_PAYMENT,
+                "Ví LuckyKing",
+                "Ví của nhà phát triển",
+                user.id,
+                tx
+            )
+
+            order = await tx.order.create({
+                data: {
+                    amount: totalAmount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    method: body.method,
+                    surcharge: surcharge,
+                    tradingCode: transaction.id,
+                },
+                include: { Lottery: { include: { NumberLottery: true } } }
+            })
+
+            const lotteryToReturn = []
+            for (const lotteryData of lotteries) {
+                const lottery = await tx.lottery.create({
+                    data: {
+                        ...lotteryData,
+                        Order: {
+                            connect: { id: order.id }
+                        }
+                    },
+                    include: { NumberLottery: true }
+                })
+
+                lotteryToReturn.push(lottery)
+            }
+
+            //@ts-ignore
+            order.transaction = transaction;
+            //@ts-ignore
+            order.Lottery = lotteryToReturn;
+        })
         return order
     }
 
@@ -260,7 +269,7 @@ export class OrderService {
             let list = new LotteryNumber();
 
             for (let i = 0; i < lotteryNumbers.length; i++) {
-                list.add(new NumberDetail(lotteryNumbers[i], parseInt(body.bets[i]) || DEFAULT_BET));
+                list.add(new NumberDetail(lotteryNumbers[i], parseInt(bets[i]) || DEFAULT_BET));
                 amount += parseInt(bets[i]) || DEFAULT_BET;
             }
 
@@ -297,51 +306,57 @@ export class OrderService {
             if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
         }
 
-        const transaction = await this.transactionService.payForOrder(
-            user,
-            totalAmount + surcharge,
-            LUCKY_KING_PAYMENT,
-            "Ví LuckyKing",
-            "Ví của nhà phát triển",
-            user.id
-        )
 
-        const order = await this.prismaService.order.create({
-            data: {
-                amount: totalAmount,
-                user: {
-                    connect: { id: user.id }
-                },
-                //@ts-ignore
-                status: body.status ? body.status : OrderStatus.PENDING,
-                ticketType: "keno",
-                dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
-                method: body.method,
-                surcharge: surcharge,
-                tradingCode: transaction.id,
-            },
-            include: { Lottery: { include: { NumberLottery: true } } }
-        })
+        let order: Order;
 
-        const lotteryToReturn = []
-        for (const lotteryData of lotteries) {
-            const lottery = await this.prismaService.lottery.create({
+        await this.prismaService.$transaction(async (tx) => {
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalAmount + surcharge,
+                LUCKY_KING_PAYMENT,
+                "Ví LuckyKing",
+                "Ví của nhà phát triển",
+                user.id,
+                tx
+            )
+
+            order = await tx.order.create({
                 data: {
-                    ...lotteryData,
-                    Order: {
-                        connect: { id: order.id }
-                    }
+                    amount: totalAmount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: body.status ? body.status : OrderStatus.PENDING,
+                    ticketType: "keno",
+                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    method: body.method,
+                    surcharge: surcharge,
+                    tradingCode: transaction.id,
                 },
-                include: { NumberLottery: true }
+                include: { Lottery: { include: { NumberLottery: true } } }
             })
 
-            lotteryToReturn.push(lottery)
-        }
+            const lotteryToReturn = []
+            for (const lotteryData of lotteries) {
+                const lottery = await tx.lottery.create({
+                    data: {
+                        ...lotteryData,
+                        Order: {
+                            connect: { id: order.id }
+                        }
+                    },
+                    include: { NumberLottery: true }
+                })
 
-        //@ts-ignore
-        order.transaction = transaction;
-        //@ts-ignore
-        order.Lottery = lotteryToReturn;
+                lotteryToReturn.push(lottery)
+            }
+
+            //@ts-ignore
+            order.transaction = transaction;
+            //@ts-ignore
+            order.Lottery = lotteryToReturn;
+        })
 
         return order
     }
@@ -371,38 +386,40 @@ export class OrderService {
             throw new ForbiddenException("The balance is not enough");
         }
 
-        let order: Order;   // Will add $transaction in a future
-        // await this.prismaService.$transaction(async (tx) => {
-        const transaction = await this.transactionService.payForOrder(
-            user,
-            totalMoney,
-            LUCKY_KING_PAYMENT,
-            "Ví LuckyKing",
-            "Ví của nhà phát triển",
-            user.id
-        )
+        let order: Order;
 
-        const currentDate = new nDate()
+        await this.prismaService.$transaction(async (tx) => {
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalMoney,
+                LUCKY_KING_PAYMENT,
+                "Ví LuckyKing",
+                "Ví của nhà phát triển",
+                user.id,
+                tx
+            )
 
-        order = await this.prismaService.order.create({
-            data: {
-                amount: totalAmount,
-                user: {
-                    connect: { id: user.id }
-                },
-                //@ts-ignore
-                status: OrderStatus.PENDING,
-                dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
-                method: method || OrderMethod.Keep,
-                surcharge: surcharge,
-                tradingCode: transaction.id,
+            const currentDate = new nDate()
+
+            order = await tx.order.create({
+                data: {
+                    amount: totalAmount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: OrderStatus.PENDING,
+                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    method: method || OrderMethod.Keep,
+                    surcharge: surcharge,
+                    tradingCode: transaction.id,
+                }
+            });
+
+            for (const lotteryId of lotteryIdsToCreate) {
+                await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id, tx);
             }
-        });
-
-        for (const lotteryId of lotteryIdsToCreate) {
-            await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id);
-        }
-        // )}
+        })
         return order;
     }
 
@@ -523,52 +540,49 @@ export class OrderService {
         return orderConfirmed
     }
 
-    async lockOrder(user: User, body: ConfirmOrderDTO): Promise<Order> {
-        const order = await this.prismaService.order.findUnique({
-            where: { id: body.orderId },
-            include: { user: true, Lottery: true }
-        })
+    async lockOrder(user: User, { orderIds, description, payment }: lockMultiOrderDTO): Promise<Order[]> {
+        const lockedOrders = [];
 
-        if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
+        for (const orderId of orderIds) {
+            const order = await this.prismaService.order.findUnique({
+                where: { id: orderId },
+                include: { user: true, Lottery: true }
+            })
 
-        const newStatus = body.status ? body.status : OrderStatus.LOCK
-        // const payment = body.payment || LUCKY_KING_PAYMENT
-        let confirmBy = ""
-        if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
+            if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
 
-        // const transaction = await this.transactionService.payForOrder(
-        //     order.user,
-        //     order.amount + order.surcharge,
-        //     payment,
-        //     "Ví LuckyKing",
-        //     "Ví của nhà phát triển",
-        //     user.id
-        // )
+            // const payment = body.payment || LUCKY_KING_PAYMENT
+            let confirmBy = ""
+            if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
 
-        const orderConfirmed = await this.prismaService.order.update({
-            data: {
-                status: newStatus,
-                statusDescription: body.description,
-                confirmAt: new nDate(),
-                confirmBy: confirmBy,
-                confrimUserId: user.id,
-                // payment: payment,
-                // tradingCode: transaction.id
-            },
-            where: { id: body.orderId },
-            include: { Lottery: { include: { NumberLottery: true } } }
-        })
-        await this.prismaService.$transaction(
-            orderConfirmed.Lottery.map((child) =>
-                this.prismaService.lottery.update({
-                    where: { id: child.id },
-                    data: { status: newStatus },
-                })
+            const newStatus = OrderStatus.LOCK;
+
+            const lockedOrder = await this.prismaService.order.update({
+                data: {
+                    status: newStatus,
+                    statusDescription: description,
+                    confirmAt: new nDate(),
+                    confirmBy: confirmBy,
+                    confrimUserId: user.id,
+                    // payment: payment,
+                    // tradingCode: transaction.id
+                },
+                where: { id: orderId },
+                include: { Lottery: { include: { NumberLottery: true } } }
+            })
+            await this.prismaService.$transaction(
+                lockedOrder.Lottery.map((child) =>
+                    this.prismaService.lottery.update({
+                        where: { id: child.id },
+                        data: { status: newStatus },
+                    })
+                )
             )
-        )
-        //@ts-ignore
-        // orderConfirmed.transaction = transaction
-        return orderConfirmed
+
+            lockedOrders.push(lockedOrder)
+        }
+
+        return lockedOrders
     }
 }
 

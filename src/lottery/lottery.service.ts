@@ -18,17 +18,21 @@ export class LotteryService {
         return lotteryInfo;
     }
 
-    async createLottery(createLotteryData: ICreateLottery) {
-        const { NumberLottery, cartId, orderId, amount, drawCode, drawTime, status, type, userId } = createLotteryData;
+    async createLottery(createLotteryData: ICreateLottery, session?) {
+
+        const prismaService = session ? session : this.prismaService;
+
+        const { NumberLottery, cartId, amount, bets, drawCode, drawTime, status, type, userId } = createLotteryData;
         const { level, numberDetail, numberSets } = NumberLottery;
 
-        const lottery = await this.prismaService.lottery.create({
+        const lottery = await prismaService.lottery.create({
             data: {
                 user: {
                     connect: { id: userId }
                 },
                 type,
                 amount,
+                bets,
                 status,
                 drawCode,
                 drawTime,
@@ -49,8 +53,10 @@ export class LotteryService {
         return lottery
     }
 
-    async createLotteryFromCart(user: User, lotteryId: string, orderId: string) {
-        const lottery = await this.prismaService.lottery.update({
+    async createLotteryFromCart(user: User, lotteryId: string, orderId: string, session?) {
+        const prismaService = session ? session : this.prismaService;
+
+        const lottery = await prismaService.lottery.update({
             where: {
                 id: lotteryId,
             },
@@ -124,5 +130,4 @@ export class LotteryService {
         numberDetail.map(item => total = total + item.tienCuoc)
         console.log(total)
     }
-
 }

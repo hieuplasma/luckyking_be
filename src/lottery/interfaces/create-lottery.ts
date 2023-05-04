@@ -27,7 +27,5 @@ export interface ICreateLottery {
     bets?: number[];
 
     cartId?: string;
-
-    orderId?: string;
 }
 

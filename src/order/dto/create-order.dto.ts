@@ -21,15 +21,23 @@ class CreateOrder {
     @IsArray()
     @IsNotEmpty()
     @ArrayMinSize(1)
+    @IsNumber({}, { each: true })
     drawCode: number[];
 
+    @IsArray()
+    @IsNotEmpty()
+    @ArrayMinSize(1)
     drawTime: Date[]
 
     surcharge: number
     status: string
     cartId: string
 }
-export class CreateOrderMegaPowerDTO extends CreateOrder { }
+export class CreateOrderMegaPowerDTO extends CreateOrder {
+    @IsArray()
+    @ArrayMinSize(1)
+    bets: any
+}
 
 export class CreateOrderMax3dDTO extends CreateOrder {
     @IsArray()
