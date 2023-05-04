@@ -431,6 +431,14 @@ export class OrderService {
         return order
     }
 
+    async getOrderByDisplayId(displayOrderId: number): Promise<Order> {
+        const order = await this.prismaService.order.findFirst({
+            where: { displayId: displayOrderId },
+            include: { Lottery: { include: { NumberLottery: true } }, user: true }
+        })
+        return order
+    }
+
     async getListOrderByUser(me: User, status: keyof typeof OrderStatus, ticketType: string): Promise<Order[]> {
         const orders = await this.prismaService.order.findMany({
             where: { AND: { userId: me.id, status, ticketType } },
@@ -439,11 +447,11 @@ export class OrderService {
         return orders
     }
 
-    async getAllOrder(status: keyof typeof OrderStatus, ticketType: string): Promise<Order[]> {
-        const query: { [key: string]: string } = {};
+    async getAllOrder(status: (keyof typeof OrderStatus)[], ticketType: string): Promise<Order[]> {
+        const query: { [key: string]: any } = {};
 
         if (status) {
-            query.status = status;
+            query.status = { in: status };
         }
         if (ticketType) {
             query.ticketType = ticketType;
@@ -453,7 +461,24 @@ export class OrderService {
             where: query,
             include: { Lottery: { include: { NumberLottery: true } }, user: true }
         })
-        return orders
+        return orders;
+    }
+
+    async getOneKenoOrder(status: (keyof typeof OrderStatus)[]): Promise<Order> {
+        const query: { [key: string]: any } = {};
+
+        if (status) {
+            query.status = { in: status };
+        }
+
+        query.ticketType = 'keno';
+
+        const order = await this.prismaService.order.findFirst({
+            where: query,
+            include: { Lottery: { include: { NumberLottery: true } }, user: true }
+        })
+
+        return order;
     }
 
     async returnOrder(user: User, body: ReturnOrderDTO): Promise<Order> {

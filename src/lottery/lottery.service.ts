@@ -5,6 +5,7 @@ import { LotteryNumber, NumberDetail } from 'src/common/entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateImageDTO } from './dto';
 import { ICreateLottery } from './interfaces';
+import fs from 'fs'
 
 @Injectable()
 export class LotteryService {
@@ -99,7 +100,17 @@ export class LotteryService {
             })
             return update
         }
-        else throw new ForbiddenException("Vé sổ xố này không còn tồn tại nữa")
+        else {
+            console.log(imgFront)
+            fs.unlink(imgFront.path, () => {
+                console.log('Delete image successfully')
+            })
+            fs.unlink(imgBack.path, () => {
+                console.log('Delete image successfully')
+            })
+
+            throw new ForbiddenException("Vé sổ xố này không còn tồn tại nữa");
+        }
     }
 
     async deleteLottery(lotteryId: string): Promise<Lottery> {

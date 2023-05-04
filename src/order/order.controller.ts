@@ -55,15 +55,33 @@ export class OrderController {
         return this.orderService.getOrderById(orderId)
     }
 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-by-display-id/:id')
+    @Roles(Role.User, Role.Staff, Role.Admin)
+    getOrderByDisplayId(@Param('id') displayOrderId: number): Promise<Order> {
+        return this.orderService.getOrderByDisplayId(displayOrderId)
+    }
+
 
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-all-order')
     @Roles(Role.Staff)
     getAllOrder(
-        @Query('status') status: keyof typeof OrderStatus,
+        @Query('status') status: (keyof typeof OrderStatus)[],
         @Query('ticketType') ticketType: string
     ): Promise<Order[]> {
         return this.orderService.getAllOrder(status, ticketType)
+    }
+
+
+    // ========================== this api for test ======================
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('keno-get-one')
+    @Roles(Role.Staff)
+    getOneKenoOrder(
+        @Query('status') status: (keyof typeof OrderStatus)[],
+    ): Promise<Order> {
+        return this.orderService.getOneKenoOrder(status)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
