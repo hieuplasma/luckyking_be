@@ -335,12 +335,13 @@ export class ResultService {
         switch (body.type) {
             case LotteryType.Max3D:
                 tmp = await this.addScheduleMax3d(parseInt(body.drawCode.toString()), body.drawTime)
+                break;
             case LotteryType.Max3DPlus:
                 tmp = await this.addScheduleMax3d(parseInt(body.drawCode.toString()), body.drawTime)
+                break;
             case LotteryType.Max3DPro:
                 tmp = await this.addScheduleMax3dPro(parseInt(body.drawCode.toString()), body.drawTime)
                 break;
-
             default:
                 break;
         }
