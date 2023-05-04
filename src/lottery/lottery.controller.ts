@@ -21,6 +21,12 @@ export class LotteryController {
     // }
 
 
+    @Get('print')
+    async print(@Query() data: any) {
+        console.log(data)
+        return 'ok'
+    }
+
     @Get(':lotteryId')
     async getLotteryById(@Param('lotteryId') lotteryId: string) {
         return await this.lotteryService.getLotteryById(lotteryId)
@@ -36,11 +42,12 @@ export class LotteryController {
             filename(req, file, callback) {
                 const ext = file.originalname.split('.').pop();
                 const fileName = `${fileNameConvert(req.body.lotteryId)}.${ext}`;
+                console.log(fileName)
                 callback(null, fileName)
             },
         })
     }))
-    async addAvatar(
+    async updateImage(
         @Body() body: UpdateImageDTO,
         @UploadedFiles() files: { imgFront?: Express.Multer.File[], imgBack?: Express.Multer.File[] }) {
         return this.lotteryService.updateImage(body, files.imgFront[0], files.imgBack[0])
