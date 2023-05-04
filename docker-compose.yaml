@@ -30,5 +30,17 @@ services:
     #   - .:/usr/src/app
     #   - /usr/src/app/node_modules
     restart: unless-stopped
+  nginx:
+    container_name: nginx-proxy
+    image: nginx:1.21.1-alpine
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - dev
+    networks:
+      - nestjs-network
 networks:
   nestjs-network: 
