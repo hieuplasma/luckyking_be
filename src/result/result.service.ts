@@ -4,10 +4,22 @@ import { JackPot, OrderStatus, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
 import { TIMEZONE } from 'src/common/constants/constants';
 import { LotteryType } from 'src/common/enum';
-import { caculateKenoBenefits, caculateMax3dBenefits, caculateMax3dProBenefits, caculateMax3PlusdBenefits, caculateMegaBenefits, caculatePowerBenefits, getNearestTimeDay, getTimeToday, nDate, serializeBigInt } from 'src/common/utils';
+import {
+    caculateKenoBenefits, caculateMax3dBenefits,
+    caculateMax3dProBenefits, caculateMax3PlusdBenefits,
+    caculateMegaBenefits, caculatePowerBenefits,
+    getNearestTimeDay, getTimeToday,
+    nDate, serializeBigInt
+} from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionService } from 'src/transaction/transaction.service';
-import { OldResultKenoDTO, OldResultMegaDTO, OldResultPowerDTO, OldResultMax3dDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, JackPotDTO, UpdateResultPowerDTO, UpdateResultMax3dDTO } from './dto';
+import {
+    OldResultKenoDTO, OldResultMegaDTO,
+    OldResultPowerDTO, OldResultMax3dDTO,
+    ScheduleKenoDTO, ScheduleMax3dDTO,
+    UpdateResultKenoDTO, JackPotDTO,
+    UpdateResultPowerDTO, UpdateResultMax3dDTO
+} from './dto';
 
 const TIME_DRAW = 11
 @Injectable()
@@ -249,8 +261,15 @@ export class ResultService {
 
     // Insert old result 
     async insertOldResultKeno(body: OldResultKenoDTO) {
-        const result = await this.prismaService.resultKeno.create({
-            data: {
+        const result = await this.prismaService.resultKeno.upsert({
+            where: { drawCode: body.drawCode },
+            update: {
+                drawn: true,
+                // drawCode: parseInt(body.drawCode.toString()),
+                drawTime: body.drawTime,
+                result: body.result
+            },
+            create: {
                 drawn: true,
                 drawCode: parseInt(body.drawCode.toString()),
                 drawTime: body.drawTime,
@@ -261,33 +280,68 @@ export class ResultService {
     }
 
     async insertOldResultPower(body: OldResultPowerDTO) {
-        const result = await this.prismaService.resultPower.create({
-            data: {
+        const jackpot1 = body.jackpot1 ? BigInt(body.jackpot1.toString()) : 0
+        const jackpot2 = body.jackpot2 ? BigInt(body.jackpot2.toString()) : 0
+        const result = await this.prismaService.resultPower.upsert({
+            where: { drawCode: body.drawCode },
+            update: {
+                drawn: true,
+                // drawCode: parseInt(body.drawCode.toString()),
+                drawTime: body.drawTime,
+                result: body.result,
+                specialNumber: body.specialNumber,
+                jackpot1: jackpot1,
+                jackpot2: jackpot2
+            },
+            create: {
                 drawn: true,
                 drawCode: parseInt(body.drawCode.toString()),
                 drawTime: body.drawTime,
                 result: body.result,
-                specialNumber: body.specialNumber
+                specialNumber: body.specialNumber,
+                jackpot1: jackpot1,
+                jackpot2: jackpot2
             }
         })
-        return result
+        return serializeBigInt(result)
     }
 
     async insertOldResultMega(body: OldResultMegaDTO) {
-        const result = await this.prismaService.resultMega.create({
-            data: {
+        const jackpot = body.jackpot ? BigInt(body.jackpot.toString()) : 0
+        const result = await this.prismaService.resultMega.upsert({
+            where: { drawCode: body.drawCode },
+            update: {
+                drawn: true,
+                // drawCode: parseInt(body.drawCode.toString()),
+                drawTime: body.drawTime,
+                result: body.result,
+                jackpot1: jackpot
+            },
+            create: {
                 drawn: true,
                 drawCode: parseInt(body.drawCode.toString()),
                 drawTime: body.drawTime,
-                result: body.result
+                result: body.result,
+                jackpot1: jackpot
             }
         })
-        return result
+        return serializeBigInt(result)
     }
 
     async insertOldResultMax3d(body: OldResultMax3dDTO) {
-        const result = await this.prismaService.resultMax3d.create({
-            data: {
+        const result = await this.prismaService.resultMax3d.upsert({
+            where: { uniqueDraw: { drawCode: body.drawCode, type: body.type } },
+            update: {
+                drawn: true,
+                // drawCode: parseInt(body.drawCode.toString()),
+                // type: body.type,
+                drawTime: body.drawTime,
+                first: body.first,
+                second: body.second,
+                third: body.third,
+                special: body.special
+            },
+            create: {
                 drawn: true,
                 drawCode: parseInt(body.drawCode.toString()),
                 drawTime: body.drawTime,
@@ -380,7 +434,7 @@ export class ResultService {
             take: take ? parseInt(take.toString()) : 10,
             skip: skip ? parseInt(skip.toString()) : 0
         })
-        return schedule
+        return serializeBigInt(schedule)
     }
 
     async getResultPower(take: number, skip: number) {
@@ -391,7 +445,7 @@ export class ResultService {
             take: take ? parseInt(take.toString()) : 10,
             skip: skip ? parseInt(skip.toString()) : 0
         })
-        return schedule
+        return serializeBigInt(schedule)
     }
     // ------ End -------
 
@@ -426,7 +480,7 @@ export class ResultService {
             take: take ? parseInt(take.toString()) : 6,
             skip: skip ? parseInt(skip.toString()) : 0
         })
-        return schedule
+        return serializeBigInt(schedule)
     }
 
     async getSchedulePower(take: number, skip: number) {
@@ -481,9 +535,11 @@ export class ResultService {
                 case LotteryType.Max3DPlus:
                     // So ve xem trung khong
                     benefits = caculateMax3PlusdBenefits(lottery, body.special, body.first, body.second, body.third)
+                    break;
                 case LotteryType.Max3DPlus:
                     // So ve xem trung khong
                     benefits = caculateMax3dProBenefits(lottery, body.special, body.first, body.second, body.third)
+                    break
                 default:
                     break;
             }
@@ -544,7 +600,7 @@ export class ResultService {
             // So ve xem trung khong
             let benefits = caculateMegaBenefits(lottery, body.result, parseInt(jackPot.JackPotMega.toString()))
             // Tra thuong
-            this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
+            await this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
         })
         return update
     }
@@ -574,7 +630,7 @@ export class ResultService {
                 parseInt(body.specialNumber.toString()),
                 parseInt(jackPot.JackPot1Power.toString()),
                 parseInt(jackPot.JackPot2Power.toString()))
-            this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
+            await this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
         })
         return update
     }

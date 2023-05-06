@@ -12,6 +12,9 @@ export class OldResultPowerDTO {
 
     @IsNotEmpty()
     specialNumber: number
+
+    jackpot1: number
+    jackpot2: number
 }
 
 export class UpdateResultPowerDTO {

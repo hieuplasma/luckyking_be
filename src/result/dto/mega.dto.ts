@@ -9,4 +9,6 @@ export class OldResultMegaDTO {
 
     @IsNotEmpty()
     result: string
+
+    jackpot: number
 }

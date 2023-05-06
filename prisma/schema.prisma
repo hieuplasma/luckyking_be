@@ -163,6 +163,7 @@ model ResultMega {
   drawCode Int      @unique
   drawTime DateTime
   result   String? // Ket qua Mega dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  jackpot1 BigInt?
 }
 
 model ResultPower {
@@ -172,6 +173,8 @@ model ResultPower {
   drawTime      DateTime
   result        String? // Ket qua Power dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
   specialNumber Int? // So dac biet, neu chua co ket qua tra ve null
+  jackpot1      BigInt?
+  jackpot2      BigInt?
 }
 
 model ResultMax3d {
@@ -184,6 +187,8 @@ model ResultMax3d {
   first    String[] // 4 giai nhat
   second   String[] // 6 giai nhi
   third    String[] // 8 giai 3
+
+  @@unique([drawCode, type], name: "uniqueDraw")
 }
 
 model JackPot {
