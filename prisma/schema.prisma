@@ -55,6 +55,7 @@ model Lottery {
   id            String         @id @default(uuid())
   displayId     Int?           @default(autoincrement())
   type          String // Cac loai ve Vietlot
+  isElective    Boolean?       @default(false) // Cac loai ve Vietlot
   buyTime       DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   resultTime    DateTime?
@@ -226,6 +227,7 @@ model JackPot {
 enum OrderStatus {
   PENDING // chưa xử lý
   LOCK // chưa xử lý
+  PRINTED // Vé đã được in nhưng chưa xử lý
   CONFIRMED //đã nhận tiền
   ERROR //Lỗi hết bộ số hay 1 lý do nào đó
   RETURNED //đã trả lại

@@ -79,9 +79,19 @@ export class OrderController {
     @Get('keno-get-one')
     @Roles(Role.Staff)
     getOneKenoOrder(
+        @GetUser() user: User,
         @Query('status') status: (keyof typeof OrderStatus)[],
     ): Promise<Order> {
-        return this.orderService.getOneKenoOrder(status)
+        return this.orderService.getOneKenoOrder(user, status)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('keno-count')
+    @Roles(Role.Staff)
+    countKenoPendingOrder(
+        @Query('status') status: (keyof typeof OrderStatus)[],
+    ): Promise<number> {
+        return this.orderService.countKenoPendingOrder();
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)

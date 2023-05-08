@@ -9,6 +9,7 @@ import { UserService } from 'src/user/user.service';
 import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { LotteryService } from 'src/lottery/lottery.service';
+import { TIME_TO_HANDLE_LOTTERY } from 'src/common/constants/constants';
 
 @Injectable()
 export class OrderService {
@@ -464,21 +465,108 @@ export class OrderService {
         return orders;
     }
 
-    async getOneKenoOrder(status: (keyof typeof OrderStatus)[]): Promise<Order> {
+    async getOneKenoOrder(user: User, status: (keyof typeof OrderStatus)[]): Promise<Order> {
         const query: { [key: string]: any } = {};
 
-        if (status) {
-            query.status = { in: status };
-        }
+        // if (status) {
+        //     query.status = { in: status };
+        // }
+        // if (status) {
+        //     query.status = OrderStatus.PENDING;
+        // }
+
+
+        // const printedOrder = await this.prismaService.order.findFirst({
+        //     where: {
+        //         confrimUserId: user.id,
+        //         status: OrderStatus.PRINTED,
+        //         ticketType: 'keno'
+        //     },
+        //     orderBy: {
+        //         createdAt: 'asc',
+        //     },
+        //     include: { Lottery: { include: { NumberLottery: true } }, user: true },
+        // })
+
+        // if (printedOrder) {
+        //     console.log('printed order: ', printedOrder)
+        //     return printedOrder
+        // };
+
+        query.status = OrderStatus.PENDING;
 
         query.ticketType = 'keno';
 
         const order = await this.prismaService.order.findFirst({
             where: query,
-            include: { Lottery: { include: { NumberLottery: true } }, user: true }
+            orderBy: {
+                createdAt: 'asc',
+            },
+            include: { Lottery: { include: { NumberLottery: true } }, user: true },
         })
 
+        if (order) {
+            await this.lockOrder(user, { orderIds: [order.id], description: '', payment: '' })
+            console.log('get order')
+
+            const durationTime = order.Lottery.length * TIME_TO_HANDLE_LOTTERY;
+
+            setTimeout(async () => {
+                const orderToReset = await this.prismaService.order.findUnique({
+                    where: { id: order.id }
+                });
+
+                if (orderToReset.status === OrderStatus.LOCK) {
+                    await this.setOrderLotteryToPending(order.id);
+                    console.log('reset')
+                } else {
+                    console.log('no reset')
+                }
+
+            }, durationTime)
+        }
+
         return order;
+    };
+
+    async setOrderLotteryToPending(orderId: string) {
+        const order = await this.prismaService.order.findUnique({
+            where: { id: orderId }
+        })
+
+        if (!order) throw new ForbiddenException("Record to update does not exist");
+
+        if (order.status === OrderStatus.LOCK) {
+            const lockedOrder = await this.prismaService.order.update({
+                data: {
+                    status: OrderStatus.PENDING,
+                    statusDescription: null,
+                    confirmAt: new nDate(),
+                    confirmBy: null,
+                    confrimUserId: null,
+                },
+                where: { id: orderId },
+                include: { Lottery: true }
+            })
+            await this.prismaService.$transaction(
+                lockedOrder.Lottery.map((child) =>
+                    this.prismaService.lottery.update({
+                        where: { id: child.id },
+                        data: { status: OrderStatus.PENDING },
+                    })
+                )
+            )
+        }
+    }
+
+    async countKenoPendingOrder(): Promise<number> {
+        const ordersCount = await this.prismaService.order.count({
+            where: {
+                status: OrderStatus.PENDING,
+            },
+        })
+
+        return ordersCount;
     }
 
     async returnOrder(user: User, body: ReturnOrderDTO): Promise<Order> {
@@ -519,16 +607,17 @@ export class OrderService {
         })
 
         if (order.status === OrderStatus.PENDING) { throw new ForbiddenException("Order is not locked") }
-        if (order.status != OrderStatus.LOCK) { throw new ForbiddenException("Order is aleady resolved!") }
+        if (order.status === OrderStatus.LOCK) { throw new ForbiddenException("Lottery of order is not printed") }
+        if (order.status != OrderStatus.PRINTED) { throw new ForbiddenException("Order is aleady resolved!") }
 
         const newStatus = body.status ? body.status : OrderStatus.CONFIRMED
         // const payment = body.payment || LUCKY_KING_PAYMENT
         let confirmBy = ""
         if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
 
-        order.Lottery.map(item => {
-            if (!(item.imageBack || item.imageFront)) { throw new ForbiddenException("All lotteries must have image!") }
-        })
+        // order.Lottery.map(item => {
+        //     if (!(item.imageBack || item.imageFront)) { throw new ForbiddenException("All lotteries must have image!") }
+        // })
 
         // const transaction = await this.transactionService.payForOrder(
         //     order.user,

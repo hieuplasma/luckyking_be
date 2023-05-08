@@ -5,7 +5,7 @@ import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
 import { fileNameConvert } from 'src/common/utils';
-import { UpdateImageDTO } from './dto';
+import { UpdateImageDTO, PrintDTO } from './dto';
 import { LotteryService } from './lottery.service';
 
 @Controller('lottery')
@@ -25,6 +25,12 @@ export class LotteryController {
     async print(@Query() data: any) {
         console.log(data)
         return 'ok'
+    }
+
+    @Post('print')
+    async confirmPrintLottery(@Body() data: PrintDTO) {
+        const { lotteryId } = data;
+        return await this.lotteryService.confirmPrintLottery(lotteryId)
     }
 
     @Get(':lotteryId')
@@ -51,6 +57,27 @@ export class LotteryController {
         @Body() body: UpdateImageDTO,
         @UploadedFiles() files: { imgFront?: Express.Multer.File[], imgBack?: Express.Multer.File[] }) {
         return this.lotteryService.updateImage(body, files.imgFront[0], files.imgBack[0])
+    }
+    @Post('update-keno-image')
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'imgFront', maxCount: 1 },
+    ], {
+        storage: diskStorage({
+            destination: 'uploads/images',
+            filename(req, file, callback) {
+                if (file) {
+                    const ext = file.originalname.split('.').pop();
+                    const fileName = `${fileNameConvert(req.body.lotteryId)}.${ext}`;
+                    console.log(fileName)
+                    callback(null, fileName)
+                }
+            },
+        })
+    }))
+    async updateKenoImage(
+        @Body() body: UpdateImageDTO,
+        @UploadedFiles() files: { imgFront?: Express.Multer.File[] }) {
+        return this.lotteryService.updateKenoImage(body, files.imgFront[0])
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)

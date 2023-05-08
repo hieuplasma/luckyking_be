@@ -113,6 +113,54 @@ export class LotteryService {
         }
     }
 
+    async updateKenoImage(body: UpdateImageDTO, imgFront: Express.Multer.File) {
+        const images = await this.prismaService.lottery.findUnique({
+            where: { id: body.lotteryId },
+            select: { imageFront: true, imageBack: true }
+        })
+
+        if (images) {
+            const update = await this.prismaService.lottery.update({
+                data: {
+                    imageFront: imgFront ? `/${imgFront.filename}` : images.imageFront,
+                },
+                where: { id: body.lotteryId }
+            })
+            return update
+        }
+        else {
+            console.log(imgFront)
+            fs.unlink(imgFront.path, () => {
+                console.log('Delete image successfully')
+            })
+
+            throw new ForbiddenException("Vé sổ xố này không còn tồn tại nữa");
+        }
+    }
+
+    async confirmPrintLottery(lotteryId: string): Promise<Boolean> {
+        const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
+        if (!lottery) throw new ForbiddenException("Record to delete does not exist")
+
+        if (lottery.status === OrderStatus.PRINTED) return false;
+
+        await this.prismaService.lottery.update({
+            where: { id: lotteryId },
+            data: {
+                status: OrderStatus.PRINTED,
+            }
+        })
+
+        await this.prismaService.order.update({
+            where: { id: lottery.orderId },
+            data: {
+                status: OrderStatus.PRINTED,
+            }
+        })
+
+        return true;
+    }
+
     async deleteLottery(lotteryId: string): Promise<Lottery> {
         const find = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } })
         if (!find) throw new ForbiddenException("Record to delete does not exist")
