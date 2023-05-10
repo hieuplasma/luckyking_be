@@ -55,7 +55,6 @@ model Lottery {
   id            String         @id @default(uuid())
   displayId     Int?           @default(autoincrement())
   type          String // Cac loai ve Vietlot
-  isElective    Boolean?       @default(false) // Cac loai ve Vietlot
   buyTime       DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   resultTime    DateTime?

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { GetUser, Roles } from 'src/auth/decorator';
@@ -6,6 +6,8 @@ import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
 import { fileNameConvert } from 'src/common/utils';
 import { UpdateImageDTO, PrintDTO } from './dto';
+import { UpdateLotteryNumbersDTO } from './dto/update-lottery-numbers.dto';
+import { IUpdateLotteryNumber } from './interfaces';
 import { LotteryService } from './lottery.service';
 
 @Controller('lottery')
@@ -24,7 +26,12 @@ export class LotteryController {
     @Get('print')
     async print(@Query() data: any) {
         console.log(data)
-        return 'ok'
+        return new Promise((res) => {
+            setTimeout(() => {
+                res('ok')
+            }, 2000)
+        })
+        // return 'ok'
     }
 
     @Post('print')
@@ -36,6 +43,11 @@ export class LotteryController {
     @Get(':lotteryId')
     async getLotteryById(@Param('lotteryId') lotteryId: string) {
         return await this.lotteryService.getLotteryById(lotteryId)
+    }
+
+    @Patch(':lotteryId')
+    async updateLotteryNumbers(@Param('lotteryId') lotteryId: string, @Body() data: UpdateLotteryNumbersDTO) {
+        return await this.lotteryService.updateLotteryNumbers(lotteryId, data);
     }
 
     @Post('update-image')

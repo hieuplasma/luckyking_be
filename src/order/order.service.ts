@@ -460,6 +460,9 @@ export class OrderService {
 
         const orders = await this.prismaService.order.findMany({
             where: query,
+            orderBy: {
+                confirmAt: 'asc'
+            },
             include: { Lottery: { include: { NumberLottery: true } }, user: true }
         })
         return orders;

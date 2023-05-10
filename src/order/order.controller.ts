@@ -59,7 +59,7 @@ export class OrderController {
     @Get('get-by-display-id/:id')
     @Roles(Role.User, Role.Staff, Role.Admin)
     getOrderByDisplayId(@Param('id') displayOrderId: number): Promise<Order> {
-        return this.orderService.getOrderByDisplayId(displayOrderId)
+        return this.orderService.getOrderByDisplayId(+displayOrderId)
     }
 
 
