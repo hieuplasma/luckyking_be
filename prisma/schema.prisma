@@ -231,6 +231,7 @@ model JackPot {
 enum OrderStatus {
   PENDING // chưa xử lý
   LOCK // chưa xử lý
+  PRINTED // Vé đã được in nhưng chưa xử lý
   CONFIRMED //đã nhận tiền
   ERROR //Lỗi hết bộ số hay 1 lý do nào đó
   RETURNED //đã trả lại

@@ -4,7 +4,7 @@ import { LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateImageDTO } from './dto';
-import { ICreateLottery } from './interfaces';
+import { ICreateLottery, IUpdateLotteryNumber } from './interfaces';
 import fs from 'fs'
 
 @Injectable()
@@ -17,6 +17,32 @@ export class LotteryService {
         })
 
         return lotteryInfo;
+    }
+
+    async updateLotteryNumbers(lotteryId: string, data: IUpdateLotteryNumber) {
+        const { NumberLottery } = data;
+        const { numbers } = NumberLottery;
+
+        const numberLotteryToUpdate = await this.prismaService.numberLottery.findUnique({
+            where: { lotteryId }
+        })
+
+        const numberDetail = JSON.parse(numberLotteryToUpdate.numberDetail as string);
+
+        for (let i = 0; i < numbers.length; i++) {
+            numberDetail[i].boSo = numbers[i];
+        }
+
+        const updatedLottery = await this.prismaService.numberLottery.update({
+            where: {
+                lotteryId
+            },
+            data: {
+                numberDetail: JSON.stringify(numberDetail),
+            }
+        })
+
+        return updatedLottery;
     }
 
     async createLottery(createLotteryData: ICreateLottery, session?) {
@@ -111,6 +137,54 @@ export class LotteryService {
 
             throw new ForbiddenException("Vé sổ xố này không còn tồn tại nữa");
         }
+    }
+
+    async updateKenoImage(body: UpdateImageDTO, imgFront: Express.Multer.File) {
+        const images = await this.prismaService.lottery.findUnique({
+            where: { id: body.lotteryId },
+            select: { imageFront: true, imageBack: true }
+        })
+
+        if (images) {
+            const update = await this.prismaService.lottery.update({
+                data: {
+                    imageFront: imgFront ? `/${imgFront.filename}` : images.imageFront,
+                },
+                where: { id: body.lotteryId }
+            })
+            return update
+        }
+        else {
+            console.log(imgFront)
+            fs.unlink(imgFront.path, () => {
+                console.log('Delete image successfully')
+            })
+
+            throw new ForbiddenException("Vé sổ xố này không còn tồn tại nữa");
+        }
+    }
+
+    async confirmPrintLottery(lotteryId: string): Promise<Boolean> {
+        const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
+        if (!lottery) throw new ForbiddenException("Record to delete does not exist")
+
+        if (lottery.status === OrderStatus.PRINTED) return false;
+
+        await this.prismaService.lottery.update({
+            where: { id: lotteryId },
+            data: {
+                status: OrderStatus.PRINTED,
+            }
+        })
+
+        await this.prismaService.order.update({
+            where: { id: lottery.orderId },
+            data: {
+                status: OrderStatus.PRINTED,
+            }
+        })
+
+        return true;
     }
 
     async deleteLottery(lotteryId: string): Promise<Lottery> {
