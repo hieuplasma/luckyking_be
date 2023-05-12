@@ -1,4 +1,5 @@
 import { IsNotEmpty } from "class-validator"
+import { LotteryType } from "src/common/enum"
 
 export class OldResultKenoDTO {
     @IsNotEmpty()
@@ -25,4 +26,12 @@ export class UpdateResultKenoDTO {
 
     @IsNotEmpty()
     result: string
+}
+
+export class GetResultByDrawCodeDTO {
+    @IsNotEmpty()
+    drawCode: number
+
+    @IsNotEmpty()
+    type: LotteryType
 }

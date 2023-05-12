@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
-import { Role } from 'src/common/enum';
+import { LotteryType, Role } from 'src/common/enum';
 import { JackPotDTO, OldResultKenoDTO, OldResultMax3dDTO, OldResultMegaDTO, OldResultPowerDTO, ScheduleKenoDTO, ScheduleMax3dDTO, UpdateResultKenoDTO, UpdateResultMax3dDTO, UpdateResultPowerDTO } from './dto';
 import { ResultService } from './result.service';
 
@@ -11,7 +11,6 @@ export class ResultController {
     constructor(private resultService: ResultService) { }
 
     // Insert old  result
-
     @UseGuards(MyJwtGuard, RolesGuard)
     @Post('insert-old/power')
     @Roles(Role.Staff, Role.Admin)
@@ -177,5 +176,12 @@ export class ResultController {
         return this.resultService.getJackPot()
     }
     // ------ End ------
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-by-draw')
+    @Roles(Role.Staff, Role.Admin, Role.User)
+    getResultByDrawCode(@Query('type') type: LotteryType, @Query('drawCode') drawCode: number) {
+        return this.resultService.getResultByDrawCode(type, drawCode)
+    }
 }
 

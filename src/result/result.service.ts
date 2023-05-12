@@ -699,4 +699,40 @@ export class ResultService {
         return serializeBigInt(jackpot)
     }
     // ------ End ------
+
+    async getResultByDrawCode(type: LotteryType, drawCodeIp: number) {
+        const drawCode = parseInt(drawCodeIp.toString())
+        let result = null
+        switch (type) {
+            case LotteryType.Keno:
+                result = await this.prismaService.resultKeno.findFirst({
+                    where: { drawCode: drawCode }
+                })
+                break;
+            case LotteryType.Mega:
+                result = await this.prismaService.resultMega.findFirst({
+                    where: { drawCode: drawCode }
+                })
+                break;
+            case LotteryType.Power:
+                result = await this.prismaService.resultPower.findFirst({
+                    where: { drawCode: drawCode }
+                })
+                break;
+            case LotteryType.Max3D:
+            case LotteryType.Max3DPlus:
+                result = await this.prismaService.resultMax3d.findFirst({
+                    where: { drawCode: drawCode, type: LotteryType.Max3D }
+                })
+                break;
+            case LotteryType.Max3DPro:
+                result = await this.prismaService.resultMax3d.findFirst({
+                    where: { drawCode: drawCode, type: LotteryType.Max3DPro }
+                })
+                break;
+            default:
+                break;
+        }
+        return serializeBigInt(result)
+    }
 }
