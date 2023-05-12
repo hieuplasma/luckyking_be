@@ -6,6 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateImageDTO } from './dto';
 import { ICreateLottery, IUpdateLotteryNumber } from './interfaces';
 import fs from 'fs'
+import { nDate } from 'src/common/utils';
 
 @Injectable()
 export class LotteryService {
@@ -19,30 +20,71 @@ export class LotteryService {
         return lotteryInfo;
     }
 
+    async getKenoNextPending(): Promise<Lottery[]> {
+        const now = new nDate()
+        const schedule = await this.prismaService.resultKeno.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        })
+
+        const Lotteries = await this.prismaService.lottery.findMany({
+            where: {
+                drawCode: schedule.drawCode,
+                status: OrderStatus.PENDING
+            },
+            include: {
+                Order: true,
+                NumberLottery: true
+            }
+        })
+
+        return Lotteries;
+    }
+
+    async confirmLottery(lotteryId: string): Promise<Lottery> {
+        const confirmedLottery = await this.prismaService.lottery.update({
+            where: {
+                id: lotteryId,
+            },
+            data: {
+                status: OrderStatus.CONFIRMED,
+            }
+        })
+
+        return confirmedLottery;
+    }
+
     async updateLotteryNumbers(lotteryId: string, data: IUpdateLotteryNumber) {
         const { NumberLottery } = data;
         const { numbers } = NumberLottery;
 
-        const numberLotteryToUpdate = await this.prismaService.numberLottery.findUnique({
-            where: { lotteryId }
-        })
+        console.log('updating...')
 
-        const numberDetail = JSON.parse(numberLotteryToUpdate.numberDetail as string);
+        try {
 
-        for (let i = 0; i < numbers.length; i++) {
-            numberDetail[i].boSo = numbers[i];
+            const numberLotteryToUpdate = await this.prismaService.numberLottery.findUnique({
+                where: { lotteryId }
+            })
+
+            const numberDetail = JSON.parse(numberLotteryToUpdate.numberDetail as string);
+
+            for (let i = 0; i < numbers.length; i++) {
+                numberDetail[i].boSo = numbers[i];
+            }
+
+            const updatedLottery = await this.prismaService.numberLottery.update({
+                where: {
+                    lotteryId
+                },
+                data: {
+                    numberDetail: JSON.stringify(numberDetail),
+                }
+            })
+            return updatedLottery;
+        } catch (error) {
+            throw new ForbiddenException("Không thể cập nhật vé số");
         }
 
-        const updatedLottery = await this.prismaService.numberLottery.update({
-            where: {
-                lotteryId
-            },
-            data: {
-                numberDetail: JSON.stringify(numberDetail),
-            }
-        })
-
-        return updatedLottery;
     }
 
     async createLottery(createLotteryData: ICreateLottery, session?) {
@@ -165,24 +207,24 @@ export class LotteryService {
     }
 
     async confirmPrintLottery(lotteryId: string): Promise<Boolean> {
-        const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
-        if (!lottery) throw new ForbiddenException("Record to delete does not exist")
+        // const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
+        // if (!lottery) throw new ForbiddenException("Record to delete does not exist")
 
-        if (lottery.status === OrderStatus.PRINTED) return false;
+        // if (lottery.status === OrderStatus.PRINTED) return false;
 
-        await this.prismaService.lottery.update({
-            where: { id: lotteryId },
-            data: {
-                status: OrderStatus.PRINTED,
-            }
-        })
+        // await this.prismaService.lottery.update({
+        //     where: { id: lotteryId },
+        //     data: {
+        //         status: OrderStatus.PRINTED,
+        //     }
+        // })
 
-        await this.prismaService.order.update({
-            where: { id: lottery.orderId },
-            data: {
-                status: OrderStatus.PRINTED,
-            }
-        })
+        // await this.prismaService.order.update({
+        //     where: { id: lottery.orderId },
+        //     data: {
+        //         status: OrderStatus.PRINTED,
+        //     }
+        // })
 
         return true;
     }

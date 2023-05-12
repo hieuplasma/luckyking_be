@@ -109,6 +109,13 @@ export class OrderController {
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('update-status')
+    @Roles(Role.Staff)
+    updateOrderStatus(@GetUser() user: User) {
+        return this.orderService.updateOrderStatus(user)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
     @Post('lock')
     @Roles(Role.Staff)
     lockOrder(@GetUser() user: User, @Body() body: lockMultiOrderDTO) {

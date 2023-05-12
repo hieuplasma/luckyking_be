@@ -458,13 +458,25 @@ export class OrderService {
             query.ticketType = ticketType;
         }
 
-        const orders = await this.prismaService.order.findMany({
+        const now = new nDate()
+
+        let orders = await this.prismaService.order.findMany({
             where: query,
             orderBy: {
                 confirmAt: 'asc'
             },
-            include: { Lottery: { include: { NumberLottery: true } }, user: true }
+            include: {
+                Lottery: {
+                    where: {
+                        drawTime: { gt: now }
+                    },
+                    include: { NumberLottery: true }
+                }, user: true
+            }
         })
+
+        orders = orders.filter((order) => order.Lottery.length !== 0);
+
         return orders;
     }
 
@@ -509,24 +521,25 @@ export class OrderService {
         })
 
         if (order) {
-            await this.lockOrder(user, { orderIds: [order.id], description: '', payment: '' })
+            // await this.lockOrder(user, { orderIds: [order.id], description: '', payment: '' })
             console.log('get order')
 
-            const durationTime = order.Lottery.length * TIME_TO_HANDLE_LOTTERY;
+            // const durationTime = order.Lottery.length * TIME_TO_HANDLE_LOTTERY;
 
-            setTimeout(async () => {
-                const orderToReset = await this.prismaService.order.findUnique({
-                    where: { id: order.id }
-                });
+            // setTimeout(async () => {
+            //     const orderToReset = await this.prismaService.order.findUnique({
+            //         where: { id: order.id }
+            //     });
 
-                if (orderToReset.status === OrderStatus.LOCK) {
-                    await this.setOrderLotteryToPending(order.id);
-                    console.log('reset')
-                } else {
-                    console.log('no reset')
-                }
+            //     if (orderToReset.status === OrderStatus.LOCK) {
+            //         await this.setOrderLotteryToPending(order.id);
+            //         console.log('reset')
+            //     } else {
+            //         console.log('no reset')
 
-            }, durationTime)
+            //     }
+
+            // }, durationTime)
         }
 
         return order;
@@ -563,6 +576,26 @@ export class OrderService {
     }
 
     async countKenoPendingOrder(): Promise<number> {
+
+        // const now = new nDate()
+
+        // let orders = await this.prismaService.order.findMany({
+        //     where: query,
+        //     orderBy: {
+        //         confirmAt: 'asc'
+        //     },
+        //     include: {
+        //         Lottery: {
+        //             where: {
+        //                 drawTime: { gt: now }
+        //             },
+        //             include: { NumberLottery: true }
+        //         }, user: true
+        //     }
+        // })
+
+        // orders = orders.filter((order) => order.Lottery.length !== 0);
+
         const ordersCount = await this.prismaService.order.count({
             where: {
                 status: OrderStatus.PENDING,
@@ -609,9 +642,9 @@ export class OrderService {
             include: { user: true, Lottery: true }
         })
 
-        if (order.status === OrderStatus.PENDING) { throw new ForbiddenException("Order is not locked") }
-        if (order.status === OrderStatus.LOCK) { throw new ForbiddenException("Lottery of order is not printed") }
-        if (order.status != OrderStatus.PRINTED) { throw new ForbiddenException("Order is aleady resolved!") }
+        // if (order.status === OrderStatus.PENDING) { throw new ForbiddenException("Order is not locked") }
+        // if (order.status === OrderStatus.LOCK) { throw new ForbiddenException("Lottery of order is not printed") }
+        // if (order.status != OrderStatus.PRINTED) { throw new ForbiddenException("Order is aleady resolved!") }
 
         const newStatus = body.status ? body.status : OrderStatus.CONFIRMED
         // const payment = body.payment || LUCKY_KING_PAYMENT
@@ -655,6 +688,45 @@ export class OrderService {
         //@ts-ignore
         // orderConfirmed.transaction = transaction
         return orderConfirmed
+    }
+
+    async updateOrderStatus(user: User): Promise<Order[]> {
+
+        const printedOrders = await this.prismaService.order.findMany({
+            where: {
+                status: OrderStatus.PRINTED,
+            },
+            include: {
+                Lottery: true
+            }
+        })
+
+        const orderIdsToUpdate = [];
+
+        for (const order of printedOrders) {
+
+            let countConfirmedLottery = 0;
+            for (const lottery of order.Lottery) {
+                if (lottery.status === OrderStatus.CONFIRMED) { countConfirmedLottery++ };
+            }
+            if (countConfirmedLottery === order.Lottery.length) {
+                orderIdsToUpdate.push(order.id);
+            }
+        }
+
+        const updatedOrders = await this.prismaService.order.updateMany({
+            where: {
+                id: { in: orderIdsToUpdate }
+            },
+            data: {
+                status: OrderStatus.CONFIRMED,
+                confirmAt: new nDate(),
+                confrimUserId: user.id,
+            }
+        })
+
+        //@ts-ignore
+        return updatedOrders;
     }
 
     async lockOrder(user: User, { orderIds, description, payment }: lockMultiOrderDTO): Promise<Order[]> {
