@@ -18,29 +18,29 @@ datasource db {
 
 model User {
   // @@map("users") //users is table's name in postgres SQL
-  id             String   @id @default(uuid())
-  displayId      Int?     @default(autoincrement())
-  phoneNumber    String   @unique
+  id             String        @id @default(uuid())
+  displayId      Int?          @default(autoincrement())
+  phoneNumber    String        @unique
   hashedPassword String
   fullName       String?
-  createdAt      DateTime @default(now())
-  updateAt       DateTime @updatedAt
+  createdAt      DateTime      @default(now())
+  updateAt       DateTime      @updatedAt
   email          String?
   address        String?
   identify       String?
   // balance        Int      @default(0)
-  status         String   @default("active")
-  role           String   @default("user") // admin, u8ser, staff
+  status         String        @default("active")
+  role           String        @default("user") // admin, u8ser, staff
   avatar         String? // Link anh
   personNumber   String? // Ma alias ca nhan
-
-  Device       Device[]
-  Lottery      Lottery[]
-  Transaction  Transaction[]
-  Order        Order[]
-  Cart         Cart?
-  MoneyAccount MoneyAccount?
-  RewardWallet RewardWallet?
+  printerUrl     String?
+  Device         Device[]
+  Lottery        Lottery[]
+  Transaction    Transaction[]
+  Order          Order[]
+  Cart           Cart?
+  MoneyAccount   MoneyAccount?
+  RewardWallet   RewardWallet?
 }
 
 model Device {
@@ -77,10 +77,11 @@ model Lottery {
 }
 
 model Cart {
-  id      String    @id @default(uuid())
-  User    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId  String    @unique
-  Lottery Lottery[]
+  id        String    @id @default(uuid())
+  displayId Int?      @default(autoincrement())
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String    @unique
+  Lottery   Lottery[]
 }
 
 // Lich su giao dich, bien dong so du, lich su thang, thua se dung api rut gon cua lich su giao dich
@@ -158,12 +159,13 @@ model ResultKeno {
 }
 
 model ResultMega {
-  id       String   @id @default(uuid())
-  drawn    Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
-  drawCode Int      @unique
-  drawTime DateTime
-  result   String? // Ket qua Mega dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
-  jackpot1 BigInt?
+  id        String   @id @default(uuid())
+  drawn     Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode  Int      @unique
+  drawTime  DateTime
+  result    String? // Ket qua Mega dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  jackpot1  BigInt?
+  displayId Int?     @default(autoincrement())
 }
 
 model ResultPower {
