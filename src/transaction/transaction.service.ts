@@ -44,7 +44,7 @@ export class TransactionService {
         //@ts-ignore
         transaction.currentBalance = moneyAccount.balance
         //@ts-ignore
-        transaction.success = true
+        transaction.message = "success"
         return transaction
     }
 
