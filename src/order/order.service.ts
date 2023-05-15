@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, ReturnOrderDTO } from './dto';
-import { OrderMethod, Role } from 'src/common/enum';
+import { LotteryType, OrderMethod, Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
@@ -448,6 +448,7 @@ export class OrderService {
         return orders
     }
 
+    // Basic order
     async getAllOrder(status: (keyof typeof OrderStatus)[], ticketType: string): Promise<Order[]> {
         const query: { [key: string]: any } = {};
 
@@ -458,24 +459,66 @@ export class OrderService {
             query.ticketType = ticketType;
         }
 
-        const now = new nDate()
-
         let orders = await this.prismaService.order.findMany({
             where: query,
+            take: 20,
             orderBy: {
-                confirmAt: 'asc'
+                displayId: 'asc',
+                // confirmAt: 'asc',
             },
             include: {
-                Lottery: {
-                    where: {
-                        drawTime: { gt: now }
-                    },
-                    include: { NumberLottery: true }
-                }, user: true
+                Lottery: { include: { NumberLottery: true } },
+                user: true
             }
         })
 
-        orders = orders.filter((order) => order.Lottery.length !== 0);
+        // Update lottery expired
+        const now = new nDate();
+        const max3DSchedule = await this.prismaService.resultMax3d.findFirst({
+            where: { drawn: false, type: LotteryType.Max3D, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        })
+        const max3DProSchedule = await this.prismaService.resultMax3d.findFirst({
+            where: { drawn: false, type: LotteryType.Max3DPro, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        })
+        const MegaSchedule = await this.prismaService.resultMega.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        })
+        const powerSchedule = await this.prismaService.resultPower.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        })
+
+        for (const order of orders) {
+            for (const lottery of order.Lottery) {
+                if (lottery.drawTime < now && (lottery.status === OrderStatus.PENDING || lottery.status === OrderStatus.LOCK)) {
+                    let scheduleType: any = null;
+
+                    if (lottery.type === LotteryType.Mega) {
+                        scheduleType = MegaSchedule;
+                    }
+                    else if (lottery.type === LotteryType.Power) {
+                        scheduleType = powerSchedule;
+                    }
+                    else if (lottery.type === LotteryType.Max3D || lottery.type === LotteryType.Max3DPlus) {
+                        scheduleType = max3DSchedule
+                    }
+                    else if (lottery.type === LotteryType.Max3DPro) {
+                        scheduleType = max3DProSchedule;
+                    }
+
+                    await this.prismaService.lottery.update({
+                        where: { id: lottery.id },
+                        data: {
+                            drawCode: scheduleType.drawCode,
+                            drawTime: scheduleType.drawTime,
+                        }
+                    })
+                }
+            }
+        }
 
         return orders;
     }
@@ -490,23 +533,6 @@ export class OrderService {
         //     query.status = OrderStatus.PENDING;
         // }
 
-
-        // const printedOrder = await this.prismaService.order.findFirst({
-        //     where: {
-        //         confrimUserId: user.id,
-        //         status: OrderStatus.PRINTED,
-        //         ticketType: 'keno'
-        //     },
-        //     orderBy: {
-        //         createdAt: 'asc',
-        //     },
-        //     include: { Lottery: { include: { NumberLottery: true } }, user: true },
-        // })
-
-        // if (printedOrder) {
-        //     console.log('printed order: ', printedOrder)
-        //     return printedOrder
-        // };
 
         query.status = OrderStatus.PENDING;
 
@@ -557,7 +583,6 @@ export class OrderService {
                 data: {
                     status: OrderStatus.PENDING,
                     statusDescription: null,
-                    confirmAt: new nDate(),
                     confirmBy: null,
                     confrimUserId: null,
                 },
@@ -577,29 +602,24 @@ export class OrderService {
 
     async countKenoPendingOrder(): Promise<number> {
 
-        // const now = new nDate()
-
-        // let orders = await this.prismaService.order.findMany({
-        //     where: query,
-        //     orderBy: {
-        //         confirmAt: 'asc'
+        // const ordersCount = await this.prismaService.order.count({
+        //     where: {
+        //         ticketType: LotteryType.Keno,
+        //         status: OrderStatus.PENDING,
         //     },
-        //     include: {
-        //         Lottery: {
-        //             where: {
-        //                 drawTime: { gt: now }
-        //             },
-        //             include: { NumberLottery: true }
-        //         }, user: true
-        //     }
         // })
+        const now = new nDate()
+        const schedule = await this.prismaService.resultKeno.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        });
 
-        // orders = orders.filter((order) => order.Lottery.length !== 0);
-
-        const ordersCount = await this.prismaService.order.count({
+        const ordersCount = await this.prismaService.lottery.count({
             where: {
+                type: LotteryType.Keno,
+                drawCode: schedule.drawCode,
                 status: OrderStatus.PENDING,
-            },
+            }
         })
 
         return ordersCount;
@@ -642,9 +662,9 @@ export class OrderService {
             include: { user: true, Lottery: true }
         })
 
-        // if (order.status === OrderStatus.PENDING) { throw new ForbiddenException("Order is not locked") }
-        // if (order.status === OrderStatus.LOCK) { throw new ForbiddenException("Lottery of order is not printed") }
-        // if (order.status != OrderStatus.PRINTED) { throw new ForbiddenException("Order is aleady resolved!") }
+        if (order.status === OrderStatus.PENDING) { throw new ForbiddenException("Order is not locked") }
+        if (order.status === OrderStatus.LOCK) { throw new ForbiddenException("Lottery of order is not printed") }
+        if (order.status !== OrderStatus.PRINTED) { throw new ForbiddenException("Order is aleady resolved!") }
 
         const newStatus = body.status ? body.status : OrderStatus.CONFIRMED
         // const payment = body.payment || LUCKY_KING_PAYMENT
@@ -691,7 +711,6 @@ export class OrderService {
     }
 
     async updateOrderStatus(user: User): Promise<Order[]> {
-
         const printedOrders = await this.prismaService.order.findMany({
             where: {
                 status: OrderStatus.PRINTED,

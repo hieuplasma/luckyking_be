@@ -89,7 +89,6 @@ export class LotteryController {
         storage: diskStorage({
             destination: 'uploads/images',
             filename(req, file, callback) {
-                console.log(file)
                 const ext = file.originalname.split('.').pop();
                 const fileName = `${fileNameConvert(req.body.lotteryId)}.${ext}`;
                 console.log(fileName)

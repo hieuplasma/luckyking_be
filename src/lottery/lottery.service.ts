@@ -7,6 +7,7 @@ import { UpdateImageDTO } from './dto';
 import { ICreateLottery, IUpdateLotteryNumber } from './interfaces';
 import fs from 'fs'
 import { nDate } from 'src/common/utils';
+import { LotteryType } from 'src/common/enum';
 
 @Injectable()
 export class LotteryService {
@@ -25,18 +26,38 @@ export class LotteryService {
         const schedule = await this.prismaService.resultKeno.findFirst({
             where: { drawn: false, drawTime: { gt: now } },
             orderBy: { drawCode: 'asc' },
+        });
+
+        // Update lottery expired
+        await this.prismaService.lottery.updateMany({
+            where: {
+                type: LotteryType.Keno,
+                drawTime: { lte: now },
+                status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
+            },
+            data: {
+                drawCode: schedule.drawCode,
+                drawTime: schedule.drawTime,
+            }
         })
 
         const Lotteries = await this.prismaService.lottery.findMany({
             where: {
+                type: LotteryType.Keno,
                 drawCode: schedule.drawCode,
                 status: OrderStatus.PENDING
             },
+            orderBy: {
+                Order: {
+                    displayId: 'asc'
+                }
+            },
+            take: 3,
             include: {
                 Order: true,
                 NumberLottery: true
             }
-        })
+        });
 
         return Lotteries;
     }
@@ -57,8 +78,6 @@ export class LotteryService {
     async updateLotteryNumbers(lotteryId: string, data: IUpdateLotteryNumber) {
         const { NumberLottery } = data;
         const { numbers } = NumberLottery;
-
-        console.log('updating...')
 
         try {
 
@@ -84,7 +103,6 @@ export class LotteryService {
         } catch (error) {
             throw new ForbiddenException("Không thể cập nhật vé số");
         }
-
     }
 
     async createLottery(createLotteryData: ICreateLottery, session?) {
@@ -153,16 +171,16 @@ export class LotteryService {
     }
 
     async updateImage(body: UpdateImageDTO, imgFront: Express.Multer.File, imgBack: Express.Multer.File) {
-        const images = await this.prismaService.lottery.findUnique({
+        const lottery = await this.prismaService.lottery.findUnique({
             where: { id: body.lotteryId },
             select: { imageFront: true, imageBack: true }
         })
 
-        if (images) {
+        if (lottery) {
             const update = await this.prismaService.lottery.update({
                 data: {
-                    imageFront: imgFront ? `/${imgFront.filename}` : images.imageFront,
-                    imageBack: imgBack ? `/${imgBack.filename}` : images.imageBack
+                    imageFront: imgFront ? `/${imgFront.filename}` : lottery.imageFront,
+                    imageBack: imgBack ? `/${imgBack.filename}` : lottery.imageBack
                 },
                 where: { id: body.lotteryId }
             })
@@ -182,15 +200,15 @@ export class LotteryService {
     }
 
     async updateKenoImage(body: UpdateImageDTO, imgFront: Express.Multer.File) {
-        const images = await this.prismaService.lottery.findUnique({
+        const lottery = await this.prismaService.lottery.findUnique({
             where: { id: body.lotteryId },
             select: { imageFront: true, imageBack: true }
         })
 
-        if (images) {
+        if (lottery) {
             const update = await this.prismaService.lottery.update({
                 data: {
-                    imageFront: imgFront ? `/${imgFront.filename}` : images.imageFront,
+                    imageFront: imgFront ? `/${imgFront.filename}` : lottery.imageFront,
                 },
                 where: { id: body.lotteryId }
             })
@@ -207,24 +225,24 @@ export class LotteryService {
     }
 
     async confirmPrintLottery(lotteryId: string): Promise<Boolean> {
-        // const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
-        // if (!lottery) throw new ForbiddenException("Record to delete does not exist")
+        const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
+        if (!lottery) throw new ForbiddenException("Record to delete does not exist")
 
-        // if (lottery.status === OrderStatus.PRINTED) return false;
+        if (lottery.status === OrderStatus.PRINTED) return false;
 
-        // await this.prismaService.lottery.update({
-        //     where: { id: lotteryId },
-        //     data: {
-        //         status: OrderStatus.PRINTED,
-        //     }
-        // })
+        await this.prismaService.lottery.update({
+            where: { id: lotteryId },
+            data: {
+                status: OrderStatus.PRINTED,
+            }
+        })
 
-        // await this.prismaService.order.update({
-        //     where: { id: lottery.orderId },
-        //     data: {
-        //         status: OrderStatus.PRINTED,
-        //     }
-        // })
+        await this.prismaService.order.update({
+            where: { id: lottery.orderId },
+            data: {
+                status: OrderStatus.PRINTED,
+            }
+        })
 
         return true;
     }
