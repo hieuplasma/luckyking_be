@@ -103,7 +103,14 @@ export class AuthService {
                 }
             }
         })
-        return await this.signJwtToken(user.id, user.phoneNumber)
+
+        const { accessToken } = await this.signJwtToken(user.id, user.phoneNumber);
+
+        return {
+            accessToken,
+            printerUrl: user.printerUrl
+        }
+
     }
 
     async superLogin(authDTO: AuthDTO) {
@@ -233,7 +240,7 @@ export class AuthService {
             secret: this.configService.get('JWT_SECRET')
         })
         return {
-            accessToken: jwtString
+            accessToken: jwtString,
         }
     }
 

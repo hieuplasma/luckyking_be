@@ -6,6 +6,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateImageDTO } from './dto';
 import { ICreateLottery, IUpdateLotteryNumber } from './interfaces';
 import fs from 'fs'
+import { nDate } from 'src/common/utils';
+import { LotteryType } from 'src/common/enum';
 
 @Injectable()
 export class LotteryService {
@@ -19,30 +21,88 @@ export class LotteryService {
         return lotteryInfo;
     }
 
+    async getKenoNextPending(): Promise<Lottery[]> {
+        const now = new nDate()
+        const schedule = await this.prismaService.resultKeno.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        });
+
+        // Update lottery expired
+        await this.prismaService.lottery.updateMany({
+            where: {
+                type: LotteryType.Keno,
+                drawTime: { lte: now },
+                status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
+            },
+            data: {
+                drawCode: schedule.drawCode,
+                drawTime: schedule.drawTime,
+            }
+        })
+
+        const Lotteries = await this.prismaService.lottery.findMany({
+            where: {
+                type: LotteryType.Keno,
+                drawCode: schedule.drawCode,
+                status: OrderStatus.PENDING
+            },
+            orderBy: {
+                Order: {
+                    displayId: 'asc'
+                }
+            },
+            take: 3,
+            include: {
+                Order: true,
+                NumberLottery: true
+            }
+        });
+
+        return Lotteries;
+    }
+
+    async confirmLottery(lotteryId: string): Promise<Lottery> {
+        const confirmedLottery = await this.prismaService.lottery.update({
+            where: {
+                id: lotteryId,
+            },
+            data: {
+                status: OrderStatus.CONFIRMED,
+            }
+        })
+
+        return confirmedLottery;
+    }
+
     async updateLotteryNumbers(lotteryId: string, data: IUpdateLotteryNumber) {
         const { NumberLottery } = data;
         const { numbers } = NumberLottery;
 
-        const numberLotteryToUpdate = await this.prismaService.numberLottery.findUnique({
-            where: { lotteryId }
-        })
+        try {
 
-        const numberDetail = JSON.parse(numberLotteryToUpdate.numberDetail as string);
+            const numberLotteryToUpdate = await this.prismaService.numberLottery.findUnique({
+                where: { lotteryId }
+            })
 
-        for (let i = 0; i < numbers.length; i++) {
-            numberDetail[i].boSo = numbers[i];
-        }
+            const numberDetail = JSON.parse(numberLotteryToUpdate.numberDetail as string);
 
-        const updatedLottery = await this.prismaService.numberLottery.update({
-            where: {
-                lotteryId
-            },
-            data: {
-                numberDetail: JSON.stringify(numberDetail),
+            for (let i = 0; i < numbers.length; i++) {
+                numberDetail[i].boSo = numbers[i];
             }
-        })
 
-        return updatedLottery;
+            const updatedLottery = await this.prismaService.numberLottery.update({
+                where: {
+                    lotteryId
+                },
+                data: {
+                    numberDetail: JSON.stringify(numberDetail),
+                }
+            })
+            return updatedLottery;
+        } catch (error) {
+            throw new ForbiddenException("Không thể cập nhật vé số");
+        }
     }
 
     async createLottery(createLotteryData: ICreateLottery, session?) {
@@ -111,16 +171,16 @@ export class LotteryService {
     }
 
     async updateImage(body: UpdateImageDTO, imgFront: Express.Multer.File, imgBack: Express.Multer.File) {
-        const images = await this.prismaService.lottery.findUnique({
+        const lottery = await this.prismaService.lottery.findUnique({
             where: { id: body.lotteryId },
             select: { imageFront: true, imageBack: true }
         })
 
-        if (images) {
+        if (lottery) {
             const update = await this.prismaService.lottery.update({
                 data: {
-                    imageFront: imgFront ? `/${imgFront.filename}` : images.imageFront,
-                    imageBack: imgBack ? `/${imgBack.filename}` : images.imageBack
+                    imageFront: imgFront ? `/${imgFront.filename}` : lottery.imageFront,
+                    imageBack: imgBack ? `/${imgBack.filename}` : lottery.imageBack
                 },
                 where: { id: body.lotteryId }
             })
@@ -140,15 +200,15 @@ export class LotteryService {
     }
 
     async updateKenoImage(body: UpdateImageDTO, imgFront: Express.Multer.File) {
-        const images = await this.prismaService.lottery.findUnique({
+        const lottery = await this.prismaService.lottery.findUnique({
             where: { id: body.lotteryId },
             select: { imageFront: true, imageBack: true }
         })
 
-        if (images) {
+        if (lottery) {
             const update = await this.prismaService.lottery.update({
                 data: {
-                    imageFront: imgFront ? `/${imgFront.filename}` : images.imageFront,
+                    imageFront: imgFront ? `/${imgFront.filename}` : lottery.imageFront,
                 },
                 where: { id: body.lotteryId }
             })

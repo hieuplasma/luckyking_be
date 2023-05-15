@@ -26,24 +26,36 @@ export class LotteryController {
     @Get('print')
     async print(@Query() data: any) {
         console.log(data)
-        return new Promise((res) => {
-            setTimeout(() => {
-                res('ok')
-            }, 2000)
-        })
-        // return 'ok'
+        // return new Promise((res) => {
+        //     setTimeout(() => {
+        //         res('ok')
+        //     }, 2000)
+        // })
+        return 'ok'
     }
 
-    @Post('print')
+    @Post('check-print')
     async confirmPrintLottery(@Body() data: PrintDTO) {
         const { lotteryId } = data;
-        return await this.lotteryService.confirmPrintLottery(lotteryId)
+        return await this.lotteryService.confirmPrintLottery(lotteryId);
     }
 
     @Get(':lotteryId')
     async getLotteryById(@Param('lotteryId') lotteryId: string) {
         return await this.lotteryService.getLotteryById(lotteryId)
     }
+
+
+    @Get('keno/next-pending')
+    async getKenoLatestPending() {
+        return await this.lotteryService.getKenoNextPending();
+    }
+
+    @Patch('confirm/:lotteryId')
+    async confirmLottery(@Param('lotteryId') lotteryId: string) {
+        return await this.lotteryService.confirmLottery(lotteryId);
+    }
+
 
     @Patch(':lotteryId')
     async updateLotteryNumbers(@Param('lotteryId') lotteryId: string, @Body() data: UpdateLotteryNumbersDTO) {
@@ -77,12 +89,10 @@ export class LotteryController {
         storage: diskStorage({
             destination: 'uploads/images',
             filename(req, file, callback) {
-                if (file) {
-                    const ext = file.originalname.split('.').pop();
-                    const fileName = `${fileNameConvert(req.body.lotteryId)}.${ext}`;
-                    console.log(fileName)
-                    callback(null, fileName)
-                }
+                const ext = file.originalname.split('.').pop();
+                const fileName = `${fileNameConvert(req.body.lotteryId)}.${ext}`;
+                console.log(fileName)
+                callback(null, fileName)
             },
         })
     }))
