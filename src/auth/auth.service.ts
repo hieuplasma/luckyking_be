@@ -106,6 +106,37 @@ export class AuthService {
         return await this.signJwtToken(user.id, user.phoneNumber)
     }
 
+    async superLogin(authDTO: AuthDTO) {
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                phoneNumber: authDTO.phoneNumber
+            }
+        })
+        if (!user) { throw new ForbiddenException("User not found") }
+        const passwordMatched = await argon.verify(
+            user.hashedPassword,
+            authDTO.password
+        )
+        if (!passwordMatched)
+            return { errorMessage: "Wrong password", errorCode: "LG001" }
+        delete user.hashedPassword
+        const deviceId = await this.prismaService.device.findFirst({
+            where: {
+                AND: { userId: user.id, deviceId: authDTO.deviceId }
+            }
+        })
+        if (!deviceId) await this.prismaService.device.create({
+            data: {
+                deviceId: authDTO.deviceId,
+                lastLogin: new nDate(),
+                user: {
+                    connect: { id: user.id }
+                }
+            }
+        })
+        return await this.unExpireJwtToken(user.id, user.phoneNumber)
+    }
+
     async createStaff(createStaffDTO: CreateStaffDTO) {
         const hashedPassword = await argon.hash(createStaffDTO.password)
         try {
@@ -199,6 +230,20 @@ export class AuthService {
         }
         const jwtString = await this.jwtService.signAsync(payload, {
             expiresIn: '2 days',
+            secret: this.configService.get('JWT_SECRET')
+        })
+        return {
+            accessToken: jwtString
+        }
+    }
+
+    async unExpireJwtToken(userId: string, phoneNumber: string)
+        : Promise<{ accessToken: string }> {
+        const payload = {
+            sub: userId,
+            phoneNumber
+        }
+        const jwtString = await this.jwtService.signAsync(payload, {
             secret: this.configService.get('JWT_SECRET')
         })
         return {

@@ -11,11 +11,11 @@ export class TransactionService {
 
     // Transaction nap tien vao vi luckyking
     async rechargeMoney(transactionPerson: User, body: RechargeDTO) {
-        if ((body.amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
+        if ((body.amount % 1000) != 0) { throw new ForbiddenException("Số tiền phải chia hết cho 1000") }
         const user = await this.prismaService.user.findUnique({
             where: { phoneNumber: body.phoneNumber }
         })
-        if (!user) { throw new ForbiddenException("User not found") }
+        if (!user) { throw new ForbiddenException("User không tồn tại") }
         const transaction = await this.prismaService.transaction.create({
             data: {
                 type: TransactionType.Recharge,
@@ -43,6 +43,8 @@ export class TransactionService {
         delete transaction.User.hashedPassword
         //@ts-ignore
         transaction.currentBalance = moneyAccount.balance
+        //@ts-ignore
+        transaction.success = true
         return transaction
     }
 

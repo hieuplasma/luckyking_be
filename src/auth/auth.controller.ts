@@ -31,6 +31,11 @@ export class AuthController {
         return this.authService.login(body)
     }
 
+    @Post("super-login")
+    superLogin(@Body() body: AuthDTO) {
+        return this.authService.superLogin(body)
+    }
+
     @Post("update-password")
     updatePassword(@Body() body: UpdatePassWordDTO) {
         return this.authService.updatePassword(body)
