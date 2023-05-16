@@ -226,7 +226,7 @@ export class LotteryService {
 
     async confirmPrintLottery(lotteryId: string): Promise<Boolean> {
         const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
-        if (!lottery) throw new ForbiddenException("Record to delete does not exist")
+        if (!lottery) throw new ForbiddenException("Record to print does not exist")
 
         if (lottery.status === OrderStatus.PRINTED) return false;
 
