@@ -448,8 +448,8 @@ export class OrderService {
         return orders
     }
 
-    // Basic order
-    async getAllOrder(status: (keyof typeof OrderStatus)[], ticketType: string): Promise<Order[]> {
+    // Basic order, not for keno
+    async getAllOrder(status: (keyof typeof OrderStatus)[], ticketType: string, startTime?: Date, endTime?: Date): Promise<Order[]> {
         const query: { [key: string]: any } = {};
 
         if (status) {
@@ -457,6 +457,14 @@ export class OrderService {
         }
         if (ticketType) {
             query.ticketType = ticketType;
+        }
+        query.confirmAt = {};
+
+        if (startTime) {
+            query.confirmAt.gte = new Date(startTime);
+        }
+        if (endTime) {
+            query.confirmAt.lte = new Date(endTime);
         }
 
         let orders = await this.prismaService.order.findMany({
@@ -473,49 +481,51 @@ export class OrderService {
         })
 
         // Update lottery expired
-        const now = new nDate();
-        const max3DSchedule = await this.prismaService.resultMax3d.findFirst({
-            where: { drawn: false, type: LotteryType.Max3D, drawTime: { gt: now } },
-            orderBy: { drawCode: 'asc' },
-        })
-        const max3DProSchedule = await this.prismaService.resultMax3d.findFirst({
-            where: { drawn: false, type: LotteryType.Max3DPro, drawTime: { gt: now } },
-            orderBy: { drawCode: 'asc' },
-        })
-        const MegaSchedule = await this.prismaService.resultMega.findFirst({
-            where: { drawn: false, drawTime: { gt: now } },
-            orderBy: { drawCode: 'asc' },
-        })
-        const powerSchedule = await this.prismaService.resultPower.findFirst({
-            where: { drawn: false, drawTime: { gt: now } },
-            orderBy: { drawCode: 'asc' },
-        })
+        if (ticketType === 'basic' && status.includes(OrderStatus.PENDING)) {
+            const now = new nDate();
+            const max3DSchedule = await this.prismaService.resultMax3d.findFirst({
+                where: { drawn: false, type: LotteryType.Max3D, drawTime: { gt: now } },
+                orderBy: { drawCode: 'asc' },
+            })
+            const max3DProSchedule = await this.prismaService.resultMax3d.findFirst({
+                where: { drawn: false, type: LotteryType.Max3DPro, drawTime: { gt: now } },
+                orderBy: { drawCode: 'asc' },
+            })
+            const MegaSchedule = await this.prismaService.resultMega.findFirst({
+                where: { drawn: false, drawTime: { gt: now } },
+                orderBy: { drawCode: 'asc' },
+            })
+            const powerSchedule = await this.prismaService.resultPower.findFirst({
+                where: { drawn: false, drawTime: { gt: now } },
+                orderBy: { drawCode: 'asc' },
+            })
 
-        for (const order of orders) {
-            for (const lottery of order.Lottery) {
-                if (lottery.drawTime < now && (lottery.status === OrderStatus.PENDING || lottery.status === OrderStatus.LOCK)) {
-                    let scheduleType: any = null;
+            for (const order of orders) {
+                for (const lottery of order.Lottery) {
+                    if (lottery.drawTime < now && (lottery.status === OrderStatus.PENDING || lottery.status === OrderStatus.LOCK)) {
+                        let scheduleType: any = null;
 
-                    if (lottery.type === LotteryType.Mega) {
-                        scheduleType = MegaSchedule;
-                    }
-                    else if (lottery.type === LotteryType.Power) {
-                        scheduleType = powerSchedule;
-                    }
-                    else if (lottery.type === LotteryType.Max3D || lottery.type === LotteryType.Max3DPlus) {
-                        scheduleType = max3DSchedule
-                    }
-                    else if (lottery.type === LotteryType.Max3DPro) {
-                        scheduleType = max3DProSchedule;
-                    }
-
-                    await this.prismaService.lottery.update({
-                        where: { id: lottery.id },
-                        data: {
-                            drawCode: scheduleType.drawCode,
-                            drawTime: scheduleType.drawTime,
+                        if (lottery.type === LotteryType.Mega) {
+                            scheduleType = MegaSchedule;
                         }
-                    })
+                        else if (lottery.type === LotteryType.Power) {
+                            scheduleType = powerSchedule;
+                        }
+                        else if (lottery.type === LotteryType.Max3D || lottery.type === LotteryType.Max3DPlus) {
+                            scheduleType = max3DSchedule
+                        }
+                        else if (lottery.type === LotteryType.Max3DPro) {
+                            scheduleType = max3DProSchedule;
+                        }
+
+                        await this.prismaService.lottery.update({
+                            where: { id: lottery.id },
+                            data: {
+                                drawCode: scheduleType.drawCode,
+                                drawTime: scheduleType.drawTime,
+                            }
+                        })
+                    }
                 }
             }
         }
@@ -601,13 +611,6 @@ export class OrderService {
     }
 
     async countKenoPendingOrder(): Promise<number> {
-
-        // const ordersCount = await this.prismaService.order.count({
-        //     where: {
-        //         ticketType: LotteryType.Keno,
-        //         status: OrderStatus.PENDING,
-        //     },
-        // })
         const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findFirst({
             where: { drawn: false, drawTime: { gt: now } },
@@ -638,8 +641,6 @@ export class OrderService {
             data: {
                 status: newStatus,
                 statusDescription: body.description,
-                confirmAt: new nDate(),
-                confirmBy: confirmBy,
                 confrimUserId: user.id,
             },
             where: { id: body.orderId },
@@ -769,9 +770,6 @@ export class OrderService {
                 data: {
                     status: newStatus,
                     statusDescription: description,
-                    confirmAt: new nDate(),
-                    confirmBy: confirmBy,
-                    confrimUserId: user.id,
                     // payment: payment,
                     // tradingCode: transaction.id
                 },

@@ -68,9 +68,11 @@ export class OrderController {
     @Roles(Role.Staff)
     getAllOrder(
         @Query('status') status: (keyof typeof OrderStatus)[],
-        @Query('ticketType') ticketType: string
+        @Query('ticketType') ticketType: string,
+        @Query('startDate') startDate: Date,
+        @Query('endDate') endDate: Date,
     ): Promise<Order[]> {
-        return this.orderService.getAllOrder(status, ticketType)
+        return this.orderService.getAllOrder(status, ticketType, startDate, endDate)
     }
 
 
