@@ -572,7 +572,7 @@ export class ResultService {
             // So ve xem trung khong
             let benefits = caculateKenoBenefits(lottery, body.result)
             // Tra thuong
-            this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
+            await this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
         })
         return update
     }
