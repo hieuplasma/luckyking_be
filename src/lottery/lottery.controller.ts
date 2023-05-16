@@ -15,22 +15,9 @@ export class LotteryController {
 
     constructor(private lotteryService: LotteryService) { }
 
-    // @UseGuards(MyJwtGuard, RolesGuard)
-    // @Post('update-image')
-    // @Roles(Role.Staff)
-    // confirmOrder(@Body() body: UpdateImageDTO) {
-    //     return this.lotteryService.updateImage(body)
-    // }
-
-
     @Get('print')
     async print(@Query() data: any) {
         console.log(data)
-        // return new Promise((res) => {
-        //     setTimeout(() => {
-        //         res('ok')
-        //     }, 2000)
-        // })
         return 'ok'
     }
 
@@ -46,22 +33,36 @@ export class LotteryController {
     }
 
 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Roles(Role.Staff)
+    @Get('keno/pending/:lotteryId')
+    async getKenoPendingByDisplayId(@Param('lotteryId') lotteryId: string) {
+        return await this.lotteryService.getKenoPendingByDisplayId(lotteryId);
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Roles(Role.Staff)
     @Get('keno/next-pending')
-    async getKenoLatestPending() {
+    async getKenoNextPending() {
         return await this.lotteryService.getKenoNextPending();
     }
 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Roles(Role.Staff)
     @Patch('confirm/:lotteryId')
     async confirmLottery(@Param('lotteryId') lotteryId: string) {
         return await this.lotteryService.confirmLottery(lotteryId);
     }
 
-
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Roles(Role.Staff)
     @Patch(':lotteryId')
     async updateLotteryNumbers(@Param('lotteryId') lotteryId: string, @Body() data: UpdateLotteryNumbersDTO) {
         return await this.lotteryService.updateLotteryNumbers(lotteryId, data);
     }
 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Roles(Role.Staff)
     @Post('update-image')
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'imgFront', maxCount: 1 },
@@ -82,6 +83,9 @@ export class LotteryController {
         @UploadedFiles() files: { imgFront?: Express.Multer.File[], imgBack?: Express.Multer.File[] }) {
         return this.lotteryService.updateImage(body, files.imgFront[0], files.imgBack[0])
     }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Roles(Role.Staff)
     @Post('update-keno-image')
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'imgFront', maxCount: 1 },

@@ -21,6 +21,29 @@ export class LotteryService {
         return lotteryInfo;
     }
 
+    async getKenoPendingByDisplayId(displayId: string): Promise<Lottery> {
+        const now = new nDate()
+        const schedule = await this.prismaService.resultKeno.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        });
+
+        const kenoPendingLottery = await this.prismaService.lottery.findFirst({
+            where: {
+                displayId: +displayId,
+                status: OrderStatus.PENDING,
+                drawCode: schedule.drawCode,
+                type: LotteryType.Keno,
+            },
+            include: {
+                Order: true,
+                NumberLottery: true
+            }
+        })
+
+        return kenoPendingLottery;
+    }
+
     async getKenoNextPending(): Promise<Lottery[]> {
         const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findFirst({
@@ -45,7 +68,7 @@ export class LotteryService {
             where: {
                 type: LotteryType.Keno,
                 drawCode: schedule.drawCode,
-                status: OrderStatus.PENDING
+                status: OrderStatus.PENDING             // Lock??
             },
             orderBy: {
                 Order: {
@@ -177,6 +200,19 @@ export class LotteryService {
         })
 
         if (lottery) {
+
+            if (lottery.imageFront) {
+                fs.unlink(`uploads/images/${lottery.imageFront}`, () => {
+                    console.log('Delete image successfully')
+                })
+            }
+
+            if (lottery.imageBack) {
+                fs.unlink(`uploads/images/${lottery.imageBack}`, () => {
+                    console.log('Delete image successfully')
+                })
+            }
+
             const update = await this.prismaService.lottery.update({
                 data: {
                     imageFront: imgFront ? `/${imgFront.filename}` : lottery.imageFront,
@@ -206,6 +242,12 @@ export class LotteryService {
         })
 
         if (lottery) {
+            if (lottery.imageFront) {
+                fs.unlink(`uploads/images/${lottery.imageFront}`, () => {
+                    console.log('Delete image successfully')
+                })
+            }
+
             const update = await this.prismaService.lottery.update({
                 data: {
                     imageFront: imgFront ? `/${imgFront.filename}` : lottery.imageFront,
