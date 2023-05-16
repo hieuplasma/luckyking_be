@@ -1,8 +1,9 @@
 import { Lottery } from '../../../node_modules/.prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { NumberDetail } from '../entity';
-import { LotteryType } from "../enum";
+import { EVEN_ODD, LotteryType, SMALL_BIG } from "../enum";
 import { dateConvert } from './time.utils';
+import { getLevelFromNumber, kenoAnalysis } from './other.utils';
 
 
 export function caculateSurcharge(amount: number) {
@@ -18,14 +19,16 @@ export function caculateKenoBenefits(lottery: any, resultString: string) {
     const result: number[] = resultString.split("-").map(Number)
     let totalBenefits = 0;
     const numberDetail: NumberDetail[] = JSON.parse(lottery.NumberLottery.numberDetail.toString())
-    const level = lottery.NumberLottery.level
     numberDetail.map(item => {
         let benefits = 0
         const numbers: number[] = item.boSo.split("-").map(Number);
+        let level = numbers.length
+        if (numbers.length == 0 && numbers[0] > 80) level = getLevelFromNumber(numbers[0], level)
         let duplicate = 0;
         numbers.map(number => {
             if (result.includes(number)) duplicate++
         })
+        const analysis = kenoAnalysis(result)
         switch (level) {
             case 1:
                 if (duplicate == 1) benefits = benefits + 2 * MUOI_NGHIN
@@ -66,7 +69,6 @@ export function caculateKenoBenefits(lottery: any, resultString: string) {
                 if (duplicate == 6) benefits = benefits + 50 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 5 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + MUOI_NGHIN
-                if (duplicate == 4) benefits = benefits + MUOI_NGHIN
             case 9:
                 if (duplicate == 9) benefits = benefits + 800 * TRIEU
                 if (duplicate == 8) benefits = benefits + 12 * TRIEU
@@ -76,13 +78,48 @@ export function caculateKenoBenefits(lottery: any, resultString: string) {
                 if (duplicate == 4) benefits = benefits + MUOI_NGHIN
                 if (duplicate == 0) benefits = benefits + MUOI_NGHIN
             case 10:
-                if (duplicate == 9) benefits = benefits + 2 * TY
-                if (duplicate == 8) benefits = benefits + 150 * TRIEU
-                if (duplicate == 7) benefits = benefits + 8 * TRIEU
-                if (duplicate == 6) benefits = benefits + 71 * MUOI_NGHIN
-                if (duplicate == 5) benefits = benefits + 8 * MUOI_NGHIN
-                if (duplicate == 4) benefits = benefits + 2 * MUOI_NGHIN
+                if (duplicate == 10) benefits = benefits + 2 * TY
+                if (duplicate == 9) benefits = benefits + 150 * TRIEU
+                if (duplicate == 8) benefits = benefits + 8 * TRIEU
+                if (duplicate == 7) benefits = benefits + 71 * MUOI_NGHIN
+                if (duplicate == 6) benefits = benefits + 8 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 2 * MUOI_NGHIN
                 if (duplicate == 0) benefits = benefits + MUOI_NGHIN
+            case 11:
+                // Lớn
+                if (analysis.big == 11 || analysis.big == 12) benefits = benefits + MUOI_NGHIN
+                if (analysis.big >= 13) benefits = benefits + 2.6 * MUOI_NGHIN
+                break;
+            case 12:
+                // Nhỏ
+                if (analysis.small == 11 || analysis.big == 12) benefits = benefits + MUOI_NGHIN
+                if (analysis.small >= 13) benefits = benefits + 2.6 * MUOI_NGHIN
+                break;
+            case 13:
+                // Chẵn 13+
+                if (analysis.even == 13 || analysis.big == 14) benefits = benefits + 4 * MUOI_NGHIN
+                if (analysis.even >= 15) benefits = benefits + 20 * MUOI_NGHIN
+                break;
+            case 14:
+                // Lẻ 13+
+                if (analysis.odd == 13 || analysis.odd == 14) benefits = benefits + 4 * MUOI_NGHIN
+                if (analysis.odd >= 15) benefits = benefits + 20 * MUOI_NGHIN
+                break;
+            case 15:
+                // Hoà Lớn Nhỏ
+                if (analysis.small == 10) benefits = benefits + 2.6 * MUOI_NGHIN
+                break;
+            case 16:
+                // Hoà Chẵn Lẻ
+                if (analysis.odd == 10) benefits = benefits + 2 * MUOI_NGHIN
+                break;
+            case 17:
+                //  Chẵn 11-12
+                if (analysis.even == 11 || analysis.even == 12) benefits = benefits + 2 * MUOI_NGHIN
+            case 18:
+                //  Lẻ 11-12
+                if (analysis.odd == 11 || analysis.odd == 12) benefits = benefits + 2 * MUOI_NGHIN
+                break;
             default:
                 break;
         }
