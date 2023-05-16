@@ -711,10 +711,11 @@ export class OrderService {
         return orderConfirmed
     }
 
-    async updateOrderStatus(user: User): Promise<Order[]> {
+    async updateKenoOrderStatus(user: User): Promise<Order[]> {
         const printedOrders = await this.prismaService.order.findMany({
             where: {
                 status: OrderStatus.PRINTED,
+                ticketType: 'keno',
             },
             include: {
                 Lottery: true

@@ -114,7 +114,7 @@ export class OrderController {
     @Post('update-status')
     @Roles(Role.Staff)
     updateOrderStatus(@GetUser() user: User) {
-        return this.orderService.updateOrderStatus(user)
+        return this.orderService.updateKenoOrderStatus(user)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
