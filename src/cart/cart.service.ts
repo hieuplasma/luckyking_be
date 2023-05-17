@@ -155,24 +155,31 @@ export class CartService {
         const { drawCode, drawTime, lotteryType } = body;
         const numbers = [...body.numbers];
         const setOfNumbers = [];
+        const bets = [...body.bets];
+        const setOfBets = [];
+
         let i = 0;
 
         while (numbers.length) {
             setOfNumbers[i] = setOfNumbers[i] ? setOfNumbers[i] : [];
             setOfNumbers[i].push(numbers.shift())
+
+            setOfBets[i] = setOfBets[i] ? setOfBets[i] : [];
+            setOfBets[i].push(bets.shift())
+
             if (setOfNumbers[i].length === 6) i++;
         }
 
         const lotteries = [];
 
         await this.prismaService.$transaction(async (tx) => {
-            for (const lotteryNumbers of setOfNumbers) {
+            for (let j = 0; j < setOfNumbers.length; j++) {
                 let amount = 0;
                 let list = new LotteryNumber();
 
-                lotteryNumbers.map((item: any, index: number) => {
-                    list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
-                    amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
+                setOfNumbers[j].map((item: any, index: number) => {
+                    list.add(new NumberDetail(item, setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET));
+                    amount += setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET;
                 })
 
                 for (let i = 0; i < drawCode.length; i++) {
@@ -180,13 +187,13 @@ export class CartService {
                         userId: user.id,
                         type: lotteryType,
                         amount,
-                        bets: body.bets,
+                        bets: setOfBets[j],
                         status,
                         drawCode: drawCode[i],
                         drawTime: drawTime[i],
                         NumberLottery: {
                             level: parseInt(body.level.toString()),
-                            numberSets: lotteryNumbers.length,
+                            numberSets: setOfNumbers[j].length,
                             numberDetail: list.convertToJSon()
                         },
                         cartId,
