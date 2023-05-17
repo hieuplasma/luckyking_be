@@ -251,6 +251,7 @@ export class LotteryService {
             const update = await this.prismaService.lottery.update({
                 data: {
                     imageFront: imgFront ? `/${imgFront.filename}` : lottery.imageFront,
+                    imageBack: imgFront ? `/${imgFront.filename}` : lottery.imageBack,
                 },
                 where: { id: body.lotteryId }
             })
