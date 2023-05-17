@@ -38,7 +38,6 @@ export class CreateCartMegaPowerDTO extends CreateCart {
 export class CreateCartMax3dDTO extends CreateCart {
     @IsArray()
     @ArrayMinSize(1)
-    @IsOptional()
     bets: any
 }
 
