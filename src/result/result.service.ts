@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { JackPot, OrderStatus, User } from '@prisma/client';
+import { JackPot, OrderStatus, Prisma, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
 import { TIMEZONE } from 'src/common/constants/constants';
 import { LotteryType } from 'src/common/enum';
@@ -20,6 +20,7 @@ import {
     UpdateResultKenoDTO, JackPotDTO,
     UpdateResultPowerDTO, UpdateResultMax3dDTO
 } from './dto';
+import { convertObjectToJsonValue } from 'src/common/utils/other.utils';
 
 const TIME_DRAW = 11
 @Injectable()
@@ -572,7 +573,7 @@ export class ResultService {
             // So ve xem trung khong
             let benefits = caculateKenoBenefits(lottery, body.result)
             // Tra thuong
-            await this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
+            await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(update))
         })
         return update
     }
@@ -600,7 +601,7 @@ export class ResultService {
             // So ve xem trung khong
             let benefits = caculateMegaBenefits(lottery, body.result, parseInt(jackPot.JackPotMega.toString()))
             // Tra thuong
-            await this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
+            await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(update))
         })
         return update
     }
@@ -630,19 +631,19 @@ export class ResultService {
                 parseInt(body.specialNumber.toString()),
                 parseInt(jackPot.JackPot1Power.toString()),
                 parseInt(jackPot.JackPot2Power.toString()))
-            await this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
+            await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(update))
         })
         return update
     }
 
-    private async rewardLottery(benefits: number, drawTime: Date, lottery: any, transactionPersonId: string) {
+    private async rewardLottery(benefits: number, lottery: any, transactionPersonId: string, result: Prisma.JsonValue) {
         if (benefits == 0) await this.prismaService.lottery.update({
-            data: { status: OrderStatus.NO_PRIZE, resultTime: drawTime },
+            data: { status: OrderStatus.NO_PRIZE, resultTime: new Date(), result: result },
             where: { id: lottery.id }
         })
         if (benefits > WARNING_REWARD) {
             await this.prismaService.lottery.update({
-                data: { status: OrderStatus.WON, resultTime: drawTime, benefits: benefits },
+                data: { status: OrderStatus.WON, resultTime: new Date(), benefits: benefits, result: result },
                 where: { id: lottery.id }
             })
         }
@@ -650,7 +651,7 @@ export class ResultService {
         if (benefits > 0 && benefits <= WARNING_REWARD) {
             await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPersonId, lottery.type)
             await this.prismaService.lottery.update({
-                data: { status: OrderStatus.PAID, resultTime: drawTime, benefits: benefits },
+                data: { status: OrderStatus.PAID, resultTime: new Date(), benefits: benefits, result: result },
                 where: { id: lottery.id }
             })
         }

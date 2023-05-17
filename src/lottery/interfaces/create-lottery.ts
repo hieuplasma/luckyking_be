@@ -1,4 +1,4 @@
-import { OrderStatus } from ".prisma/client";
+import { OrderStatus, Prisma } from ".prisma/client";
 import { LotteryType } from "src/common/enum";
 
 interface INumberLottery {
@@ -6,7 +6,7 @@ interface INumberLottery {
 
     numberSets: number;
 
-    numberDetail: string;
+    numberDetail: Prisma.JsonValue;
 }
 
 export interface ICreateLottery {

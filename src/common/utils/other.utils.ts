@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { EVEN_ODD, SMALL_BIG } from "../enum"
 
 export const mapDataFromScanner = {
@@ -14,14 +15,14 @@ export const mapDataFromScanner = {
 export function getLevelFromNumber(param: number, oldLevel) {
     const number = parseInt(param.toString())
     switch (number) {
-        case 81:   return 11
-        case 82:   return 12
-        case 84:   return 13
-        case 86:   return 14
-        case 83:   return 15
-        case 85:   return 16
-        case 87:   return 17
-        case 88:   return 118
+        case 81: return 11
+        case 82: return 12
+        case 84: return 13
+        case 86: return 14
+        case 83: return 15
+        case 85: return 16
+        case 87: return 17
+        case 88: return 18
         default: return oldLevel
     }
 }
@@ -80,4 +81,16 @@ export function kenoAnalysis(param: number[]) {
     }
 
     return { small, big, even, odd, small_big, even_odd, event_number }
+}
+
+export function convertObjectToJsonValue(obj: object): Prisma.JsonValue {
+    const jsonString = JSON.stringify(obj);
+    const jsonValue = JSON.parse(jsonString) as Prisma.JsonValue;
+    return jsonValue;
+}
+
+export function convertArrayToJsonValue(array: object[]): Prisma.JsonValue {
+    const jsonString = JSON.stringify(array);
+    const jsonValue = JSON.parse(jsonString) as Prisma.JsonValue;
+    return jsonValue;
 }

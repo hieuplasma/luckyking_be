@@ -74,6 +74,7 @@ model Lottery {
   drawTime      DateTime // Thời gian quay
   Cart          Cart?          @relation(fields: [cartId], references: [id])
   cartId        String?
+  result        Json?
 }
 
 model Cart {

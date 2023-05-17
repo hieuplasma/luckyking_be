@@ -1,3 +1,5 @@
+import { convertArrayToJsonValue } from "../utils/other.utils"
+
 export class NumberDetail {
     boSo: string = ""
     tienCuoc: number = 0
@@ -17,5 +19,6 @@ export class LotteryNumber {
     }
     convertToJSon() {
         return JSON.stringify(this.list)
+        // return convertArrayToJsonValue(this.list)
     }
 }
