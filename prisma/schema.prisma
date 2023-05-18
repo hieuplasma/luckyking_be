@@ -106,6 +106,7 @@ model Order {
   id                String       @id @default(uuid())
   displayId         Int?         @default(autoincrement())
   amount            Int // So tien
+  benefits          Int          @default(0) // So tien thuong nhan duoc
   user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String
   ticketType        String?      @default("basic")
@@ -200,36 +201,6 @@ model JackPot {
   JackPot2Power BigInt?
   JackPotMega   BigInt?
 }
-
-// model ResultMax3d {
-//   id          String   @id @default(uuid())
-//   drawCode    Int
-//   drawTime    DateTime
-//   first       String[] // 2 giai nhat, moi giai bo 3 so
-//   second      String[] // 4 giai nhi
-//   third       String[] // 6 giai 3
-//   consolation String[] //8 giai khuyen khich
-// }
-
-// model ResultMax3dPro {
-//   id          String   @id @default(uuid())
-//   drawCode    Int
-//   drawTime    DateTime
-//   first       String[] // 2 giai nhat, moi giai bo 3 so
-//   second      String[] // 4 giai nhi
-//   third       String[] // 6 giai 3
-//   consolation String[] //8 giai khuyen khich
-// }
-
-// model ResultMax3dPlus {
-//   id          String   @id @default(uuid())
-//   drawCode    Int
-//   drawTime    DateTime
-//   first       String[] // 1 giai nhat, moi giai bo 4 so
-//   second      String[] // 2 giai nhi
-//   third       String[] // 3 giai 3
-//   consolation String[] // 2 giai khuyen khich
-// }
 
 enum OrderStatus {
   PENDING // chưa xử lý
