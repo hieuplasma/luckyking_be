@@ -2,8 +2,8 @@ import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/co
 import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
-import { Role } from 'src/common/enum';
-import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO, ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderFromCartDTO, lockMultiOrderDTO } from './dto';
+import { LotteryType, Role } from 'src/common/enum';
+import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO, ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderFromCartDTO, lockMultiOrderDTO, OrderByDrawDTO } from './dto';
 import { OrderService } from './order.service';
 
 @Controller('order')
@@ -122,5 +122,13 @@ export class OrderController {
     @Roles(Role.Staff)
     lockOrder(@GetUser() user: User, @Body() body: lockMultiOrderDTO) {
         return this.orderService.lockOrder(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-by-draw')
+    @Roles(Role.User)
+    getAllOrderByDraw(@GetUser() user: User, @Query('drawCode') drawCode: number,
+        @Query('type') type: LotteryType,) {
+        return this.orderService.getAllOrderByDraw(user, drawCode, type)
     }
 }

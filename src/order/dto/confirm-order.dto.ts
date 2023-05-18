@@ -1,3 +1,4 @@
+import { LotteryType } from 'src/common/enum';
 import { OrderStatus } from '../../../node_modules/.prisma/client'
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator"
 
@@ -33,4 +34,12 @@ export class lockMultiOrderDTO {
     payment: string
 
     description: string
+}
+
+export class OrderByDrawDTO {
+    @IsNotEmpty()
+    type: LotteryType
+
+    @IsNotEmpty()
+    drawCode: number
 }

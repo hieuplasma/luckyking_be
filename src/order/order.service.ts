@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, ReturnOrderDTO } from './dto';
+import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, OrderByDrawDTO, ReturnOrderDTO } from './dto';
 import { LotteryType, OrderMethod, Role } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, nDate } from 'src/common/utils';
@@ -804,6 +804,34 @@ export class OrderService {
         }
 
         return lockedOrders
+    }
+
+    async getAllOrderByDraw(user: User, drawCode: number, type: LotteryType) {
+        const listLottery = await this.prismaService.lottery.findMany({
+            where: {
+                userId: user.id,
+                type: type,
+                drawCode: parseInt(drawCode.toString())
+            },
+            include: { Order: true, NumberLottery: true, }
+        })
+
+        let sections = [];
+
+        listLottery.forEach(item => {
+            let displayId = item.Order.displayId;
+            let section = sections.find(sec => sec.displayId === displayId);
+            if (!section) {
+                section = {
+                    displayId: displayId,
+                    items: []
+                };
+                sections.push(section);
+            }
+            section.items.push(item);
+        });
+
+        return sections
     }
 }
 
