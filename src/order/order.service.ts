@@ -824,6 +824,7 @@ export class OrderService {
             if (!section) {
                 section = {
                     displayId: displayId,
+                    id: item.Order.id,
                     items: []
                 };
                 sections.push(section);
