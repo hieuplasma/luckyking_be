@@ -1,7 +1,5 @@
-import { Lottery } from '../../../node_modules/.prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { NumberDetail } from '../entity';
-import { EVEN_ODD, LotteryType, SMALL_BIG } from "../enum";
 import { dateConvert } from './time.utils';
 import { getLevelFromNumber, kenoAnalysis } from './other.utils';
 
@@ -18,12 +16,11 @@ const TY = 1000000000
 export function caculateKenoBenefits(lottery: any, resultString: string) {
     const result: number[] = resultString.split("-").map(Number)
     let totalBenefits = 0;
-    const numberDetail: NumberDetail[] = JSON.parse(lottery.NumberLottery.numberDetail.toString())
+    const numberDetail: NumberDetail[] = lottery.NumberLottery.numberDetail
     numberDetail.map(item => {
         let benefits = 0
         const numbers: number[] = item.boSo.split("-").map(Number);
-        let level = numbers.length
-        if (numbers.length == 0 && numbers[0] > 80) level = getLevelFromNumber(numbers[0], level)
+        const level = getLevelFromNumber(numbers[0], numbers.length)
         let duplicate = 0;
         numbers.map(number => {
             if (result.includes(number)) duplicate++
@@ -132,7 +129,7 @@ export function caculateKenoBenefits(lottery: any, resultString: string) {
 export function caculateMegaBenefits(lottery: any, resultString: string, jackPot: number) {
     const result: number[] = resultString.split("-").map(Number)
     let totalBenefits = 0;
-    const numberDetail: NumberDetail[] = JSON.parse(lottery.NumberLottery.numberDetail.toString())
+    const numberDetail: NumberDetail[] = lottery.NumberLottery.numberDetail
     const level = lottery.NumberLottery.level
     numberDetail.map(item => {
         let benefits = 0
@@ -221,7 +218,7 @@ export function caculateMegaBenefits(lottery: any, resultString: string, jackPot
 export function caculatePowerBenefits(lottery: any, resultString: string, specialNumber: number, jackpot1: number, jackpot2: number) {
     const result: number[] = resultString.split("-").map(Number)
     let totalBenefits = 0;
-    const numberDetail: NumberDetail[] = JSON.parse(lottery.NumberLottery.numberDetail.toString())
+    const numberDetail: NumberDetail[] = lottery.NumberLottery.numberDetail
     const level = lottery.NumberLottery.level
     numberDetail.map(item => {
         let benefits = 0
@@ -358,7 +355,7 @@ export function caculatePowerBenefits(lottery: any, resultString: string, specia
 
 export function caculateMax3dBenefits(lottery: any, special: string[], fitst: string[], second: string[], third: string[]) {
     let totalBenefits = 0;
-    const numberDetail: NumberDetail[] = JSON.parse(lottery.NumberLottery.numberDetail.toString())
+    const numberDetail: NumberDetail[] = lottery.NumberLottery.numberDetail
     numberDetail.map(item => {
         let benefits = 0
         if (special.includes(item.boSo)) benefits = benefits + TRIEU
@@ -373,7 +370,7 @@ export function caculateMax3dBenefits(lottery: any, special: string[], fitst: st
 
 export function caculateMax3PlusdBenefits(lottery: any, special: string[], fitst: string[], second: string[], third: string[]) {
     let totalBenefits = 0;
-    const numberDetail: NumberDetail[] = JSON.parse(lottery.NumberLottery.numberDetail.toString())
+    const numberDetail: NumberDetail[] = lottery.NumberLottery.numberDetail
     numberDetail.map(item => {
         let benefits = 0
         const numbers: string[] = item.boSo.split("-")

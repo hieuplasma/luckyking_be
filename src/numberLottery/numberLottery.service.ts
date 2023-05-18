@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { NumberDetail } from 'src/common/entity';
+import { INumberDetail, NumberDetail } from 'src/common/entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 
@@ -11,7 +11,7 @@ export class NumberLotteryService {
         const find = await this.prismaService.numberLottery.findUnique({ where: { id: numberLotteryId } })
         if (!find) throw new ForbiddenException("Record to delete does not exist")
 
-        const numberDetail: NumberDetail[] = JSON.parse(find.numberDetail.toString())
+        const numberDetail = find.numberDetail as INumberDetail[]
 
         if (numberDetail.length == 1) return { errorMessage: "Vé chỉ có một bộ số", errorCode: "DEL001" }
         numberDetail.splice(position, 1);

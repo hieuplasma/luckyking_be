@@ -12,7 +12,7 @@ export const mapDataFromScanner = {
     '18': '88' // Lẻ (11-12)  ==================chưa kiểm định
 }
 
-export function getLevelFromNumber(param: number, oldLevel) {
+export function getLevelFromNumber(param: number, oldLevel: number) {
     const number = parseInt(param.toString())
     switch (number) {
         case 81: return 11

@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Lottery, OrderStatus, User } from '@prisma/client';
+import { Lottery, OrderStatus, Prisma, User } from '@prisma/client';
 import { LUCKY_KING_PAYMENT } from 'src/common/constants';
-import { LotteryNumber, NumberDetail } from 'src/common/entity';
+import { INumberDetail, LotteryNumber, NumberDetail } from 'src/common/entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateImageDTO } from './dto';
 import { ICreateLottery, IUpdateLotteryNumber } from './interfaces';
@@ -108,7 +108,7 @@ export class LotteryService {
                 where: { lotteryId }
             })
 
-            const numberDetail = JSON.parse(numberLotteryToUpdate.numberDetail as string);
+            const numberDetail = numberLotteryToUpdate.numberDetail
 
             for (let i = 0; i < numbers.length; i++) {
                 numberDetail[i].boSo = numbers[i];
@@ -119,7 +119,7 @@ export class LotteryService {
                     lotteryId
                 },
                 data: {
-                    numberDetail: JSON.stringify(numberDetail),
+                    numberDetail: numberDetail,
                 }
             })
             return updatedLottery;
@@ -311,11 +311,8 @@ export class LotteryService {
             include: { NumberLottery: true }
         })
         let total = 0;
-        const detail = lottery.NumberLottery.numberDetail
-        console.log(detail)
-        const numberDetail: NumberDetail[] = JSON.parse(detail.toString())
-        console.log(numberDetail)
-        numberDetail.map(item => total = total + item.tienCuoc)
+        const detail = lottery.NumberLottery.numberDetail as INumberDetail[]
+        detail.map(item => total = total + item.tienCuoc)
         console.log(total)
     }
 }

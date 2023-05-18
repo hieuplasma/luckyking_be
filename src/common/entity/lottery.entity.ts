@@ -1,4 +1,10 @@
+import { Prisma } from "@prisma/client"
 import { convertArrayToJsonValue } from "../utils/other.utils"
+
+export type INumberDetail = {
+    boSo: string
+    tienCuoc: number
+}
 
 export class NumberDetail {
     boSo: string = ""
@@ -18,7 +24,7 @@ export class LotteryNumber {
         this.list.push(obj)
     }
     convertToJSon() {
-        return JSON.stringify(this.list)
-        // return convertArrayToJsonValue(this.list)
+        // return JSON.stringify(this.list)
+        return convertArrayToJsonValue(this.list)
     }
 }
