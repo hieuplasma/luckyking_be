@@ -85,13 +85,32 @@ export class LotteryService {
         return Lotteries;
     }
 
-    async confirmLottery(lotteryId: string): Promise<Lottery> {
+    async confirmLottery(user: User, lotteryId: string): Promise<Lottery> {
         const confirmedLottery = await this.prismaService.lottery.update({
             where: {
                 id: lotteryId,
             },
             data: {
                 status: OrderStatus.CONFIRMED,
+            },
+            include: { Order: { include: { Lottery: true } } }
+        })
+
+        for (const lottery of confirmedLottery.Order.Lottery) {
+            if (lottery.status !== OrderStatus.CONFIRMED) {
+                return confirmedLottery;
+            }
+        }
+
+        await this.prismaService.order.update({
+            where: {
+                id: confirmedLottery.orderId,
+            },
+            data: {
+                status: OrderStatus.CONFIRMED,
+                confirmAt: new nDate(),
+                confirmBy: user.fullName,
+                confrimUserId: user.id,
             }
         })
 

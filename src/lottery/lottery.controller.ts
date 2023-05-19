@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { User } from '@prisma/client';
 import { diskStorage } from 'multer';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
@@ -18,7 +19,12 @@ export class LotteryController {
     @Get('print')
     async print(@Query() data: any) {
         console.log(data)
-        return 'ok'
+        return new Promise((res, reject) => {
+            setTimeout(() => {
+                res('ok')
+            }, 3000)
+
+        })
     }
 
     @Post('check-print')
@@ -50,8 +56,8 @@ export class LotteryController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Roles(Role.Staff)
     @Patch('confirm/:lotteryId')
-    async confirmLottery(@Param('lotteryId') lotteryId: string) {
-        return await this.lotteryService.confirmLottery(lotteryId);
+    async confirmLottery(@GetUser() user: User, @Param('lotteryId') lotteryId: string) {
+        return await this.lotteryService.confirmLottery(user, lotteryId);
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
