@@ -495,54 +495,54 @@ export class OrderService {
         })
 
         // Update lottery expired
-        if (ticketType === 'basic' && status.includes(OrderStatus.PENDING)) {
-            const now = new nDate();
-            const max3DSchedule = await this.prismaService.resultMax3d.findFirst({
-                where: { drawn: false, type: LotteryType.Max3D, drawTime: { gt: now } },
-                orderBy: { drawCode: 'asc' },
-            })
-            const max3DProSchedule = await this.prismaService.resultMax3d.findFirst({
-                where: { drawn: false, type: LotteryType.Max3DPro, drawTime: { gt: now } },
-                orderBy: { drawCode: 'asc' },
-            })
-            const MegaSchedule = await this.prismaService.resultMega.findFirst({
-                where: { drawn: false, drawTime: { gt: now } },
-                orderBy: { drawCode: 'asc' },
-            })
-            const powerSchedule = await this.prismaService.resultPower.findFirst({
-                where: { drawn: false, drawTime: { gt: now } },
-                orderBy: { drawCode: 'asc' },
-            })
+        // if (ticketType === 'basic' && status.includes(OrderStatus.PENDING)) {
+        //     const now = new nDate();
+        //     const max3DSchedule = await this.prismaService.resultMax3d.findFirst({
+        //         where: { drawn: false, type: LotteryType.Max3D, drawTime: { gt: now } },
+        //         orderBy: { drawCode: 'asc' },
+        //     })
+        //     const max3DProSchedule = await this.prismaService.resultMax3d.findFirst({
+        //         where: { drawn: false, type: LotteryType.Max3DPro, drawTime: { gt: now } },
+        //         orderBy: { drawCode: 'asc' },
+        //     })
+        //     const MegaSchedule = await this.prismaService.resultMega.findFirst({
+        //         where: { drawn: false, drawTime: { gt: now } },
+        //         orderBy: { drawCode: 'asc' },
+        //     })
+        //     const powerSchedule = await this.prismaService.resultPower.findFirst({
+        //         where: { drawn: false, drawTime: { gt: now } },
+        //         orderBy: { drawCode: 'asc' },
+        //     })
 
-            for (const order of orders) {
-                for (const lottery of order.Lottery) {
-                    if (lottery.drawTime < now && (lottery.status === OrderStatus.PENDING || lottery.status === OrderStatus.LOCK)) {
-                        let scheduleType: any = null;
+        //     for (const order of orders) {
+        //         for (const lottery of order.Lottery) {
+        //             if (lottery.drawTime < now && (lottery.status === OrderStatus.PENDING || lottery.status === OrderStatus.LOCK)) {
+        //                 let scheduleType: any = null;
 
-                        if (lottery.type === LotteryType.Mega) {
-                            scheduleType = MegaSchedule;
-                        }
-                        else if (lottery.type === LotteryType.Power) {
-                            scheduleType = powerSchedule;
-                        }
-                        else if (lottery.type === LotteryType.Max3D || lottery.type === LotteryType.Max3DPlus) {
-                            scheduleType = max3DSchedule
-                        }
-                        else if (lottery.type === LotteryType.Max3DPro) {
-                            scheduleType = max3DProSchedule;
-                        }
+        //                 if (lottery.type === LotteryType.Mega) {
+        //                     scheduleType = MegaSchedule;
+        //                 }
+        //                 else if (lottery.type === LotteryType.Power) {
+        //                     scheduleType = powerSchedule;
+        //                 }
+        //                 else if (lottery.type === LotteryType.Max3D || lottery.type === LotteryType.Max3DPlus) {
+        //                     scheduleType = max3DSchedule
+        //                 }
+        //                 else if (lottery.type === LotteryType.Max3DPro) {
+        //                     scheduleType = max3DProSchedule;
+        //                 }
 
-                        await this.prismaService.lottery.update({
-                            where: { id: lottery.id },
-                            data: {
-                                drawCode: scheduleType.drawCode,
-                                drawTime: scheduleType.drawTime,
-                            }
-                        })
-                    }
-                }
-            }
-        }
+        //                 await this.prismaService.lottery.update({
+        //                     where: { id: lottery.id },
+        //                     data: {
+        //                         drawCode: scheduleType.drawCode,
+        //                         drawTime: scheduleType.drawTime,
+        //                     }
+        //                 })
+        //             }
+        //         }
+        //     }
+        // }
 
         return orders;
     }
@@ -756,6 +756,7 @@ export class OrderService {
             data: {
                 status: OrderStatus.CONFIRMED,
                 confirmAt: new nDate(),
+                confirmBy: user.fullName,
                 confrimUserId: user.id,
             }
         })
@@ -764,8 +765,8 @@ export class OrderService {
         return updatedOrders;
     }
 
-    async lockOrder(user: User, { orderIds, description, payment }: lockMultiOrderDTO): Promise<Order[]> {
-        const lockedOrders = [];
+    async lockOrder(user: User, { orderIds, description, payment }: lockMultiOrderDTO): Promise<String[]> {
+        const lockedOrderIds = [];
 
         for (const orderId of orderIds) {
             const order = await this.prismaService.order.findUnique({
@@ -800,10 +801,10 @@ export class OrderService {
                 )
             )
 
-            lockedOrders.push(lockedOrder)
+            lockedOrderIds.push(lockedOrder.id)
         }
 
-        return lockedOrders
+        return lockedOrderIds
     }
 
     async getAllOrderByDraw(user: User, drawCode: number, type: LotteryType) {
