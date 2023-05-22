@@ -1,5 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Lottery, OrderStatus, Prisma, User } from '@prisma/client';
+import { Cron } from '@nestjs/schedule';
+import { TIMEZONE } from 'src/common/constants/constants';
 import { LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { INumberDetail, LotteryNumber, NumberDetail } from 'src/common/entity';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -8,10 +10,14 @@ import { ICreateLottery, IUpdateLotteryNumber } from './interfaces';
 import fs from 'fs'
 import { nDate } from 'src/common/utils';
 import { LotteryType } from 'src/common/enum';
+import FirebaseService from '../firebase/firebase-app'
 
 @Injectable()
 export class LotteryService {
-    constructor(private prismaService: PrismaService) { }
+    constructor(
+        private prismaService: PrismaService,
+        private firebaseService: FirebaseService,
+    ) { }
 
     async getLotteryById(lotteryId: string): Promise<Lottery> {
         const lotteryInfo = await this.prismaService.lottery.findUnique({
@@ -51,18 +57,18 @@ export class LotteryService {
             orderBy: { drawCode: 'asc' },
         });
 
-        // Update lottery expired
-        await this.prismaService.lottery.updateMany({
-            where: {
-                type: LotteryType.Keno,
-                drawTime: { lte: now },
-                status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
-            },
-            data: {
-                drawCode: schedule.drawCode,
-                drawTime: schedule.drawTime,
-            }
-        })
+        // // Update lottery expired
+        // await this.prismaService.lottery.updateMany({
+        //     where: {
+        //         type: LotteryType.Keno,
+        //         drawTime: { lte: now },
+        //         status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
+        //     },
+        //     data: {
+        //         drawCode: schedule.drawCode,
+        //         drawTime: schedule.drawTime,
+        //     }
+        // })
 
         const Lotteries = await this.prismaService.lottery.findMany({
             where: {
@@ -333,5 +339,10 @@ export class LotteryService {
         const detail = lottery.NumberLottery.numberDetail as INumberDetail[]
         detail.map(item => total = total + item.tienCuoc)
         console.log(total)
+    }
+
+    // @Cron('4,9,14,19,24,29,34,39,44,49,54,59 6-22 * * *', { timeZone: TIMEZONE })
+    async kenoSchedule() {
+        this.firebaseService.sendNotification('Có đơn keno mới');
     }
 }

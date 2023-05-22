@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { JackPot, OrderStatus, Prisma, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
 import { TIMEZONE } from 'src/common/constants/constants';
