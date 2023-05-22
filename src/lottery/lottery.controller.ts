@@ -18,9 +18,9 @@ export class LotteryController {
 
     @Get('print')
     async print(@Query() data: any) {
-        console.log(data)
         return new Promise((res, reject) => {
             setTimeout(() => {
+                console.log(data)
                 res('ok')
             }, 3000)
 
@@ -30,6 +30,7 @@ export class LotteryController {
     @Post('check-print')
     async confirmPrintLottery(@Body() data: PrintDTO) {
         const { lotteryId } = data;
+        // return true
         return await this.lotteryService.confirmPrintLottery(lotteryId);
     }
 

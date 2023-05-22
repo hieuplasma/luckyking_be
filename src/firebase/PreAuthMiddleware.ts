@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import * as firebase from 'firebase-admin';
 import { Request, Response } from 'express';
-import  FirebaseApp  from './firebase-app';
+import FirebaseApp from './firebase-app';
 
 @Injectable()
 export class PreAuthMiddleware implements NestMiddleware {

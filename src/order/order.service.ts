@@ -10,6 +10,8 @@ import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { LotteryService } from 'src/lottery/lottery.service';
 import { TIME_TO_HANDLE_LOTTERY } from 'src/common/constants/constants';
+import FirebaseService from '../firebase/firebase-app'
+
 
 @Injectable()
 export class OrderService {
@@ -18,6 +20,7 @@ export class OrderService {
         private userService: UserService,
         private transactionService: TransactionService,
         private lotteryService: LotteryService,
+        private firebaseService: FirebaseService,
     ) { }
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
@@ -372,6 +375,8 @@ export class OrderService {
             //@ts-ignore
             order.Lottery = lotteryToReturn;
         })
+
+        this.firebaseService.sendNotification('Có đơn keno mới');
 
         return order
     }

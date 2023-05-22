@@ -13,13 +13,15 @@ import { CartModule } from './cart/cart.module';
 import { PreAuthMiddleware } from './firebase/PreAuthMiddleware';
 import FirebaseApp from './firebase/firebase-app';
 import { join } from 'path';
+import { WebSocketModule } from './webSocket/webSocket.module';
+import { FirebaseModule } from './firebase/firebase.module';
 
 @Module({
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads/images'),
     }),
-    ConfigModule.forRoot({isGlobal:true}),
+    ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     AuthModule,
     UserModule,
@@ -28,11 +30,13 @@ import { join } from 'path';
     TransactionModule,
     OrderModule,
     ResultModule,
-    CartModule
+    CartModule,
+    WebSocketModule,
+    FirebaseModule
   ],
-  providers:[FirebaseApp]
+  // providers: [FirebaseApp]
 })
-export class AppModule { 
+export class AppModule {
   configure(consumer: MiddlewareConsumer): any {
     consumer.apply(PreAuthMiddleware).forRoutes({
       path: '/auth/sercure/*',
