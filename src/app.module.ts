@@ -15,6 +15,7 @@ import FirebaseApp from './firebase/firebase-app';
 import { join } from 'path';
 import { WebSocketModule } from './webSocket/webSocket.module';
 import { FirebaseModule } from './firebase/firebase.module';
+import { DeviceModule } from './device/device.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { FirebaseModule } from './firebase/firebase.module';
     ScheduleModule.forRoot(),
     AuthModule,
     UserModule,
+    DeviceModule,
     PrismaModule,
     LotteryModule,
     TransactionModule,

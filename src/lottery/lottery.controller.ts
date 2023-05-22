@@ -8,7 +8,6 @@ import { Role } from 'src/common/enum';
 import { fileNameConvert } from 'src/common/utils';
 import { UpdateImageDTO, PrintDTO } from './dto';
 import { UpdateLotteryNumbersDTO } from './dto/update-lottery-numbers.dto';
-import { IUpdateLotteryNumber } from './interfaces';
 import { LotteryService } from './lottery.service';
 
 @Controller('lottery')

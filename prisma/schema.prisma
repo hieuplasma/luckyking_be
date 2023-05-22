@@ -44,11 +44,12 @@ model User {
 }
 
 model Device {
-  id        String   @id @default(uuid())
-  deviceId  String
-  lastLogin DateTime
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
+  id          String   @id @default(uuid())
+  deviceId    String
+  deviceToken String?
+  lastLogin   DateTime
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
 }
 
 model Lottery {

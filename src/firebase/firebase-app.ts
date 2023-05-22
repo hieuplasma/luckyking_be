@@ -1,13 +1,17 @@
 import { Injectable } from "@nestjs/common";
 import { User } from "@prisma/client";
 import * as firebase from "firebase-admin";
+import { Role } from "src/common/enum";
+import { PrismaService } from "src/prisma/prisma.service";
 import firebaseConfig from "./firebase-config";
 
 @Injectable()
 export default class FirebaseApp {
     private firebaseApp: firebase.app.App;
 
-    constructor() {
+    constructor(
+        private prismaService: PrismaService,
+    ) {
         this.firebaseApp = firebase.initializeApp({
             credential: firebase.credential.cert({ ...firebaseConfig }),
             databaseURL: firebaseConfig.databaseUrl
@@ -22,21 +26,35 @@ export default class FirebaseApp {
         return this.firebaseApp.firestore();
     }
 
-    sendNotification = (message: string) => {
-        const messageInfo = {
-            notification: {
-                title: "Thông báo",
-                body: message
-            },
-            token: "ctAaHl6EQDqc3vWIIyt03_:APA91bEZ1TgLztnp1y5HF5YdkvDwN--NMXoS2L5nlr-IA797EjSCGH49iv_Ig_cr37uzCOAm8IcSTMZxnLtgbk8qfZHeos_TfFNQBOJUqZQi75c1mCOzLSW5G-jaKa_j_bwug_kPm2U1"
-        };
+    sendNotification = async (message: string) => {
 
-        firebase.messaging().send(messageInfo)
-            .then((response) => {
-                console.log("Thành công:", response);
-            })
-            .catch((error) => {
-                console.log("Lỗi:", error);
-            });
+        const staffUser = await this.prismaService.user.findFirst({
+            where: {
+                role: Role.Staff,
+            },
+            include: {
+                Device: true,
+            }
+        });
+
+        for (const device of staffUser.Device) {
+            if (device.deviceToken) {
+                const messageInfo = {
+                    notification: {
+                        title: "Thông báo",
+                        body: message
+                    },
+                    token: device.deviceToken
+                };
+
+                firebase.messaging().send(messageInfo)
+                    .then((response) => {
+                        console.log("Thành công:", response);
+                    })
+                    .catch((error) => {
+                        console.log("Lỗi:", error);
+                    });
+            }
+        }
     }
 }
