@@ -57,18 +57,18 @@ export class LotteryService {
             orderBy: { drawCode: 'asc' },
         });
 
-        // // Update lottery expired
-        // await this.prismaService.lottery.updateMany({
-        //     where: {
-        //         type: LotteryType.Keno,
-        //         drawTime: { lte: now },
-        //         status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
-        //     },
-        //     data: {
-        //         drawCode: schedule.drawCode,
-        //         drawTime: schedule.drawTime,
-        //     }
-        // })
+        // Update lottery expired
+        await this.prismaService.lottery.updateMany({
+            where: {
+                type: LotteryType.Keno,
+                drawTime: { lte: now },
+                status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
+            },
+            data: {
+                drawCode: schedule.drawCode,
+                drawTime: schedule.drawTime,
+            }
+        })
 
         const Lotteries = await this.prismaService.lottery.findMany({
             where: {
@@ -341,7 +341,7 @@ export class LotteryService {
         console.log(total)
     }
 
-    // @Cron('4,9,14,19,24,29,34,39,44,49,54,59 6-22 * * *', { timeZone: TIMEZONE })
+    @Cron('4,9,14,19,24,29,34,39,44,49,54,59 6-22 * * *', { timeZone: TIMEZONE })
     async kenoSchedule() {
         this.firebaseService.sendNotification('Có đơn keno mới');
     }
