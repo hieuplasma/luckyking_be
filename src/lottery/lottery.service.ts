@@ -11,12 +11,14 @@ import fs from 'fs'
 import { nDate } from 'src/common/utils';
 import { LotteryType } from 'src/common/enum';
 import FirebaseService from '../firebase/firebase-app'
+import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
 
 @Injectable()
 export class LotteryService {
     constructor(
         private prismaService: PrismaService,
         private firebaseService: FirebaseService,
+        private kenoSocketService: KenoSocketService,
     ) { }
 
     async getLotteryById(lotteryId: string): Promise<Lottery> {
@@ -362,16 +364,27 @@ export class LotteryService {
             }
         })
 
-        const lottery = await this.prismaService.lottery.findFirst({
+        const lotteries = await this.prismaService.lottery.findMany({
             where: {
                 type: LotteryType.Keno,
                 drawCode: schedule.drawCode,
                 status: OrderStatus.PENDING             // Lock??
             },
+            orderBy: {
+                Order: {
+                    displayId: 'asc'
+                }
+            },
+            take: 3,
+            include: {
+                Order: true,
+                NumberLottery: true
+            }
         });
 
-        if (lottery) {
+        if (lotteries.length) {
             this.firebaseService.sendNotification('Có đơn keno mới');
+            this.kenoSocketService.sendKenoLottery(lotteries);
         }
     }
 }
