@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Role } from "src/common/enum";
 import { nDate } from "src/common/utils";
-import { User } from '../../node_modules/.prisma/client';
+import { User, BankAcount } from '../../node_modules/.prisma/client';
 import { PrismaService } from "../prisma/prisma.service";
 import { UserDTO } from "./dto/user.dto";
 
@@ -11,7 +11,12 @@ export class UserService {
 
     async getUserInfo(me: User) {
         const user = await this.prismaService.user.findUnique({
-            where: { id: me.id }
+            where: { id: me.id },
+            include: {
+                BankAcount: {
+                    orderBy: { updatedAt: 'desc' }, take: 1
+                }
+            }
         })
         if (user.role == Role.User) {
             const balance = await this.getBalance(me.id)

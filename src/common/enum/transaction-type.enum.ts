@@ -10,3 +10,9 @@ export enum TransactionDestination {
     REWARD = "Ví nhận thưởng",
     HOST = "Ví của nhà phát triển"
 }
+
+export enum TransactionStatus {
+    PENDING = "pending",
+    SUCCESS = "success",
+    FALSE = "false"
+}

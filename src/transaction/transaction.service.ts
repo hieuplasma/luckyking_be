@@ -1,8 +1,8 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Transaction, User } from '../../node_modules/.prisma/client';
+import { Transaction, User, WithdrawRequest } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { TransactionDestination, TransactionType } from '../common/enum'
-import { RechargeDTO, WithDrawLuckyKingDTO } from './dto';
+import { TransactionDestination, TransactionStatus, TransactionType } from '../common/enum'
+import { RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
 import { WalletEnum } from './enum';
 
 @Injectable()
@@ -86,6 +86,45 @@ export class TransactionService {
         //@ts-ignore
         transaction.rewardWalletBalance = rewardWallet.balance
         return transaction
+    }
+
+    async withdrawToBankAccount(user: User, body: WithDrawBankAccountDTO) {
+        const MIN_WITHDRAW = 100000
+        const amount = parseInt(body.amount.toString())
+        if (amount < MIN_WITHDRAW) { throw new ForbiddenException(`Số tiền phải lớn hơn ${MIN_WITHDRAW}đ!`) }
+        const response = await this.prismaService.withdrawRequest.create({
+            data: {
+                amount: amount,
+                userId: user.id,
+                name: body.name,
+                code: body.code,
+                shortName: body.shortName,
+                status: TransactionStatus.PENDING,
+                accountNumber: body.accountNumber
+            }
+        })
+
+        if (body.save) {
+            await this.prismaService.bankAcount.upsert({
+                where: { uniqueAccount: { shortName: body.shortName, accountNumber: body.accountNumber } },
+                update: {
+                    name: body.name,
+                    code: body.code,
+                    shortName: body.shortName,
+                    accountNumber: body.accountNumber,
+                    amount: amount
+                },
+                create: {
+                    userId: user.id,
+                    name: body.name,
+                    code: body.code,
+                    shortName: body.shortName,
+                    accountNumber: body.accountNumber,
+                    amount: amount
+                }
+            })
+        }
+        return response
     }
 
     // Transaction mua ve, khong co controller

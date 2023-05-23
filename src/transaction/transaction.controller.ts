@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
-import { Transaction, User } from '../../node_modules/.prisma/client';
+import { Transaction, User, WithdrawRequest } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { RechargeDTO, WithDrawLuckyKingDTO } from './dto';
+import { RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
 import { TransactionService } from './transaction.service';
 
 @Controller('transaction')
@@ -22,6 +22,13 @@ export class TransactionController {
     @Roles(Role.Admin, Role.User)
     withdrawToLuckyKing(@GetUser() transactionPerson: User, @Body() body: WithDrawLuckyKingDTO) {
         return this.transactionService.withdrawToLuckyKing(transactionPerson, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('withdraw-bank-acount')
+    @Roles(Role.User)
+    withdrawToBankAccount(@GetUser() transactionPerson: User, @Body() body: WithDrawBankAccountDTO) {
+        return this.transactionService.withdrawToBankAccount(transactionPerson, body)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
