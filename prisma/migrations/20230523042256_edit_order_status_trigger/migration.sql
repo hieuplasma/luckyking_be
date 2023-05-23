@@ -86,4 +86,4 @@ CREATE OR REPLACE TRIGGER update_order_benefits_trigger
 AFTER UPDATE ON "Lottery"
 FOR EACH ROW
 WHEN (OLD.benefits IS DISTINCT FROM NEW.benefits)
-EXECUTE FUNCTION update_order_benefits();
+EXECUTE FUNCTION update_order_benefits();-- This is an empty migration.
