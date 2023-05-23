@@ -35,16 +35,6 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
         return false;
     }
 
-    @SubscribeMessage('readyToGetKeno')
-    async readyToGetKeno(
-        @MessageBody() data: string,
-        @ConnectedSocket() client: Socket,
-    ) {
-
-        this.kenoSocketService.setClientReadyStatus();
-        return false;
-    }
-
     async handleConnection(client: Socket) {
         console.log('connection: ')
         console.log(client.id)

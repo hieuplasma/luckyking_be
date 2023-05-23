@@ -75,18 +75,6 @@ export class OrderController {
         return this.orderService.getAllOrder(status, ticketType, startDate, endDate)
     }
 
-
-    // ========================== this api for test ======================
-    // @UseGuards(MyJwtGuard, RolesGuard)
-    // @Get('keno-get-one')
-    // @Roles(Role.Staff)
-    // getOneKenoOrder(
-    //     @GetUser() user: User,
-    //     @Query('status') status: (keyof typeof OrderStatus)[],
-    // ): Promise<Order> {
-    //     return this.orderService.getOneKenoOrder(user, status)
-    // }
-
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('keno-count')
     @Roles(Role.Staff)
