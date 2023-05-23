@@ -3,13 +3,13 @@ services:
   dev-database:
     image: postgres:15.0
     container_name: dev-database
-    ports: 
+    ports:
       - ${DB_PORT}:5432
     environment:
       POSGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    networks: 
+    networks:
       - nestjs-network
   dev:
     container_name: luckyking-api
@@ -23,6 +23,7 @@ services:
     command: npm run start:prod:pm2
     ports:
       - 3003:3001
+      - 81:81
       # - 9229:9229
     networks:
       - nestjs-network
@@ -43,4 +44,4 @@ services:
     networks:
       - nestjs-network
 networks:
-  nestjs-network: 
+  nestjs-network:
