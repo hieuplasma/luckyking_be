@@ -23,7 +23,7 @@ services:
     command: npm run start:prod:pm2
     ports:
       - 3003:3001
-      - 81:81
+      - 80:80
       # - 9229:9229
     networks:
       - nestjs-network
