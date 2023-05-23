@@ -21,7 +21,7 @@ export class LotteryController {
             setTimeout(() => {
                 console.log(data)
                 res('ok')
-            }, 3000)
+            }, 2000)
 
         })
     }
@@ -57,6 +57,8 @@ export class LotteryController {
     @Roles(Role.Staff)
     @Patch('confirm/:lotteryId')
     async confirmLottery(@GetUser() user: User, @Param('lotteryId') lotteryId: string) {
+        // console.log('confirm...')
+        // return true
         return await this.lotteryService.confirmLottery(user, lotteryId);
     }
 
