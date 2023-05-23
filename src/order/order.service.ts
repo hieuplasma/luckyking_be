@@ -11,6 +11,7 @@ import { TransactionService } from 'src/transaction/transaction.service';
 import { LotteryService } from 'src/lottery/lottery.service';
 import { TIME_TO_HANDLE_LOTTERY } from 'src/common/constants/constants';
 import FirebaseService from '../firebase/firebase-app'
+import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
 
 
 @Injectable()
@@ -20,6 +21,7 @@ export class OrderService {
         private userService: UserService,
         private transactionService: TransactionService,
         private lotteryService: LotteryService,
+        private kenoSocketService: KenoSocketService,
         private firebaseService: FirebaseService,
     ) { }
 
@@ -256,7 +258,6 @@ export class OrderService {
     }
 
     async createOrderKeno(user: User, body: CreateOrderKenoDTO): Promise<Order> {
-
         const balances = await this.userService.getAllWallet(user.id)
         const { drawCode, drawTime, lotteryType } = body;
 
@@ -374,11 +375,24 @@ export class OrderService {
             order.transaction = transaction;
             //@ts-ignore
             order.Lottery = lotteryToReturn;
-        })
+        });
 
-        this.firebaseService.sendNotification('Có đơn keno mới');
 
-        return order
+        const now = new nDate()
+        const schedule = await this.prismaService.resultKeno.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        });
+
+        // @ts-ignore
+        let lotteriesToSend = order.Lottery.filter((lottery) => lottery.drawCode === schedule.drawCode);
+        lotteriesToSend.map((lottery: any) => lottery.Order = { displayId: order.displayId })
+        if (lotteriesToSend.length) {
+            this.firebaseService.sendNotification('Có đơn keno mới');
+            this.kenoSocketService.sendKenoLottery(lotteriesToSend);
+        }
+
+        return order;
     }
 
     async createOrderFromCart(user: User, lotteryIds: string[], method: keyof typeof OrderMethod) {
@@ -551,54 +565,6 @@ export class OrderService {
 
         return orders;
     }
-
-    async getOneKenoOrder(user: User, status: (keyof typeof OrderStatus)[]): Promise<Order> {
-        const query: { [key: string]: any } = {};
-
-        // if (status) {
-        //     query.status = { in: status };
-        // }
-        // if (status) {
-        //     query.status = OrderStatus.PENDING;
-        // }
-
-
-        query.status = OrderStatus.PENDING;
-
-        query.ticketType = 'keno';
-
-        const order = await this.prismaService.order.findFirst({
-            where: query,
-            orderBy: {
-                createdAt: 'asc',
-            },
-            include: { Lottery: { include: { NumberLottery: true } }, user: true },
-        })
-
-        if (order) {
-            // await this.lockOrder(user, { orderIds: [order.id], description: '', payment: '' })
-            console.log('get order')
-
-            // const durationTime = order.Lottery.length * TIME_TO_HANDLE_LOTTERY;
-
-            // setTimeout(async () => {
-            //     const orderToReset = await this.prismaService.order.findUnique({
-            //         where: { id: order.id }
-            //     });
-
-            //     if (orderToReset.status === OrderStatus.LOCK) {
-            //         await this.setOrderLotteryToPending(order.id);
-            //         console.log('reset')
-            //     } else {
-            //         console.log('no reset')
-
-            //     }
-
-            // }, durationTime)
-        }
-
-        return order;
-    };
 
     async setOrderLotteryToPending(orderId: string) {
         const order = await this.prismaService.order.findUnique({
