@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, OrderByDrawDTO, ReturnOrderDTO } from './dto';
-import { LotteryType, OrderMethod, Role } from 'src/common/enum';
+import { LotteryType, OrderMethod, Role, TransactionDestination } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
@@ -90,8 +90,8 @@ export class OrderService {
                 user,
                 totalAmount + surcharge,
                 LUCKY_KING_PAYMENT,
-                "Ví LuckyKing",
-                "Ví của nhà phát triển",
+                TransactionDestination.LUCKY_KING,
+                TransactionDestination.HOST,
                 user.id,
                 tx
             )
@@ -210,8 +210,8 @@ export class OrderService {
                 user,
                 totalAmount + surcharge,
                 LUCKY_KING_PAYMENT,
-                "Ví LuckyKing",
-                "Ví của nhà phát triển",
+                TransactionDestination.LUCKY_KING,
+                TransactionDestination.HOST,
                 user.id,
                 tx
             )
@@ -332,8 +332,8 @@ export class OrderService {
                 user,
                 totalAmount + surcharge,
                 LUCKY_KING_PAYMENT,
-                "Ví LuckyKing",
-                "Ví của nhà phát triển",
+                TransactionDestination.LUCKY_KING,
+                TransactionDestination.HOST,
                 user.id,
                 tx
             )
@@ -413,8 +413,8 @@ export class OrderService {
                 user,
                 totalMoney,
                 LUCKY_KING_PAYMENT,
-                "Ví LuckyKing",
-                "Ví của nhà phát triển",
+                TransactionDestination.LUCKY_KING,
+                TransactionDestination.HOST,
                 user.id,
                 tx
             )
@@ -817,7 +817,8 @@ export class OrderService {
             where: {
                 userId: user.id,
                 type: type,
-                drawCode: parseInt(drawCode.toString())
+                drawCode: parseInt(drawCode.toString()),
+                status: { not: OrderStatus.CART }
             },
             include: { Order: true, NumberLottery: true, }
         })

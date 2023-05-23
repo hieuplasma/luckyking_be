@@ -10,4 +10,6 @@ export class UserDTO {
     address: string
     @IsString()
     identify: string
+    
+    personNumber: string
 }

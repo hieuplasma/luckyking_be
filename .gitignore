@@ -38,3 +38,9 @@ lerna-debug.log*
 .env
 
 uploads/
+
+# module
+yarn.lock
+
+# scripts
+querry.js

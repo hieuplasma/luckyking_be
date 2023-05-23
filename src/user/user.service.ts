@@ -31,6 +31,7 @@ export class UserService {
                 identify: body.identify,
                 address: body.address,
                 email: body.email,
+                personNumber: body.personNumber,
                 updateAt: new nDate()
             },
             where: {

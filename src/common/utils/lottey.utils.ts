@@ -186,26 +186,31 @@ export function caculateMegaBenefits(lottery: any, resultString: string, jackPot
                 if (duplicate == 4) benefits = benefits + 15 * TRIEU + 12 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 112 * TRIEU
                 if (duplicate == 6) benefits = benefits + jackPot + 439 * TRIEU + 50 * MUOI_NGHIN
+                break;
             case 13:
                 if (duplicate == 3) benefits = benefits + 3 * TRIEU + 60 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + 20 * TRIEU + 88 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 138 * TRIEU + 80 * MUOI_NGHIN
                 if (duplicate == 6) benefits = benefits + jackPot + 535 * TRIEU + 50 * MUOI_NGHIN
+                break;
             case 14:
                 if (duplicate == 3) benefits = benefits + 4 * TRIEU + 95 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + 27 * TRIEU + 90 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 169 * TRIEU + 20 * MUOI_NGHIN
                 if (duplicate == 6) benefits = benefits + jackPot + 639 * TRIEU + 60 * MUOI_NGHIN
+                break;
             case 15:
                 if (duplicate == 3) benefits = benefits + 6 * TRIEU + 60 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + 36 * TRIEU + 30 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 203 * TRIEU + 50 * MUOI_NGHIN
                 if (duplicate == 6) benefits = benefits + jackPot + 752 * TRIEU + 40 * MUOI_NGHIN
+                break;
             case 18:
                 if (duplicate == 3) benefits = benefits + 13 * TRIEU + 65 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + 70 * TRIEU + 98 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 332 * TRIEU + 80 * MUOI_NGHIN
                 if (duplicate == 6) benefits = benefits + jackPot + 1149 * TRIEU
+                break;
             default:
                 break;
         }
@@ -260,18 +265,23 @@ export function caculatePowerBenefits(lottery: any, resultString: string, specia
                 case 12:
                     if (duplicate == 5) benefits = benefits + jackpot2 + 310 * TRIEU
                     if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 1330 * TRIEU
+                    break;
                 case 13:
                     if (duplicate == 5) benefits = benefits + jackpot2 + 378 * TRIEU
                     if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 1630 * TRIEU
+                    break;
                 case 14:
                     if (duplicate == 5) benefits = benefits + jackpot2 + 452 * TRIEU
                     if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 1940 * TRIEU
+                    break;
                 case 15:
                     if (duplicate == 5) benefits = benefits + jackpot2 + 532 * TRIEU + 50 * MUOI_NGHIN
                     if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 2270 * TRIEU
+                    break;
                 case 18:
                     if (duplicate == 5) benefits = benefits + jackpot2 + 818 * TRIEU
                     if (duplicate == 6) benefits = benefits + jackpot1 + jackpot2 + 3350 * TRIEU
+                    break;
                 default:
                     break;
             }
@@ -324,26 +334,31 @@ export function caculatePowerBenefits(lottery: any, resultString: string, specia
                 if (duplicate == 4) benefits = benefits + 25 * TRIEU + 20 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 350 * TRIEU
                 if (duplicate == 6) benefits = benefits + jackpot1 + 1570 * TRIEU
+                break;
             case 13:
                 if (duplicate == 3) benefits = benefits + 6 * TRIEU
                 if (duplicate == 4) benefits = benefits + 34 * TRIEU + 88 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 418 * TRIEU
                 if (duplicate == 6) benefits = benefits + jackpot1 + 1870 * TRIEU
+                break;
             case 14:
                 if (duplicate == 3) benefits = benefits + 8 * TRIEU + 25 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + 46 * TRIEU + 5 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 492 * TRIEU + 20 * MUOI_NGHIN
                 if (duplicate == 6) benefits = benefits + jackpot1 + 2180 * TRIEU
+                break;
             case 15:
                 if (duplicate == 3) benefits = benefits + 11 * TRIEU
                 if (duplicate == 4) benefits = benefits + 60 * TRIEU + 50 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 572 * TRIEU + 50 * MUOI_NGHIN
                 if (duplicate == 6) benefits = benefits + jackpot1 + 2510 * TRIEU
+                break;
             case 18:
                 if (duplicate == 3) benefits = benefits + 22 * TRIEU + 75 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + 118 * TRIEU + 30 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 858 * TRIEU + 80 * MUOI_NGHIN
                 if (duplicate == 6) benefits = benefits + jackpot1 + 3590 * TRIEU
+                break;
             default:
                 break;
         }
@@ -373,9 +388,9 @@ export function caculateMax3PlusdBenefits(lottery: any, special: string[], fitst
     const numberDetail: NumberDetail[] = lottery.NumberLottery.numberDetail
     numberDetail.map(item => {
         let benefits = 0
-        const numbers: string[] = item.boSo.split("-")
-        const number1 = numbers[0] + "-" + numbers[1] + "-" + numbers[2]
-        const number2 = numbers[3] + "-" + numbers[4] + "-" + numbers[5]
+        const numbers: string[] = item.boSo.split(" ")
+        const number1 = numbers[0]
+        const number2 = numbers[1]
         let duplicateSpecial = 0, duplicate1 = 0, duplicate2 = 0, duplicate3 = 0;
 
         if (special.includes(number1)) duplicateSpecial++; if (special.includes(number2)) duplicateSpecial++;
@@ -399,6 +414,76 @@ export function caculateMax3PlusdBenefits(lottery: any, special: string[], fitst
 
 export function caculateMax3dProBenefits(lottery: any, special: string[], fitst: string[], second: string[], third: string[]) {
     let totalBenefits = 0;
+    const numberDetail: NumberDetail[] = lottery.NumberLottery.numberDetail
+
+    if (lottery.NumberLottery.level == 10) {
+        return multibagMax3dPro(lottery, special, fitst, second, third)
+    }
+    numberDetail.map(item => {
+        let benefits = 0
+        const numbers: string[] = item.boSo.split(" ")
+        const number1 = numbers[0]
+        const number2 = numbers[1]
+        let duplicateSpecial = 0, duplicate1 = 0, duplicate2 = 0, duplicate3 = 0;
+
+        if (number1 == special[0] && number2 == special[1]) duplicateSpecial = 3
+        if (special.includes(number1)) duplicateSpecial++; if (special.includes(number2)) duplicateSpecial++;
+        if (fitst.includes(number1)) duplicate1++; if (fitst.includes(number2)) duplicate1++;
+        if (second.includes(number1)) duplicate2++; if (second.includes(number2)) duplicate2++;
+        if (third.includes(number1)) duplicate3++; if (third.includes(number2)) duplicate3++;
+
+        if (number1 == special[0] && number2 == special[1]) duplicateSpecial = 3
+
+        if (duplicateSpecial == 3) benefits = benefits + 2 * TY;
+        if (duplicateSpecial == 2) benefits = benefits + 400 * TRIEU;
+        if (duplicate1 == 2) benefits = benefits + 30 * TRIEU;
+        if (duplicate2 == 2) benefits = benefits + 10 * TRIEU;
+        if (duplicate3 == 2) benefits = benefits + 4 * TRIEU;
+        if ((duplicateSpecial + duplicate1 + duplicate2 + duplicate3) >= 2) benefits = benefits + TRIEU;
+        if (duplicateSpecial == 1) benefits = benefits + 10 * MUOI_NGHIN;
+        if ((duplicate1 + duplicate2 + duplicate3) == 1) benefits = benefits + 4 * MUOI_NGHIN
+
+        let tmp = Math.floor(parseInt(item.tienCuoc.toString()) / 10000) * benefits
+        totalBenefits = totalBenefits + tmp
+    })
+    return totalBenefits
+}
+
+function multibagMax3dPro(lottery: any, special: string[], fitst: string[], second: string[], third: string[]) {
+    let totalBenefits = 0;
+    const numberDetail: NumberDetail[] = lottery.NumberLottery.numberDetail
+    numberDetail.map((item: any, index: number) => {
+        const numbers: string[] = item.boSo.split(" ")
+        let benefits = 0
+        const coefficient = Math.floor(parseInt(item.tienCuoc.toString()) / (MUOI_NGHIN * numbers.length * (numbers.length - 1)))
+        for (let i = 0; i < numbers.length; i++) {
+            for (let j = i + 1; j < numbers.length; j++) {
+                const number1 = numbers[i]
+                const number2 = numbers[j]
+                let duplicateSpecial = 0, duplicate1 = 0, duplicate2 = 0, duplicate3 = 0;
+
+                if (number1 == special[0] && number2 == special[1]) duplicateSpecial = 3
+                if (special.includes(number1)) duplicateSpecial++; if (special.includes(number2)) duplicateSpecial++;
+                if (fitst.includes(number1)) duplicate1++; if (fitst.includes(number2)) duplicate1++;
+                if (second.includes(number1)) duplicate2++; if (second.includes(number2)) duplicate2++;
+                if (third.includes(number1)) duplicate3++; if (third.includes(number2)) duplicate3++;
+
+                if (number1 == special[0] && number2 == special[1]) duplicateSpecial = 3
+
+                if (duplicateSpecial == 3) benefits = benefits + 2 * TY;
+                if (duplicateSpecial == 2) benefits = benefits + 400 * TRIEU;
+                if (duplicate1 == 2) benefits = benefits + 30 * TRIEU;
+                if (duplicate2 == 2) benefits = benefits + 10 * TRIEU;
+                if (duplicate3 == 2) benefits = benefits + 4 * TRIEU;
+                if ((duplicateSpecial + duplicate1 + duplicate2 + duplicate3) >= 2) benefits = benefits + TRIEU;
+                if (duplicateSpecial == 1) benefits = benefits + 10 * MUOI_NGHIN;
+                if ((duplicate1 + duplicate2 + duplicate3) == 1) benefits = benefits + 4 * MUOI_NGHIN
+
+                let tmp = coefficient * benefits
+                totalBenefits = totalBenefits + tmp
+            }
+        }
+    })
     return totalBenefits
 }
 

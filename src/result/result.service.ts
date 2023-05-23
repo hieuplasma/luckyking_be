@@ -408,7 +408,7 @@ export class ResultService {
     async getResultMax3d(type: string, take: number, skip: number) {
         const now = new nDate()
         const schedule = await this.prismaService.resultMax3d.findMany({
-            where: { drawn: true, type: type, drawTime: { lt: now } },
+            where: { drawn: true, type: type },
             orderBy: { drawCode: 'desc' },
             take: take ? parseInt(take.toString()) : 10,
             skip: skip ? parseInt(skip.toString()) : 0
@@ -419,7 +419,7 @@ export class ResultService {
     async getResultKeno(take: number, skip: number) {
         const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findMany({
-            where: { drawn: true, drawTime: { lt: now } },
+            where: { drawn: true },
             orderBy: { drawCode: 'desc' },
             take: take ? parseInt(take.toString()) : 20,
             skip: skip ? parseInt(skip.toString()) : 0
@@ -430,7 +430,7 @@ export class ResultService {
     async getResultMega(take: number, skip: number) {
         const now = new nDate()
         const schedule = await this.prismaService.resultMega.findMany({
-            where: { drawn: true, drawTime: { lt: now } },
+            where: { drawn: true },
             orderBy: { drawCode: 'desc' },
             take: take ? parseInt(take.toString()) : 10,
             skip: skip ? parseInt(skip.toString()) : 0
@@ -441,7 +441,7 @@ export class ResultService {
     async getResultPower(take: number, skip: number) {
         const now = new nDate()
         const schedule = await this.prismaService.resultPower.findMany({
-            where: { drawn: true, drawTime: { lt: now } },
+            where: { drawn: true},
             orderBy: { drawCode: 'desc' },
             take: take ? parseInt(take.toString()) : 10,
             skip: skip ? parseInt(skip.toString()) : 0
@@ -537,7 +537,7 @@ export class ResultService {
                     // So ve xem trung khong
                     benefits = caculateMax3PlusdBenefits(lottery, body.special, body.first, body.second, body.third)
                     break;
-                case LotteryType.Max3DPlus:
+                case LotteryType.Max3DPro:
                     // So ve xem trung khong
                     benefits = caculateMax3dProBenefits(lottery, body.special, body.first, body.second, body.third)
                     break
@@ -545,7 +545,7 @@ export class ResultService {
                     break;
             }
             // Tra thuong
-            this.rewardLottery(benefits, update.drawTime, lottery, transactionPerson.id)
+            await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(update))
         })
         return update
     }

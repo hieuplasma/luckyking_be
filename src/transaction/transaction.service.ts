@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Transaction, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { TransactionType } from '../common/enum'
+import { TransactionDestination, TransactionType } from '../common/enum'
 import { RechargeDTO, WithDrawLuckyKingDTO } from './dto';
 import { WalletEnum } from './enum';
 
@@ -26,7 +26,7 @@ export class TransactionService {
                     connect: { id: user.id }
                 },
                 source: body.source,
-                destination: body.destination,
+                destination: TransactionDestination.LUCKY_KING,
                 transactionPersonId: transactionPerson.id
             },
             select: {
@@ -64,8 +64,8 @@ export class TransactionService {
                 User: {
                     connect: { id: user.id }
                 },
-                source: "Ví nhận thưởng",
-                destination: "Ví LuckyKing",
+                source: TransactionDestination.REWARD,
+                destination: TransactionDestination.LUCKY_KING,
                 transactionPersonId: user.id
             },
             select: {
@@ -152,8 +152,8 @@ export class TransactionService {
                 User: {
                     connect: { id: userid }
                 },
-                source: "Trung tâm LuckyKing",
-                destination: "Ví nhận thưởng",
+                source: TransactionDestination.HOST,
+                destination: TransactionDestination.REWARD,
                 transactionPersonId: transactionPersonId
             },
             select: {
