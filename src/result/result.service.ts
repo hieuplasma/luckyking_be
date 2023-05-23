@@ -441,7 +441,7 @@ export class ResultService {
     async getResultPower(take: number, skip: number) {
         const now = new nDate()
         const schedule = await this.prismaService.resultPower.findMany({
-            where: { drawn: true},
+            where: { drawn: true },
             orderBy: { drawCode: 'desc' },
             take: take ? parseInt(take.toString()) : 10,
             skip: skip ? parseInt(skip.toString()) : 0
@@ -515,11 +515,12 @@ export class ResultService {
         })
         // so ve va update ve
         let listLottery: any[]
-        if (body.type == LotteryType.Max3DPro)
+        if (body.type == LotteryType.Max3DPro) {
             listLottery = await this.prismaService.lottery.findMany({
                 where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: body.type },
                 include: { NumberLottery: true }
             })
+        }
         else {
             listLottery = await this.prismaService.lottery.findMany({
                 where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: { in: [LotteryType.Max3D, LotteryType.Max3DPlus] } },
@@ -528,7 +529,7 @@ export class ResultService {
         }
         listLottery.map(async lottery => {
             let benefits = 0
-            switch (body.type) {
+            switch (lottery.type) {
                 case LotteryType.Max3D:
                     // So ve xem trung khong
                     benefits = caculateMax3dBenefits(lottery, body.special, body.first, body.second, body.third)
