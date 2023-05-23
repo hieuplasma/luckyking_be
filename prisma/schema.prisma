@@ -41,7 +41,7 @@ model User {
   Cart            Cart?
   MoneyAccount    MoneyAccount?
   RewardWallet    RewardWallet?
-  BankAcount      BankAcount[]
+  BankAccount     BankAccount[]
   WithdrawRequest WithdrawRequest[]
 }
 
@@ -54,7 +54,7 @@ model Device {
   userId      String
 }
 
-model BankAcount {
+model BankAccount {
   id            String   @id @default(uuid())
   displayId     Int?     @default(autoincrement())
   createdAt     DateTime @default(now())
@@ -62,6 +62,8 @@ model BankAcount {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
   name          String?
+  userName      String?
+  logo          String?
   code          String?
   shortName     String?  @unique
   accountNumber String?
@@ -179,6 +181,7 @@ model WithdrawRequest {
   User              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String
   name              String?
+  userName          String?
   code              String?
   shortName         String?
   accountNumber     String?

@@ -4,7 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser, Roles } from '../auth/decorator';
 import { UserService } from './user.service';
 import { UserDTO } from './dto';
-import { User, BankAcount } from '../../node_modules/.prisma/client';
+import { User, BankAccount } from '../../node_modules/.prisma/client';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
 

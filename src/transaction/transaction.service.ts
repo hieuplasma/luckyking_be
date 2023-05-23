@@ -97,6 +97,7 @@ export class TransactionService {
                 amount: amount,
                 userId: user.id,
                 name: body.name,
+                userName: body.userName,
                 code: body.code,
                 shortName: body.shortName,
                 status: TransactionStatus.PENDING,
@@ -105,11 +106,13 @@ export class TransactionService {
         })
 
         if (body.save) {
-            await this.prismaService.bankAcount.upsert({
+            await this.prismaService.bankAccount.upsert({
                 where: { uniqueAccount: { shortName: body.shortName, accountNumber: body.accountNumber } },
                 update: {
                     name: body.name,
+                    userName: body.userName,
                     code: body.code,
+                    logo: body.logo,
                     shortName: body.shortName,
                     accountNumber: body.accountNumber,
                     amount: amount
@@ -117,6 +120,8 @@ export class TransactionService {
                 create: {
                     userId: user.id,
                     name: body.name,
+                    userName: body.userName,
+                    logo: body.logo,
                     code: body.code,
                     shortName: body.shortName,
                     accountNumber: body.accountNumber,

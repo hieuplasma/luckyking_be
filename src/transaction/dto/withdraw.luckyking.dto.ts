@@ -16,4 +16,6 @@ export class WithDrawBankAccountDTO {
 
     status: TransactionStatus
     save: Boolean
+    userName: string
+    logo: string
 }
