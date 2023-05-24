@@ -194,44 +194,59 @@ model WithdrawRequest {
 }
 
 model ResultKeno {
-  id       String   @id @default(uuid())
-  drawn    Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
-  drawCode Int      @unique
-  drawTime DateTime
-  result   String? // Ket qua keno dang string 20 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  id             String    @id @default(uuid())
+  drawn          Boolean   @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode       Int       @unique
+  drawTime       DateTime
+  result         String? // Ket qua keno dang string 20 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  approved       Boolean   @default(false)
+  approvedAt     DateTime?
+  approvedUserId String?
+  displayId      Int?      @default(autoincrement())
 }
 
 model ResultMega {
-  id        String   @id @default(uuid())
-  drawn     Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
-  drawCode  Int      @unique
-  drawTime  DateTime
-  result    String? // Ket qua Mega dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
-  jackpot1  BigInt?
-  displayId Int?     @default(autoincrement())
+  id             String    @id @default(uuid())
+  drawn          Boolean   @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode       Int       @unique
+  drawTime       DateTime
+  result         String? // Ket qua Mega dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  jackpot1       BigInt?
+  approved       Boolean   @default(false)
+  approvedAt     DateTime?
+  approvedUserId String?
+  displayId      Int?      @default(autoincrement())
 }
 
 model ResultPower {
-  id            String   @id @default(uuid())
-  drawn         Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
-  drawCode      Int      @unique
-  drawTime      DateTime
-  result        String? // Ket qua Power dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
-  specialNumber Int? // So dac biet, neu chua co ket qua tra ve null
-  jackpot1      BigInt?
-  jackpot2      BigInt?
+  id             String    @id @default(uuid())
+  drawn          Boolean   @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode       Int       @unique
+  drawTime       DateTime
+  result         String? // Ket qua Power dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  specialNumber  Int? // So dac biet, neu chua co ket qua tra ve null
+  jackpot1       BigInt?
+  jackpot2       BigInt?
+  approved       Boolean   @default(false)
+  approvedAt     DateTime?
+  approvedUserId String?
+  displayId      Int?      @default(autoincrement())
 }
 
 model ResultMax3d {
-  id       String   @id @default(uuid())
-  drawn    Boolean  @default(false) // true: da co ket qua, false: chua co ket qua
-  type     String // max3d. max3dpro, max3dplus
-  drawCode Int
-  drawTime DateTime
-  special  String[] // 2 giai dac biet
-  first    String[] // 4 giai nhat
-  second   String[] // 6 giai nhi
-  third    String[] // 8 giai 3
+  id             String    @id @default(uuid())
+  drawn          Boolean   @default(false) // true: da co ket qua, false: chua co ket qua
+  type           String // max3d. max3dpro, max3dplus
+  drawCode       Int
+  drawTime       DateTime
+  special        String[] // 2 giai dac biet
+  first          String[] // 4 giai nhat
+  second         String[] // 6 giai nhi
+  third          String[] // 8 giai 3
+  approved       Boolean   @default(false)
+  approvedAt     DateTime?
+  approvedUserId String?
+  displayId      Int?      @default(autoincrement())
 
   @@unique([drawCode, type], name: "uniqueDraw")
 }
