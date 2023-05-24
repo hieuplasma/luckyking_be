@@ -1,16 +1,16 @@
 version: '3.8'
 services:
-  dev-database:
-    image: postgres:15.0
-    container_name: dev-database
-    ports:
-      - ${DB_PORT}:5432
-    environment:
-      POSGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    networks:
-      - nestjs-network
+  # dev-database:
+  #   image: postgres:15.0
+  #   container_name: dev-database
+  #   ports:
+  #     - ${DB_PORT}:5432
+  #   environment:
+  #     POSGRES_USER: ${DB_USERNAME}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD}
+  #     POSTGRES_DB: ${DB_NAME}
+  #   networks:
+  #     - nestjs-network
   dev:
     container_name: luckyking-api
     image: nestjs-api-dev:1.0.0
