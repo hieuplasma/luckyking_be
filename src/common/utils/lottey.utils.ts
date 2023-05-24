@@ -66,6 +66,7 @@ export function caculateKenoBenefits(lottery: any, resultString: string) {
                 if (duplicate == 6) benefits = benefits + 50 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 5 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + MUOI_NGHIN
+                break;
             case 9:
                 if (duplicate == 9) benefits = benefits + 800 * TRIEU
                 if (duplicate == 8) benefits = benefits + 12 * TRIEU
@@ -74,6 +75,7 @@ export function caculateKenoBenefits(lottery: any, resultString: string) {
                 if (duplicate == 5) benefits = benefits + 3 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + MUOI_NGHIN
                 if (duplicate == 0) benefits = benefits + MUOI_NGHIN
+                break;
             case 10:
                 if (duplicate == 10) benefits = benefits + 2 * TY
                 if (duplicate == 9) benefits = benefits + 150 * TRIEU
@@ -82,6 +84,7 @@ export function caculateKenoBenefits(lottery: any, resultString: string) {
                 if (duplicate == 6) benefits = benefits + 8 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 2 * MUOI_NGHIN
                 if (duplicate == 0) benefits = benefits + MUOI_NGHIN
+                break;
             case 11:
                 // Lớn
                 if (analysis.big == 11 || analysis.big == 12) benefits = benefits + MUOI_NGHIN
