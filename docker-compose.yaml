@@ -25,6 +25,8 @@ services:
       - 3003:3001
       - 8081:8081
       # - 9229:9229
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - nestjs-network
     # volumes:
