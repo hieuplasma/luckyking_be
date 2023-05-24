@@ -58,8 +58,8 @@ export class OrderController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-by-display-id/:id')
     @Roles(Role.User, Role.Staff, Role.Admin)
-    getOrderByDisplayId(@Param('id') displayOrderId: number): Promise<Order> {
-        return this.orderService.getOrderByDisplayId(+displayOrderId)
+    getOrderByDisplayId(@Param('id') displayId: number): Promise<Order> {
+        return this.orderService.getOrderByDisplayId(+displayId)
     }
 
 
@@ -73,6 +73,15 @@ export class OrderController {
         @Query('endDate') endDate: Date,
     ): Promise<Order[]> {
         return this.orderService.getAllOrder(status, ticketType, startDate, endDate)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('keno-display-id/:id')
+    @Roles(Role.Staff)
+    getOrderKenoByDisplayId(
+        @Param('id') displayId: number
+    ): Promise<Order> {
+        return this.orderService.getOrderKenoByDisplayId(displayId);
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
