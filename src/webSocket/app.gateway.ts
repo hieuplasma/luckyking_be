@@ -38,11 +38,11 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     async handleConnection(client: Socket) {
         console.log('connection: ')
         console.log(client.id)
-        this.kenoSocketService.addNewClient(client);
+        // this.kenoSocketService.addNewClient(client);
     }
 
     async handleDisconnect(client: Socket) {
         console.log('disconnect')
-        this.kenoSocketService.deleteClient(client)
+        // this.kenoSocketService.deleteClient(client)
     }
 }

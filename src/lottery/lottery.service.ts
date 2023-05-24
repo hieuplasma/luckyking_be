@@ -60,17 +60,17 @@ export class LotteryService {
         });
 
         // Update lottery expired
-        await this.prismaService.lottery.updateMany({
-            where: {
-                type: LotteryType.Keno,
-                drawTime: { lte: now },
-                status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
-            },
-            data: {
-                drawCode: schedule.drawCode,
-                drawTime: schedule.drawTime,
-            }
-        })
+        // await this.prismaService.lottery.updateMany({
+        //     where: {
+        //         type: LotteryType.Keno,
+        //         drawTime: { lte: now },
+        //         status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
+        //     },
+        //     data: {
+        //         drawCode: schedule.drawCode,
+        //         drawTime: schedule.drawTime,
+        //     }
+        // })
 
         const Lotteries = await this.prismaService.lottery.findMany({
             where: {

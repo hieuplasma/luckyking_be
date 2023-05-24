@@ -465,11 +465,37 @@ export class OrderService {
         return order
     }
 
-    async getOrderByDisplayId(displayOrderId: number): Promise<Order> {
+    async getOrderByDisplayId(displayId: number): Promise<Order> {
         const order = await this.prismaService.order.findFirst({
-            where: { displayId: displayOrderId },
+            where: { displayId: displayId },
             include: { Lottery: { include: { NumberLottery: true } }, user: true }
         })
+        return order
+    }
+
+    async getOrderKenoByDisplayId(displayId: number): Promise<Order> {
+        const now = new nDate()
+        const schedule = await this.prismaService.resultKeno.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        });
+
+        const order = await this.prismaService.order.findFirst({
+            where: {
+                displayId: +displayId,
+                ticketType: LotteryType.Keno,
+            },
+            include: {
+                Lottery: {
+                    where: {
+                        drawCode: schedule.drawCode,
+                        status: OrderStatus.PENDING
+                    },
+                    include: { NumberLottery: true }
+                },
+            }
+        })
+
         return order
     }
 
@@ -606,7 +632,7 @@ export class OrderService {
             where: {
                 type: LotteryType.Keno,
                 drawCode: schedule.drawCode,
-                status: OrderStatus.PENDING,
+                status: OrderStatus.PENDING, // Lock?
             }
         })
 
