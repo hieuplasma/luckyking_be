@@ -8,7 +8,7 @@ export class WithDrawLuckyKingDTO {
 
 export class WithDrawBankAccountDTO {
 
-    @IsNotEmpty()amount: number
+    @IsNotEmpty() amount: number
     name: string
     @IsNotEmpty() shortName: string
     @IsNotEmpty() accountNumber: string
@@ -18,4 +18,10 @@ export class WithDrawBankAccountDTO {
     save: Boolean
     userName: string
     logo: string
+}
+
+export class AcceptBankWithdrawDTO {
+    @IsNotEmpty() id: string
+    @IsNotEmpty() status: TransactionStatus
+    statusDescription: string
 }

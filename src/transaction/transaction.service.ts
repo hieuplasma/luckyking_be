@@ -2,8 +2,9 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Transaction, User, WithdrawRequest } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionDestination, TransactionStatus, TransactionType } from '../common/enum'
-import { RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
+import { AcceptBankWithdrawDTO, RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
 import { WalletEnum } from './enum';
+import { nDate } from 'src/common/utils';
 
 @Injectable()
 export class TransactionService {
@@ -88,7 +89,7 @@ export class TransactionService {
         return transaction
     }
 
-    async withdrawToBankAccount(user: User, body: WithDrawBankAccountDTO) {
+    async requestWithDrawToBank(user: User, body: WithDrawBankAccountDTO) {
         const MIN_WITHDRAW = 100000
         const amount = parseInt(body.amount.toString())
         if (amount < MIN_WITHDRAW) { throw new ForbiddenException(`Số tiền phải lớn hơn ${MIN_WITHDRAW}đ!`) }
@@ -130,6 +131,42 @@ export class TransactionService {
             })
         }
         return response
+    }
+
+    async acceptBankWithdraw(user: User, body: AcceptBankWithdrawDTO) {
+        const withdrawRequest = await this.prismaService.withdrawRequest.update({
+            where: { id: body.id },
+            data: {
+                status: body.status,
+                statusDescription: body.statusDescription,
+                confirmAt: new nDate(),
+                confirmBy: user.phoneNumber,
+                confirmUserId: user.id
+            }
+        })
+
+        if (body.status == TransactionStatus.SUCCESS) {
+            const transaction = await this.prismaService.transaction.create({
+                data: {
+                    type: TransactionType.WithDraw,
+                    description: "Đổi thưởng về tài khoản ngân hàng",
+                    amount: withdrawRequest.amount,
+                    payment: "Chuyển khoản ngân hàng",
+                    User: {
+                        connect: { id: withdrawRequest.userId }
+                    },
+                    source: TransactionDestination.REWARD,
+                    destination: withdrawRequest.shortName + " - " + withdrawRequest.accountNumber + " - " + withdrawRequest.userName,
+                    transactionPersonId: user.id
+                }
+            })
+            await this.updateRewardWalletBalance(user.id, withdrawRequest.amount, WalletEnum.Decrease)
+
+            //@ts-ignores
+            withdrawRequest.transaction = transaction
+        }
+
+        return withdrawRequest
     }
 
     // Transaction mua ve, khong co controller

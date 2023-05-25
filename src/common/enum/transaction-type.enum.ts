@@ -8,7 +8,8 @@ export enum TransactionType {
 export enum TransactionDestination {
     LUCKY_KING = "Ví LuckyKing",
     REWARD = "Ví nhận thưởng",
-    HOST = "Ví của nhà phát triển"
+    HOST = "Ví của nhà phát triển",
+    BANK_ACOUNT = "Tài khoản của người dùng"
 }
 
 export enum TransactionStatus {

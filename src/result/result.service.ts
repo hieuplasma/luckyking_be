@@ -238,14 +238,16 @@ export class ResultService {
         });
         let check = true
         let newDrawCode = latestDraw[0].drawCode
-        const now = new Date().getTime()
-        let newTime = new Date(now + 3 * 3600 * 1000 - 60 * 1000) // get time 5h59
-        let time21h54Today = new Date(now + 18 * 3600 * 1000 + 54 * 60 * 1000)  // get time 21h54
+        const newDrawTime = new Date(latestDraw[0].drawTime)
+        const now = newDrawTime.getTime()
+        let newTime = new Date(now + 9 * 3600 * 1000 - 55 * 60 * 1000) // get time 5h59
+        let time21h54Today = new Date(now + 24 * 3600 * 1000)  // get time 21h54
+        console.log(newTime)
+        console.log(time21h54Today)
         newTime.setSeconds(0)
+        newTime.setMilliseconds(0)
         time21h54Today.setSeconds(0)
-        // const time5h59Today = getTimeToday(5, 59)
-        // let newTime = time5h59Today
-        // const time21h54Today = getTimeToday(21, 54)
+        time21h54Today.setMilliseconds(0)
         while (check) {
             newDrawCode++
             newTime = new Date(newTime.getTime() + 5 * 60000);

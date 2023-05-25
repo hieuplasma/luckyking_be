@@ -3,7 +3,7 @@ import { Transaction, User, WithdrawRequest } from '../../node_modules/.prisma/c
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
-import { RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
+import { AcceptBankWithdrawDTO, RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
 import { TransactionService } from './transaction.service';
 
 @Controller('transaction')
@@ -28,8 +28,16 @@ export class TransactionController {
     @Post('withdraw-bank-acount')
     @Roles(Role.User)
     withdrawToBankAccount(@GetUser() transactionPerson: User, @Body() body: WithDrawBankAccountDTO) {
-        return this.transactionService.withdrawToBankAccount(transactionPerson, body)
+        return this.transactionService.requestWithDrawToBank(transactionPerson, body)
     }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('accept-bank-withdraw')
+    @Roles(Role.User)
+    acceptBankWithdraw(@GetUser() transactionPerson: User, @Body() body: AcceptBankWithdrawDTO) {
+        return this.transactionService.acceptBankWithdraw(transactionPerson, body)
+    }
+
 
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('list')
