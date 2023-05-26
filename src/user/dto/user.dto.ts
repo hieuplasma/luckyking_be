@@ -1,15 +1,15 @@
 import { IsEmail, IsNotEmpty, IsPhoneNumber, IsString } from "class-validator"
 
 export class UserDTO {
-    @IsString()
+    @IsNotEmpty()
     fullName: string
-    @IsEmail()
-    @IsString()
+    // @IsEmail()
+    // @IsString()
     email: string
-    @IsString()
+    // @IsString()
     address: string
-    @IsString()
+    @IsNotEmpty()
     identify: string
-    
+
     personNumber: string
 }
