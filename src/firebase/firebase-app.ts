@@ -52,7 +52,7 @@ export default class FirebaseApp {
                         console.log("Thành công:", response);
                     })
                     .catch((error) => {
-                        console.log("Lỗi:", error);
+                        // console.log("Lỗi:", error);
                     });
             }
         }
