@@ -1,18 +1,17 @@
 FROM keymetrics/pm2:18-alpine As development
 # FROM node:18-alpine As development
 
-USER node
 RUN mkdir -p /home/node/app
 WORKDIR /home/node/app
 
-COPY --chown=node:node package*.json ./
-COPY --chown=node:node prisma ./prisma/
+COPY package*.json ./
+COPY prisma ./prisma/
 
 RUN npm install glob rimraf
 
 RUN npm install
 
-COPY --chown=node:node . .
+COPY . .
 
 RUN npx prisma generate
 

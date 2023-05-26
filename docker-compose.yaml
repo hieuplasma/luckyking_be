@@ -9,6 +9,8 @@ services:
   #     POSGRES_USER: ${DB_USERNAME}
   #     POSTGRES_PASSWORD: ${DB_PASSWORD}
   #     POSTGRES_DB: ${DB_NAME}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
   #   networks:
   #     - nestjs-network
   dev:
@@ -23,14 +25,16 @@ services:
     command: npm run start:prod:pm2
     ports:
       - 3003:3001
-      - 8081:8081
+      # - 8081:8081
+      - 81:81
       # - 9229:9229
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       - nestjs-network
-    # volumes:
-    #   - .:/usr/src/app
+    volumes:
+      - ./uploads:/home/node/app/uploads
+    # - .:/usr/src/app
     #   - /usr/src/app/node_modules
     restart: unless-stopped
   nginx:
@@ -47,3 +51,5 @@ services:
       - nestjs-network
 networks:
   nestjs-network:
+    # volumes:
+    #   pgdata:
