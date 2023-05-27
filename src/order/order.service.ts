@@ -135,6 +135,9 @@ export class OrderService {
             order.Lottery = lotteryToReturn;
 
         })
+
+        this.firebaseService.sendNotification('Có đơn PowerMega mới');
+
         return order
     }
 
@@ -254,6 +257,10 @@ export class OrderService {
             //@ts-ignore
             order.Lottery = lotteryToReturn;
         })
+
+
+        this.firebaseService.sendNotification('Có đơn max3D mới');
+
         return order
     }
 
@@ -454,6 +461,9 @@ export class OrderService {
                 await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id, tx);
             }
         })
+
+        this.firebaseService.sendNotification('Có đơn vé thường mới');
+
         return order;
     }
 
