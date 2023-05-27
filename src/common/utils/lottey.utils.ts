@@ -92,12 +92,12 @@ export function caculateKenoBenefits(lottery: any, resultString: string) {
                 break;
             case 12:
                 // Nhỏ
-                if (analysis.small == 11 || analysis.big == 12) benefits = benefits + MUOI_NGHIN
+                if (analysis.small == 11 || analysis.small == 12) benefits = benefits + MUOI_NGHIN
                 if (analysis.small >= 13) benefits = benefits + 2.6 * MUOI_NGHIN
                 break;
             case 13:
                 // Chẵn 13+
-                if (analysis.even == 13 || analysis.big == 14) benefits = benefits + 4 * MUOI_NGHIN
+                if (analysis.even == 13 || analysis.even == 14) benefits = benefits + 4 * MUOI_NGHIN
                 if (analysis.even >= 15) benefits = benefits + 20 * MUOI_NGHIN
                 break;
             case 14:
