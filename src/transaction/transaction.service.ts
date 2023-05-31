@@ -5,14 +5,20 @@ import { TransactionDestination, TransactionStatus, TransactionType } from '../c
 import { AcceptBankWithdrawDTO, RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
 import { WalletEnum } from './enum';
 import { nDate } from 'src/common/utils';
+import FirebaseService from '../firebase/firebase-app'
+import { FIREBASE_MESSAGE, FIREBASE_TITLE } from 'src/common/constants/constants';
 
 @Injectable()
 export class TransactionService {
-    constructor(private prismaService: PrismaService) { }
+    constructor(
+        private prismaService: PrismaService,
+        private firebaseService: FirebaseService
+    ) { }
 
     // Transaction nap tien vao vi luckyking
     async rechargeMoney(transactionPerson: User, body: RechargeDTO) {
-        if ((body.amount % 1000) != 0) { throw new ForbiddenException("Số tiền phải chia hết cho 1000") }
+        const amount = parseInt(body.amount.toString())
+        if ((amount % 1000) != 0) { throw new ForbiddenException("Số tiền phải chia hết cho 1000") }
         const user = await this.prismaService.user.findUnique({
             where: { phoneNumber: body.phoneNumber }
         })
@@ -21,7 +27,7 @@ export class TransactionService {
             data: {
                 type: TransactionType.Recharge,
                 description: "Nạp tiền vào ví LuckyKing",
-                amount: parseInt(body.amount.toString()),
+                amount: amount,
                 payment: body.payment,
                 User: {
                     connect: { id: user.id }
@@ -41,6 +47,13 @@ export class TransactionService {
             }
         })
         const moneyAccount = await this.updateLucKyingBalance(user.id, body.amount, WalletEnum.Increase)
+
+        await this.firebaseService.senNotificationToUser(
+            user.id,
+            FIREBASE_TITLE.RECHARGE_SUCCESS,
+            FIREBASE_MESSAGE.RECHARGE_SUCCESS.replace('so_tien', amount + '').replace('nguon_tien', body.payment)
+        )
+
         delete transaction.User.hashedPassword
         //@ts-ignore
         transaction.currentBalance = moneyAccount.balance
@@ -51,16 +64,17 @@ export class TransactionService {
 
     // Transaction rut tien ve vi luckyking
     async withdrawToLuckyKing(user: User, body: WithDrawLuckyKingDTO) {
-        if ((body.amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
+        const amount = parseInt(body.amount.toString())
+        if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
         const wallet = await this.prismaService.rewardWallet.findUnique({
             where: { userId: user.id }
         })
-        if (wallet.balance < body.amount) { throw new ForbiddenException("The balance is not enough") }
+        if (wallet.balance < amount) { throw new ForbiddenException("The balance is not enough") }
         const transaction = await this.prismaService.transaction.create({
             data: {
                 type: TransactionType.WithDraw,
                 description: "Đổi thưởng về ví LuckyKing",
-                amount: parseInt(body.amount.toString()),
+                amount: amount,
                 payment: "Chuyển tiền nội bộ LuckyKing",
                 User: {
                     connect: { id: user.id }
@@ -86,6 +100,13 @@ export class TransactionService {
         transaction.luckykingBalance = moneyAccount.balance
         //@ts-ignore
         transaction.rewardWalletBalance = rewardWallet.balance
+
+        await this.firebaseService.senNotificationToUser(
+            user.id,
+            FIREBASE_TITLE.WITHDRAW_LUCKYKING,
+            FIREBASE_MESSAGE.WITHDRAW_LUCKYKING.replace('so_tien', amount + '')
+        )
+
         return transaction
     }
 

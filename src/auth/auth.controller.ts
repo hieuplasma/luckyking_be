@@ -41,8 +41,13 @@ export class AuthController {
         return this.authService.updatePassword(body)
     }
 
-    @Post("forgot-password")
+    @Post("/sercure/forgot-password")
     forgotPassword(@Body() body: ForgotPassWordDTO) {
+        return this.authService.forgotPassword(body)
+    }
+
+    @Post("forgot-password")
+    cheateForgotPassword(@Body() body: ForgotPassWordDTO) {
         return this.authService.forgotPassword(body)
     }
 

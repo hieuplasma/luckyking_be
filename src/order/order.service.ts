@@ -9,9 +9,10 @@ import { UserService } from 'src/user/user.service';
 import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { LotteryService } from 'src/lottery/lottery.service';
-import { TIME_TO_HANDLE_LOTTERY } from 'src/common/constants/constants';
+import { FIREBASE_MESSAGE, FIREBASE_TITLE, TIME_TO_HANDLE_LOTTERY } from 'src/common/constants/constants';
 import FirebaseService from '../firebase/firebase-app'
 import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
+import { printCode } from 'src/common/utils/other.utils';
 
 
 @Injectable()
@@ -137,6 +138,13 @@ export class OrderService {
         })
 
         this.firebaseService.sendNotification('Có đơn PowerMega mới');
+        await this.firebaseService.senNotificationToUser(
+            user.id,
+            FIREBASE_TITLE.ORDER_SUCCESS,
+            FIREBASE_MESSAGE.ORDER_SUCCESS
+                .replace('ma_don_hang', printCode(order.displayId))
+                .replace('so_tien', totalAmount.toString())
+        )
 
         return order
     }
@@ -260,6 +268,13 @@ export class OrderService {
 
 
         this.firebaseService.sendNotification('Có đơn max3D mới');
+        await this.firebaseService.senNotificationToUser(
+            user.id,
+            FIREBASE_TITLE.ORDER_SUCCESS,
+            FIREBASE_MESSAGE.ORDER_SUCCESS
+                .replace('ma_don_hang', printCode(order.displayId))
+                .replace('so_tien', totalAmount.toString())
+        )
 
         return order
     }
@@ -399,6 +414,14 @@ export class OrderService {
             this.kenoSocketService.sendKenoLottery(lotteriesToSend);
         }
 
+        await this.firebaseService.senNotificationToUser(
+            user.id,
+            FIREBASE_TITLE.ORDER_SUCCESS,
+            FIREBASE_MESSAGE.ORDER_SUCCESS
+                .replace('ma_don_hang', printCode(order.displayId))
+                .replace('so_tien', totalAmount.toString())
+        )
+
         return order;
     }
 
@@ -463,6 +486,13 @@ export class OrderService {
         })
 
         this.firebaseService.sendNotification('Có đơn vé thường mới');
+        await this.firebaseService.senNotificationToUser(
+            user.id,
+            FIREBASE_TITLE.ORDER_SUCCESS,
+            FIREBASE_MESSAGE.ORDER_SUCCESS
+                .replace('ma_don_hang', printCode(order.displayId))
+                .replace('so_tien', totalAmount.toString())
+        )
 
         return order;
     }
@@ -729,6 +759,14 @@ export class OrderService {
         )
         //@ts-ignore
         // orderConfirmed.transaction = transaction
+
+        await this.firebaseService.senNotificationToUser(
+            order.userId,
+            FIREBASE_TITLE.PRINTED_LOTTERY,
+            FIREBASE_MESSAGE.PRINTED_LOTTERY
+                .replace('ma_don_hang', printCode(order.displayId))
+        )
+
         return orderConfirmed
     }
 

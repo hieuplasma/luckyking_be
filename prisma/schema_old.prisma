@@ -1,0 +1,272 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "../ERD.png"
+// }
+
+model User {
+  // @@map("users") //users is table's name in postgres SQL
+  id              String            @id @default(uuid())
+  displayId       Int?              @default(autoincrement())
+  phoneNumber     String            @unique
+  hashedPassword  String
+  fullName        String?
+  createdAt       DateTime          @default(now())
+  updateAt        DateTime          @updatedAt
+  email           String?
+  address         String?
+  identify        String?
+  // balance        Int      @default(0)
+  status          String            @default("active")
+  role            String            @default("user") // admin, u8ser, staff
+  avatar          String? // Link anh
+  personNumber    String? // Ma alias ca nhan
+  printerUrl      String?
+  Device          Device[]
+  Lottery         Lottery[]
+  Transaction     Transaction[]
+  Order           Order[]
+  Cart            Cart?
+  MoneyAccount    MoneyAccount?
+  RewardWallet    RewardWallet?
+  BankAccount     BankAccount[]
+  WithdrawRequest WithdrawRequest[]
+}
+
+model Device {
+  id          String   @id @default(uuid())
+  deviceId    String
+  deviceToken String?
+  lastLogin   DateTime
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+}
+
+model BankAccount {
+  id            String   @id @default(uuid())
+  displayId     Int?     @default(autoincrement())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt()
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  name          String?
+  userName      String?
+  logo          String?
+  code          String?
+  shortName     String?  @unique
+  accountNumber String?
+  amount        Int?     @default(0)
+
+  @@unique([shortName, accountNumber], name: "uniqueAccount")
+}
+
+model MoneyAccount {
+  id         String  @id @default(uuid())
+  name       String? @default("Ví LuckyKing") // ten money account
+  balance    Int     @default(0)
+  decription String?
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String  @unique
+}
+
+model RewardWallet {
+  id         String  @id @default(uuid())
+  name       String? @default("Ví nhận thưởng") // ten vi nhan thuong
+  balance    Int     @default(0)
+  decription String?
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String  @unique
+}
+
+model Cart {
+  id        String    @id @default(uuid())
+  displayId Int?      @default(autoincrement())
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String    @unique
+  Lottery   Lottery[]
+}
+
+// Lich su mua hang: mua ve, tra thuong, nap tien, rut tien
+model Order {
+  id                String       @id @default(uuid())
+  displayId         Int?         @default(autoincrement())
+  amount            Int // So tien
+  benefits          Int          @default(0) // So tien thuong nhan duoc
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  ticketType        String?      @default("basic")
+  description       String?
+  Lottery           Lottery[]
+  statusDescription String?
+  status            OrderStatus?
+  createdAt         DateTime     @default(now())
+  confirmAt         DateTime?
+  confirmBy         String? // ma diem ban hang
+  confrimUserId     String? // staffId neu nguoi ban hang confirm, userId neu nguoi dung tu confirm
+  payment           String? //hinh thuc thanh tonan
+  tradingCode       String? // ma giao dich (transactionId)
+  surcharge         Int?         @default(0) // phu phi
+  dataPart          String? // 20230316 ngay dat don hang
+  method            String       @default("keep") // giu ho, ship ve
+}
+
+model Lottery {
+  id            String         @id @default(uuid())
+  displayId     Int?           @default(autoincrement())
+  type          String // Cac loai ve Vietlot
+  buyTime       DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  resultTime    DateTime?
+  deleteTime    DateTime?
+  bets          Int[]
+  amount        Int            @default(0) // tong tien dat cuoc
+  benefits      Int?           @default(0) // tien an duoc
+  status        OrderStatus?
+  imageFront    String? // Link anh ve ma truoc
+  imageBack     String? // Link anh ve mat sau
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  Order         Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId       String?
+  NumberLottery NumberLottery?
+  drawCode      Int // Mã kỳ quay
+  drawTime      DateTime // Thời gian quay
+  Cart          Cart?          @relation(fields: [cartId], references: [id])
+  cartId        String?
+  result        Json?
+}
+
+model NumberLottery {
+  id           String  @id @default(uuid())
+  Lottery      Lottery @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
+  lotteryId    String  @unique
+  level        Int // bac cua ve
+  numberSets   Int // số bộ số
+  numberDetail Json // {boSo:[...], tienCuoc:int}
+}
+
+// Lich su giao dich, bien dong so du, lich su thang, thua se dung api rut gon cua lich su giao dich
+model Transaction {
+  id                  String   @id @default(uuid())
+  displayId           Int?     @default(autoincrement())
+  type                String // nap tien, rut tien, nhan thuong
+  description         String   @default("")
+  amount              Int      @default(0) // so tien 
+  payment             String   @default("") // Hinh thuc thanh toan
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String
+  createdAt           DateTime @default(now())
+  source              String? // Mo ta nguon
+  destination         String? // Mo ta dich den
+  transactionPersonId String? // UserId cua nguoi thuc hien giao dich (admin)
+}
+
+model WithdrawRequest {
+  id                String    @id @default(uuid())
+  displayId         Int?      @default(autoincrement())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt()
+  User              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  name              String?
+  userName          String?
+  code              String?
+  shortName         String?
+  accountNumber     String?
+  amount            Int?      @default(0)
+  status            String    @default("pending")
+  statusDescription String?
+  confirmAt         DateTime?
+  confirmBy         String?
+  confirmUserId     String?
+}
+
+model ResultKeno {
+  id             String    @id @default(uuid())
+  drawn          Boolean   @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode       Int       @unique
+  drawTime       DateTime
+  result         String? // Ket qua keno dang string 20 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  approved       Boolean   @default(false)
+  approvedAt     DateTime?
+  approvedUserId String?
+  displayId      Int?      @default(autoincrement())
+}
+
+model ResultMega {
+  id             String    @id @default(uuid())
+  drawn          Boolean   @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode       Int       @unique
+  drawTime       DateTime
+  result         String? // Ket qua Mega dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  jackpot1       BigInt?
+  approved       Boolean   @default(false)
+  approvedAt     DateTime?
+  approvedUserId String?
+  displayId      Int?      @default(autoincrement())
+}
+
+model ResultPower {
+  id             String    @id @default(uuid())
+  drawn          Boolean   @default(false) // true: da co ket qua, false: chua co ket qua
+  drawCode       Int       @unique
+  drawTime       DateTime
+  result         String? // Ket qua Power dang string 6 so ("1-2-3-..."), neu chua co ket qua tra ve null
+  specialNumber  Int? // So dac biet, neu chua co ket qua tra ve null
+  jackpot1       BigInt?
+  jackpot2       BigInt?
+  approved       Boolean   @default(false)
+  approvedAt     DateTime?
+  approvedUserId String?
+  displayId      Int?      @default(autoincrement())
+}
+
+model ResultMax3d {
+  id             String    @id @default(uuid())
+  drawn          Boolean   @default(false) // true: da co ket qua, false: chua co ket qua
+  type           String // max3d. max3dpro, max3dplus
+  drawCode       Int
+  drawTime       DateTime
+  special        String[] // 2 giai dac biet
+  first          String[] // 4 giai nhat
+  second         String[] // 6 giai nhi
+  third          String[] // 8 giai 3
+  approved       Boolean   @default(false)
+  approvedAt     DateTime?
+  approvedUserId String?
+  displayId      Int?      @default(autoincrement())
+
+  @@unique([drawCode, type], name: "uniqueDraw")
+}
+
+model JackPot {
+  id            String  @id @default(uuid())
+  JackPot1Power BigInt?
+  JackPot2Power BigInt?
+  JackPotMega   BigInt?
+}
+
+enum OrderStatus {
+  PENDING // chưa xử lý
+  LOCK // chưa xử lý
+  PRINTED // Vé đã được in nhưng chưa xử lý
+  CONFIRMED //đã nhận tiền
+  ERROR //Lỗi hết bộ số hay 1 lý do nào đó
+  RETURNED //đã trả lại
+  WON // ve thang
+  PAID // da tra thuong
+  NO_PRIZE // khong trung thuong
+  CART // trong gio hang
+}

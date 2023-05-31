@@ -94,3 +94,8 @@ export function convertArrayToJsonValue(array: object[]): Prisma.JsonValue {
     const jsonValue = JSON.parse(jsonString) as Prisma.JsonValue;
     return jsonValue;
 }
+
+export function printCode(param: any) {
+    const code = parseInt(param.toString())
+    return "#" + code.toString().padStart(7, "0")
+}

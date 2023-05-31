@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Lottery, OrderStatus, Prisma, User } from '@prisma/client';
 import { Cron } from '@nestjs/schedule';
-import { TIMEZONE } from 'src/common/constants/constants';
+import { FIREBASE_MESSAGE, FIREBASE_TITLE, TIMEZONE } from 'src/common/constants/constants';
 import { LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { INumberDetail, LotteryNumber, NumberDetail } from 'src/common/entity';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -12,6 +12,7 @@ import { nDate } from 'src/common/utils';
 import { LotteryType } from 'src/common/enum';
 import FirebaseService from '../firebase/firebase-app'
 import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
+import { printCode } from 'src/common/utils/other.utils';
 
 @Injectable()
 export class LotteryService {
@@ -121,6 +122,13 @@ export class LotteryService {
                 confrimUserId: user.id,
             }
         })
+
+        await this.firebaseService.senNotificationToUser(
+            confirmedLottery.userId,
+            FIREBASE_TITLE.PRINTED_LOTTERY,
+            FIREBASE_MESSAGE.PRINTED_LOTTERY
+                .replace('ma_don_hang', printCode(confirmedLottery.Order.displayId))
+        )
 
         return confirmedLottery;
     }
