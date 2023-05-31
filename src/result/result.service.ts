@@ -1,8 +1,8 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { JackPot, OrderStatus, Prisma, User } from '@prisma/client';
+import { JackPot, Lottery, OrderStatus, Prisma, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
-import { TIMEZONE } from 'src/common/constants/constants';
+import { FIREBASE_MESSAGE, FIREBASE_TITLE, TIMEZONE } from 'src/common/constants/constants';
 import { LotteryType } from 'src/common/enum';
 import {
     caculateKenoBenefits, caculateMax3dBenefits,
@@ -20,13 +20,18 @@ import {
     UpdateResultKenoDTO, JackPotDTO,
     UpdateResultPowerDTO, UpdateResultMax3dDTO
 } from './dto';
-import { convertObjectToJsonValue } from 'src/common/utils/other.utils';
+import { convertObjectToJsonValue, printCode, printDrawCode } from 'src/common/utils/other.utils';
+import FirebaseService from '../firebase/firebase-app'
 
 const TIME_DRAW = 11
 @Injectable()
 export class ResultService {
 
-    constructor(private prismaService: PrismaService, private transactionService: TransactionService) { }
+    constructor(
+        private prismaService: PrismaService,
+        private transactionService: TransactionService,
+        private firebaseService: FirebaseService
+    ) { }
     private readonly logger = new Logger(ResultService.name);
 
     // @Cron(CronExpression.EVERY_10_SECONDS)
@@ -639,7 +644,7 @@ export class ResultService {
         return update
     }
 
-    private async rewardLottery(benefits: number, lottery: any, transactionPersonId: string, result: Prisma.JsonValue) {
+    private async rewardLottery(benefits: number, lottery: Lottery, transactionPersonId: string, result: Prisma.JsonValue) {
         if (benefits == 0) await this.prismaService.lottery.update({
             data: { status: OrderStatus.NO_PRIZE, resultTime: new Date(), result: result },
             where: { id: lottery.id }
@@ -649,6 +654,15 @@ export class ResultService {
                 data: { status: OrderStatus.WON, resultTime: new Date(), benefits: benefits, result: result },
                 where: { id: lottery.id }
             })
+            await this.firebaseService.senNotificationToUser(
+                lottery.userId,
+                FIREBASE_TITLE.WON_PRIZE,
+                FIREBASE_MESSAGE.WON_PRIZE
+                    .replace('ma_don_hang', printCode(lottery.orderId))
+                    .replace('ky_quay', printDrawCode(lottery.drawCode))
+                    .replace('ngay_quay', lottery.drawTime.toDateString())
+                    .replace('so_tien', benefits.toString())
+            )
         }
         // Neu trung thi tao transaction tra thuong
         if (benefits > 0 && benefits <= WARNING_REWARD) {
@@ -657,6 +671,13 @@ export class ResultService {
                 data: { status: OrderStatus.PAID, resultTime: new Date(), benefits: benefits, result: result },
                 where: { id: lottery.id }
             })
+            await this.firebaseService.senNotificationToUser(
+                lottery.userId,
+                FIREBASE_TITLE.PAID_PRIZE,
+                FIREBASE_MESSAGE.PAID_PRIZE
+                    .replace('so_tien', benefits.toString())
+                    .replace('ma_don_hang', printCode(lottery.orderId))
+            )
         }
         // Service ban notify cho nguoi dung o day .........
     }
