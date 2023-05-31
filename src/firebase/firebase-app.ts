@@ -60,7 +60,7 @@ export default class FirebaseApp {
         }
     }
 
-    senNotificationToUser = async (userId: string, message: string = DEFAULT_MESSAGE, title: string = DEFAULT_TITLE) => {
+    senNotificationToUser = async (userId: string, title: string = DEFAULT_TITLE, message: string = DEFAULT_MESSAGE,) => {
         const user = await this.prismaService.user.findUnique({
             where: { id: userId },
             include: { Device: true }
