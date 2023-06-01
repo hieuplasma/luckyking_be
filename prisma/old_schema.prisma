@@ -100,26 +100,27 @@ model Cart {
 
 // Lich su mua hang: mua ve, tra thuong, nap tien, rut tien
 model Order {
-  id                String       @id @default(uuid())
-  displayId         Int?         @default(autoincrement())
+  id                String        @id @default(uuid())
+  displayId         Int?          @default(autoincrement())
   amount            Int // So tien
-  benefits          Int          @default(0) // So tien thuong nhan duoc
-  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  benefits          Int           @default(0) // So tien thuong nhan duoc
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String
-  ticketType        String?      @default("basic")
+  ticketType        String?       @default("basic")
   description       String?
   Lottery           Lottery[]
   statusDescription String?
   status            OrderStatus?
-  createdAt         DateTime     @default(now())
+  createdAt         DateTime      @default(now())
   confirmAt         DateTime?
   confirmBy         String? // ma diem ban hang
   confrimUserId     String? // staffId neu nguoi ban hang confirm, userId neu nguoi dung tu confirm
   payment           String? //hinh thuc thanh tonan
   tradingCode       String? // ma giao dich (transactionId)
-  surcharge         Int?         @default(0) // phu phi
+  surcharge         Int?          @default(0) // phu phi
   dataPart          String? // 20230316 ngay dat don hang
-  method            String       @default("keep") // giu ho, ship ve
+  method            String        @default("keep") // giu ho, ship ve
+  transaction       Transaction[]
 }
 
 model Lottery {
@@ -146,6 +147,7 @@ model Lottery {
   Cart          Cart?          @relation(fields: [cartId], references: [id])
   cartId        String?
   result        Json?
+  transaction   Transaction[]
 }
 
 model NumberLottery {
@@ -171,6 +173,10 @@ model Transaction {
   source              String? // Mo ta nguon
   destination         String? // Mo ta dich den
   transactionPersonId String? // UserId cua nguoi thuc hien giao dich (admin)
+  Order               Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId             String?
+  Lottery             Lottery? @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
+  lotteryId           String?
 }
 
 model WithdrawRequest {
