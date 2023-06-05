@@ -10,7 +10,9 @@ export const errorMessage = {
     NOT_EXISTED_DRAW: "Mã kỳ quay không tồn tại!",
     UPDATED_DRAW: "Kỳ quay này đã được cập nhật kết quả!",
 
-    MONEY_DEVIDE_1000:"Số tiền phải là bội của 1000",
+    MONEY_DEVIDE_1000: "Số tiền phải là bội của 1000",
+    USER_NOT_FOUND: "Người dùng không tồn tại!",
 
-    USER_NOT_FOUND:"Người dùng không tồn tại!"
+    NOT_FOUND: "Bản ghi không tồn tại",
+    UNAUTHORIZED: "Không thể có quyền"
 }

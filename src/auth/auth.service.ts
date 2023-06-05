@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "..//prisma/prisma.service";
 import * as argon from 'argon2';
 import { AuthDTO, CheckAuthDTO, CreateStaffDTO, ForgotPassWordDTO, UpdatePassWordDTO } from "./dto";
@@ -6,6 +6,7 @@ import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { Role, UserStatus } from "src/common/enum";
 import { nDate } from "src/common/utils";
+import { errorMessage } from "src/common/error_message";
 
 @Injectable({})
 export class AuthService {
@@ -22,14 +23,14 @@ export class AuthService {
                 phoneNumber: checkAuthDTO.phoneNumber
             }
         })
-        if (!user) return { errorMessage: "Request register", errorCode: "CA001" }
+        if (!user) throw new NotFoundException(errorMessage.NOT_FOUND);
         // if (user.status == 'block') return { errorMessage: "This account had been block", errorCode: "CA002" }
         const device = this.prismaService.device.findFirst({
             where: {
                 AND: { userId: user.id, deviceId: checkAuthDTO.deviceId }
             }
         })
-        if (!device) return { errorMessage: "Request OTP", errorCode: "CA003" }
+        if (!device) throw new NotFoundException(errorMessage.NOT_FOUND);
         return { errorMessage: "Allow login", errorCode: "CA004" }
     }
 
@@ -68,10 +69,7 @@ export class AuthService {
             user.accessToken = accessToken.accessToken
             return user
         } catch (error) {
-            if (error.code == 'P2002') {
-                // throw new ForbiddenException(error.message)
-                throw new ForbiddenException("registered phone number")
-            }
+            throw new ForbiddenException(error.message)
         }
     }
 
@@ -81,13 +79,14 @@ export class AuthService {
                 phoneNumber: authDTO.phoneNumber
             }
         })
-        if (!user) { throw new ForbiddenException("User not found") }
+        if (!user) { throw new NotFoundException(errorMessage.NOT_FOUND) }
         const passwordMatched = await argon.verify(
             user.hashedPassword,
             authDTO.password
         )
-        if (!passwordMatched)
-            return { errorMessage: "Wrong password", errorCode: "LG001" }
+        if (!passwordMatched) {
+            throw new UnauthorizedException("Wrong password or phoneNumber")
+        }
         delete user.hashedPassword
         const deviceId = await this.prismaService.device.findFirst({
             where: {
@@ -119,13 +118,14 @@ export class AuthService {
                 phoneNumber: authDTO.phoneNumber
             }
         })
-        if (!user) { throw new ForbiddenException("User not found") }
+        if (!user) { throw new NotFoundException(errorMessage.NOT_FOUND) }
         const passwordMatched = await argon.verify(
             user.hashedPassword,
             authDTO.password
         )
-        if (!passwordMatched)
-            return { errorMessage: "Wrong password", errorCode: "LG001" }
+        if (!passwordMatched) {
+            throw new UnauthorizedException("Wrong password or phoneNumber")
+        }
         delete user.hashedPassword
         const deviceId = await this.prismaService.device.findFirst({
             where: {
@@ -182,10 +182,7 @@ export class AuthService {
             user.accessToken = accessToken.accessToken
             return user
         } catch (error) {
-            if (error.code == 'P2002') {
-                // throw new ForbiddenException(error.message)
-                throw new ForbiddenException("registered phone number")
-            }
+            throw new ForbiddenException(error.message)
         }
     }
 
@@ -198,12 +195,14 @@ export class AuthService {
                 phoneNumber: body.phoneNumber
             }
         })
-        if (!user) { throw new ForbiddenException("User not found") }
+        if (!user) { throw new NotFoundException(errorMessage.NOT_FOUND) }
         const passwordMatched = await argon.verify(
             user.hashedPassword,
             body.oldPassword
         )
-        if (!passwordMatched) return { errorMessage: "Wrong password", errorCode: "LG001" }
+        if (!passwordMatched) {
+            throw new UnauthorizedException(errorMessage.UNAUTHORIZED)
+        }
 
         const update = await this.prismaService.user.update({
             where: { phoneNumber: body.phoneNumber },
@@ -220,7 +219,7 @@ export class AuthService {
                 phoneNumber: body.phoneNumber
             }
         })
-        if (!user) { throw new ForbiddenException("User not found") }
+        if (!user) { throw new NotFoundException(errorMessage.NOT_FOUND) }
         const update = await this.prismaService.user.update({
             where: { phoneNumber: body.phoneNumber },
             data: { hashedPassword: hashedPassword },

@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Lottery, OrderStatus, Prisma, User } from '@prisma/client';
 import { Cron } from '@nestjs/schedule';
 import { FIREBASE_MESSAGE, FIREBASE_TITLE, TIMEZONE } from 'src/common/constants/constants';
@@ -13,6 +13,7 @@ import { LotteryType } from 'src/common/enum';
 import FirebaseService from '../firebase/firebase-app'
 import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
 import { printCode } from 'src/common/utils/other.utils';
+import { errorMessage } from 'src/common/error_message';
 
 @Injectable()
 export class LotteryService {
@@ -298,13 +299,13 @@ export class LotteryService {
                 console.log('Delete image successfully')
             })
 
-            throw new ForbiddenException("Vé sổ xố này không còn tồn tại nữa");
+            throw new NotFoundException("Vé sổ xố này không còn tồn tại nữa");
         }
     }
 
     async confirmPrintLottery(lotteryId: string): Promise<Boolean> {
         const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
-        if (!lottery) throw new ForbiddenException("Record to print does not exist")
+        if (!lottery) throw new NotFoundException(errorMessage.NOT_FOUND)
 
         if (lottery.status === OrderStatus.PRINTED) return false;
 
@@ -327,7 +328,7 @@ export class LotteryService {
 
     async deleteLottery(lotteryId: string): Promise<Lottery> {
         const find = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } })
-        if (!find) throw new ForbiddenException("Record to delete does not exist")
+        if (!find) throw new NotFoundException(errorMessage.NOT_FOUND);
         const del = await this.prismaService.lottery.delete({
             where: { id: lotteryId }
         })
