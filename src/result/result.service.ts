@@ -8,7 +8,7 @@ import {
     caculateKenoBenefits, caculateMax3dBenefits,
     caculateMax3dProBenefits, caculateMax3PlusdBenefits,
     caculateMegaBenefits, caculatePowerBenefits,
-    getNearestTimeDay, getTimeToday,
+    getNearestTimeDay,
     nDate, serializeBigInt
 } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -413,7 +413,6 @@ export class ResultService {
 
     // View Result 
     async getResultMax3d(type: string, take: number, skip: number) {
-        const now = new nDate()
         const schedule = await this.prismaService.resultMax3d.findMany({
             where: { drawn: true, type: type },
             orderBy: { drawCode: 'desc' },
@@ -424,7 +423,6 @@ export class ResultService {
     }
 
     async getResultKeno(take: number, skip: number) {
-        const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findMany({
             where: { drawn: true },
             orderBy: { drawCode: 'desc' },
@@ -435,7 +433,6 @@ export class ResultService {
     }
 
     async getResultMega(take: number, skip: number) {
-        const now = new nDate()
         const schedule = await this.prismaService.resultMega.findMany({
             where: { drawn: true },
             orderBy: { drawCode: 'desc' },
@@ -446,7 +443,6 @@ export class ResultService {
     }
 
     async getResultPower(take: number, skip: number) {
-        const now = new nDate()
         const schedule = await this.prismaService.resultPower.findMany({
             where: { drawn: true },
             orderBy: { drawCode: 'desc' },
@@ -534,7 +530,8 @@ export class ResultService {
                 include: { NumberLottery: true }
             })
         }
-        listLottery.map(async lottery => {
+
+        for (const lottery of listLottery) {
             let benefits = 0
             switch (lottery.type) {
                 case LotteryType.Max3D:
@@ -554,7 +551,7 @@ export class ResultService {
             }
             // Tra thuong
             await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(update))
-        })
+        }
         return update
     }
 
@@ -577,12 +574,13 @@ export class ResultService {
             where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Keno },
             include: { NumberLottery: true }
         })
-        listLottery.map(async lottery => {
+
+        for (const lottery of listLottery) {
             // So ve xem trung khong
             let benefits = caculateKenoBenefits(lottery, body.result)
             // Tra thuong
             await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(update))
-        })
+        }
         return update
     }
 
@@ -605,12 +603,11 @@ export class ResultService {
             where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Mega },
             include: { NumberLottery: true }
         })
-        listLottery.map(async lottery => {
-            // So ve xem trung khong
+        for (const lottery of listLottery) {
             let benefits = caculateMegaBenefits(lottery, body.result, parseInt(jackPot.JackPotMega.toString()))
             // Tra thuong
             await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(update))
-        })
+        }
         return update
     }
 
@@ -629,10 +626,10 @@ export class ResultService {
         const jackPot: JackPot = JSON.parse(await this.getJackPot())
         // so ve va update ve
         const listLottery = await this.prismaService.lottery.findMany({
-            where: { drawCode: {}, status: OrderStatus.CONFIRMED, type: LotteryType.Power },
+            where: { drawCode: update.drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Power },
             include: { NumberLottery: true }
         })
-        listLottery.map(async lottery => {
+        for (const lottery of listLottery) {
             // So ve xem trung khong
             let benefits = caculatePowerBenefits(
                 lottery, body.result,
@@ -640,7 +637,7 @@ export class ResultService {
                 parseInt(jackPot.JackPot1Power.toString()),
                 parseInt(jackPot.JackPot2Power.toString()))
             await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(update))
-        })
+        }
         return update
     }
 

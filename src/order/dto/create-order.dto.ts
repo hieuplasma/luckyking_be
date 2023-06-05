@@ -1,4 +1,4 @@
-import { ArrayMinSize, IsArray, IsDate, IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
 import { LotteryType, OrderMethod } from "src/common/enum";
 
 class CreateOrder {

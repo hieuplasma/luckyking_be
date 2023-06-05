@@ -9,10 +9,11 @@ import { UserService } from 'src/user/user.service';
 import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { LotteryService } from 'src/lottery/lottery.service';
-import { FIREBASE_MESSAGE, FIREBASE_TITLE, TIME_TO_HANDLE_LOTTERY } from 'src/common/constants/constants';
+import { FIREBASE_MESSAGE, FIREBASE_TITLE } from 'src/common/constants/constants';
 import FirebaseService from '../firebase/firebase-app'
 import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
 import { printCode } from 'src/common/utils/other.utils';
+import { errorMessage } from 'src/common/error_message';
 
 
 @Injectable()
@@ -83,7 +84,7 @@ export class OrderService {
 
         const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
         if (body.status !== OrderStatus.CART) {
-            if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+            if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
         }
 
         let order: Order;
@@ -137,7 +138,7 @@ export class OrderService {
 
         })
 
-        this.firebaseService.sendNotification('Có đơn PowerMega mới');
+        await this.firebaseService.sendNotification('Có đơn PowerMega mới');
         await this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
