@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Transaction, User, WithdrawRequest } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionDestination, TransactionStatus, TransactionType } from '../common/enum'
@@ -7,6 +7,7 @@ import { WalletEnum } from './enum';
 import { nDate } from 'src/common/utils';
 import FirebaseService from '../firebase/firebase-app'
 import { FIREBASE_MESSAGE, FIREBASE_TITLE } from 'src/common/constants/constants';
+import { errorMessage } from 'src/common/error_message';
 
 @Injectable()
 export class TransactionService {
@@ -18,11 +19,11 @@ export class TransactionService {
     // Transaction nap tien vao vi luckyking
     async rechargeMoney(transactionPerson: User, body: RechargeDTO) {
         const amount = parseInt(body.amount.toString())
-        if ((amount % 1000) != 0) { throw new ForbiddenException("Số tiền phải chia hết cho 1000") }
+        if ((amount % 1000) != 0) { throw new ForbiddenException(errorMessage.MONEY_DEVIDE_1000) }
         const user = await this.prismaService.user.findUnique({
             where: { phoneNumber: body.phoneNumber }
         })
-        if (!user) { throw new ForbiddenException("User không tồn tại") }
+        if (!user) { throw new NotFoundException(errorMessage.USER_NOT_FOUND) }
         const transaction = await this.prismaService.transaction.create({
             data: {
                 type: TransactionType.Recharge,
@@ -65,11 +66,11 @@ export class TransactionService {
     // Transaction rut tien ve vi luckyking
     async withdrawToLuckyKing(user: User, body: WithDrawLuckyKingDTO) {
         const amount = parseInt(body.amount.toString())
-        if ((amount % 1000) != 0) { throw new ForbiddenException("The amount must be a multiple of 1000") }
+        if ((amount % 1000) != 0) { throw new ForbiddenException(errorMessage.MONEY_DEVIDE_1000) }
         const wallet = await this.prismaService.rewardWallet.findUnique({
             where: { userId: user.id }
         })
-        if (wallet.balance < amount) { throw new ForbiddenException("The balance is not enough") }
+        if (wallet.balance < amount) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
         const transaction = await this.prismaService.transaction.create({
             data: {
                 type: TransactionType.WithDraw,
@@ -198,7 +199,7 @@ export class TransactionService {
             where: { userId: user.id }
         })
 
-        if (wallet.balance < amount) { throw new ForbiddenException("The balance is not enough") }
+        if (wallet.balance < amount) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
         const transaction = await prismaService.transaction.create({
             data: {
                 type: TransactionType.BuyLottery,

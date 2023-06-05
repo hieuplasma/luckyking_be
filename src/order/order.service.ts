@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, OrderByDrawDTO, ReturnOrderDTO } from './dto';
@@ -135,7 +135,6 @@ export class OrderService {
             order.transaction = transaction;
             //@ts-ignore
             order.Lottery = lotteryToReturn;
-
         })
 
         await this.firebaseService.sendNotification('Có đơn PowerMega mới');
@@ -214,7 +213,7 @@ export class OrderService {
 
         const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
         if (body.status !== OrderStatus.CART) {
-            if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+            if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
         }
 
         let order: Order;
@@ -268,7 +267,7 @@ export class OrderService {
         })
 
 
-        this.firebaseService.sendNotification('Có đơn max3D mới');
+        await this.firebaseService.sendNotification('Có đơn max3D mới');
         await this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
@@ -345,9 +344,8 @@ export class OrderService {
 
         const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
         if (body.status !== OrderStatus.CART) {
-            if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException("The balance is not enough") }
+            if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
         }
-
 
         let order: Order;
 
@@ -440,7 +438,7 @@ export class OrderService {
             totalAmount += amount;
         }
 
-        if (lotteryIdsToCreate.length === 0) throw new ForbiddenException("No lottery to order");
+        if (lotteryIdsToCreate.length === 0) throw new ForbiddenException(errorMessage.NO_LOTTERY_CART);
 
         const surcharge = caculateSurcharge(totalAmount);
         const totalMoney = totalAmount + surcharge;
@@ -448,7 +446,7 @@ export class OrderService {
         const balances = await this.userService.getAllWallet(user.id);
 
         if (totalMoney > balances.luckykingBalance) {
-            throw new ForbiddenException("The balance is not enough");
+            throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH);
         }
 
         let order: Order;
@@ -511,6 +509,7 @@ export class OrderService {
             where: { displayId: displayId },
             include: { Lottery: { include: { NumberLottery: true } }, user: true }
         })
+
         return order
     }
 
@@ -638,7 +637,7 @@ export class OrderService {
             where: { id: orderId }
         })
 
-        if (!order) throw new ForbiddenException("Record to update does not exist");
+        if (!order) throw new NotFoundException(errorMessage.NO_ORDER);
 
         if (order.status === OrderStatus.LOCK) {
             const lockedOrder = await this.prismaService.order.update({
@@ -684,7 +683,7 @@ export class OrderService {
         const order = await this.prismaService.order.findUnique({
             where: { id: body.orderId }
         })
-        if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
+        if (order.status != OrderStatus.PENDING) { throw new ForbiddenException(errorMessage.RESOLVED_ORDER) }
 
         const newStatus = body.status ? body.status : OrderStatus.RETURNED
         let confirmBy = ""
@@ -715,9 +714,9 @@ export class OrderService {
             include: { user: true, Lottery: true }
         })
 
-        if (order.status === OrderStatus.PENDING) { throw new ForbiddenException("Order is not locked") }
-        if (order.status === OrderStatus.LOCK) { throw new ForbiddenException("Lottery of order is not printed") }
-        if (order.status !== OrderStatus.PRINTED) { throw new ForbiddenException("Order is aleady resolved!") }
+        if (order.status === OrderStatus.PENDING) { throw new ForbiddenException(errorMessage.NOT_LOCK_ORDER) }
+        if (order.status === OrderStatus.LOCK) { throw new ForbiddenException(errorMessage.NOT_PRINT_ORDER) }
+        if (order.status !== OrderStatus.PRINTED) { throw new ForbiddenException(errorMessage.RESOLVED_ORDER) }
 
         const newStatus = body.status ? body.status : OrderStatus.CONFIRMED
         // const payment = body.payment || LUCKY_KING_PAYMENT
@@ -820,7 +819,7 @@ export class OrderService {
                 include: { user: true, Lottery: true }
             })
 
-            if (order.status != OrderStatus.PENDING) { throw new ForbiddenException("Order is aleady resolved!") }
+            if (order.status != OrderStatus.PENDING) { throw new ForbiddenException(errorMessage.RESOLVED_ORDER) }
 
             // const payment = body.payment || LUCKY_KING_PAYMENT
             let confirmBy = ""

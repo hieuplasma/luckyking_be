@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { JackPot, Lottery, OrderStatus, Prisma, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
@@ -22,6 +22,7 @@ import {
 } from './dto';
 import { convertObjectToJsonValue, printCode, printDrawCode } from 'src/common/utils/other.utils';
 import FirebaseService from '../firebase/firebase-app'
+import { errorMessage } from 'src/common/error_message';
 
 const TIME_DRAW = 11
 @Injectable()
@@ -367,7 +368,7 @@ export class ResultService {
     // Insert Schedule Manual
     async insertScheduleKeno(body: ScheduleKenoDTO) {
         const check = await this.prismaService.resultKeno.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
-        if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
+        if (check) throw new ForbiddenException(errorMessage.EXISTED_DRAW)
         const result = await this.prismaService.resultKeno.create({
             data: {
                 drawn: false,
@@ -380,19 +381,19 @@ export class ResultService {
 
     async insertScheduleMega(body: ScheduleKenoDTO) {
         const check = await this.prismaService.resultMega.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
-        if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
+        if (check) throw new ForbiddenException(errorMessage.EXISTED_DRAW)
         return await this.addScheduleMega(parseInt(body.drawCode.toString()), body.drawTime)
     }
 
     async insertSchedulePower(body: ScheduleKenoDTO) {
         const check = await this.prismaService.resultPower.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
-        if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
+        if (check) throw new ForbiddenException(errorMessage.EXISTED_DRAW)
         return await this.addSchedulePower(parseInt(body.drawCode.toString()), body.drawTime)
     }
 
     async insertScheduleMax3d(body: ScheduleMax3dDTO) {
         const check = await this.prismaService.resultMax3d.findFirst({ where: { drawCode: parseInt(body.drawCode.toString()) } })
-        if (check) throw new ForbiddenException("Mã kỳ quay đã tồn tại")
+        if (check) throw new ForbiddenException(errorMessage.EXISTED_DRAW)
         let tmp
         switch (body.type) {
             case LotteryType.Max3D:
@@ -506,8 +507,8 @@ export class ResultService {
         const draw = await this.prismaService.resultMax3d.findFirst({
             where: { drawCode: drawCode, type: body.type }
         })
-        if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
-        if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
+        if (!draw) throw new NotFoundException(errorMessage.NOT_EXISTED_DRAW)
+        if (draw.drawn) throw new ForbiddenException(errorMessage.UPDATED_DRAW)
         // Cap nhat ket qua
         const update = await this.prismaService.resultMax3d.update({
             where: { id: draw.id },
@@ -562,8 +563,8 @@ export class ResultService {
         const draw = await this.prismaService.resultKeno.findUnique({
             where: { drawCode: drawCode }
         })
-        if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
-        if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
+        if (!draw) throw new NotFoundException(errorMessage.NOT_EXISTED_DRAW)
+        if (draw.drawn) throw new ForbiddenException(errorMessage.UPDATED_DRAW)
         // Cap nhat ket qua
         const update = await this.prismaService.resultKeno.update({
             where: { drawCode: drawCode },
@@ -589,8 +590,8 @@ export class ResultService {
         const draw = await this.prismaService.resultMega.findUnique({
             where: { drawCode: drawCode }
         })
-        if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
-        if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
+        if (!draw) throw new NotFoundException(errorMessage.NOT_EXISTED_DRAW)
+        if (draw.drawn) throw new ForbiddenException(errorMessage.UPDATED_DRAW)
 
         // Cap nhat ket qua
         const update = await this.prismaService.resultMega.update({
@@ -616,8 +617,8 @@ export class ResultService {
         const draw = await this.prismaService.resultPower.findUnique({
             where: { drawCode: drawCode }
         })
-        if (!draw) throw new ForbiddenException("Mã kỳ quay không tồn tại")
-        if (draw.drawn) throw new ForbiddenException("Kỳ quay này đã được cập nhật kết quả")
+        if (!draw) throw new NotFoundException(errorMessage.NOT_EXISTED_DRAW)
+        if (draw.drawn) throw new ForbiddenException(errorMessage.UPDATED_DRAW)
         // Cap nhat ket qua
         const update = await this.prismaService.resultPower.update({
             where: { drawCode: drawCode },
