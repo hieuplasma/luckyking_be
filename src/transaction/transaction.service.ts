@@ -224,7 +224,16 @@ export class TransactionService {
                 destination: true,
             }
         })
-        const moneyAccount = await this.updateLucKyingBalance(user.id, amount, WalletEnum.Decrease, session)
+        const moneyAccount = await this.updateLucKyingBalance(user.id, amount, WalletEnum.Decrease, session);
+
+        await prismaService.balanceFluctuations.create({
+            data: {
+                transactionId: transaction.id,
+                moneyAccountId: wallet.id,
+                balanceBefore: wallet.balance,
+                balanceAfter: moneyAccount.balance,
+            }
+        })
         //@ts-ignore
         transaction.luckykingBalance = moneyAccount.balance
         return transaction
