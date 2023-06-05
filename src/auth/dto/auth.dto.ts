@@ -1,7 +1,8 @@
-import { IsNotEmpty, IsPhoneNumber, IsString, IS_PHONE_NUMBER } from "class-validator"
+import { IsNotEmpty, IsPhoneNumber, IsString } from "class-validator"
+import { errorMessage } from "src/common/error_message"
 
 export class AuthDTO {
-    @IsPhoneNumber('VN')
+    @IsPhoneNumber('VN', { message: errorMessage.INVALID_PHONENUMBER })
     @IsNotEmpty()
     phoneNumber: string
 
@@ -14,8 +15,8 @@ export class AuthDTO {
     deviceId: string
 }
 
-export class CheckAuthDTO{
-    @IsPhoneNumber('VN')
+export class CheckAuthDTO {
+    @IsPhoneNumber('VN', { message: errorMessage.INVALID_PHONENUMBER })
     @IsNotEmpty()
     phoneNumber: string
 
@@ -25,7 +26,7 @@ export class CheckAuthDTO{
 }
 
 export class UpdatePassWordDTO {
-    @IsPhoneNumber('VN')
+    @IsPhoneNumber('VN', { message: errorMessage.INVALID_PHONENUMBER })
     @IsNotEmpty()
     phoneNumber: string
 
@@ -39,7 +40,7 @@ export class UpdatePassWordDTO {
 }
 
 export class ForgotPassWordDTO {
-    @IsPhoneNumber('VN')
+    @IsPhoneNumber('VN', { message: errorMessage.INVALID_PHONENUMBER })
     @IsNotEmpty()
     phoneNumber: string
 

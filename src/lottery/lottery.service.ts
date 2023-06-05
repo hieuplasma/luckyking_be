@@ -160,7 +160,7 @@ export class LotteryService {
             })
             return updatedLottery;
         } catch (error) {
-            throw new ForbiddenException("Không thể cập nhật vé số");
+            throw new ForbiddenException(errorMessage.UNABLE_UPDATE_LOTTERY);
         }
     }
 
@@ -267,7 +267,7 @@ export class LotteryService {
                 console.log('Delete image successfully')
             })
 
-            throw new ForbiddenException("Vé sổ xố này không còn tồn tại nữa");
+            throw new ForbiddenException(errorMessage.LOTTERY_NOT_EXIST);
         }
     }
 
@@ -299,13 +299,13 @@ export class LotteryService {
                 console.log('Delete image successfully')
             })
 
-            throw new NotFoundException("Vé sổ xố này không còn tồn tại nữa");
+            throw new NotFoundException(errorMessage.LOTTERY_NOT_EXIST);
         }
     }
 
     async confirmPrintLottery(lotteryId: string): Promise<Boolean> {
         const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
-        if (!lottery) throw new NotFoundException(errorMessage.NOT_FOUND)
+        if (!lottery) throw new NotFoundException(errorMessage.LOTTERY_NOT_EXIST)
 
         if (lottery.status === OrderStatus.PRINTED) return false;
 
@@ -328,7 +328,7 @@ export class LotteryService {
 
     async deleteLottery(lotteryId: string): Promise<Lottery> {
         const find = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } })
-        if (!find) throw new NotFoundException(errorMessage.NOT_FOUND);
+        if (!find) throw new NotFoundException(errorMessage.LOTTERY_NOT_EXIST);
         const del = await this.prismaService.lottery.delete({
             where: { id: lotteryId }
         })

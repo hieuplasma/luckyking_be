@@ -1,8 +1,9 @@
 import { IsEnum, IsNotEmpty, IsPhoneNumber, IsString } from "class-validator"
 import { Role } from "src/common/enum"
+import { errorMessage } from "src/common/error_message"
 
 export class CreateStaffDTO {
-    @IsPhoneNumber('VN')
+    @IsPhoneNumber('VN', { message: errorMessage.INVALID_PHONENUMBER })
     @IsNotEmpty()
     phoneNumber: string
 

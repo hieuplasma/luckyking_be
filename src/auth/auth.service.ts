@@ -23,7 +23,7 @@ export class AuthService {
                 phoneNumber: checkAuthDTO.phoneNumber
             }
         })
-        if (!user) throw new NotFoundException(errorMessage.NOT_FOUND);
+        if (!user) throw new NotFoundException(errorMessage.USER_NOT_FOUND);
         // if (user.status == 'block') return { errorMessage: "This account had been block", errorCode: "CA002" }
         const device = this.prismaService.device.findFirst({
             where: {
@@ -69,7 +69,7 @@ export class AuthService {
             user.accessToken = accessToken.accessToken
             return user
         } catch (error) {
-            throw new ForbiddenException(error.message)
+            throw new ForbiddenException(errorMessage.USER_EXISTED)
         }
     }
 
@@ -79,13 +79,13 @@ export class AuthService {
                 phoneNumber: authDTO.phoneNumber
             }
         })
-        if (!user) { throw new NotFoundException(errorMessage.NOT_FOUND) }
+        if (!user) { throw new NotFoundException(errorMessage.USER_NOT_FOUND) }
         const passwordMatched = await argon.verify(
             user.hashedPassword,
             authDTO.password
         )
         if (!passwordMatched) {
-            throw new UnauthorizedException("Wrong password or phoneNumber")
+            throw new UnauthorizedException(errorMessage.WRONG_AUTH)
         }
         delete user.hashedPassword
         const deviceId = await this.prismaService.device.findFirst({
@@ -124,7 +124,7 @@ export class AuthService {
             authDTO.password
         )
         if (!passwordMatched) {
-            throw new UnauthorizedException("Wrong password or phoneNumber")
+            throw new UnauthorizedException(errorMessage.WRONG_AUTH)
         }
         delete user.hashedPassword
         const deviceId = await this.prismaService.device.findFirst({
@@ -182,7 +182,7 @@ export class AuthService {
             user.accessToken = accessToken.accessToken
             return user
         } catch (error) {
-            throw new ForbiddenException(error.message)
+            throw new ForbiddenException(errorMessage.USER_EXISTED)
         }
     }
 
@@ -201,7 +201,7 @@ export class AuthService {
             body.oldPassword
         )
         if (!passwordMatched) {
-            throw new UnauthorizedException(errorMessage.UNAUTHORIZED)
+            throw new UnauthorizedException(errorMessage.WRONG_AUTH)
         }
 
         const update = await this.prismaService.user.update({
@@ -219,7 +219,7 @@ export class AuthService {
                 phoneNumber: body.phoneNumber
             }
         })
-        if (!user) { throw new NotFoundException(errorMessage.NOT_FOUND) }
+        if (!user) { throw new NotFoundException(errorMessage.USER_NOT_FOUND) }
         const update = await this.prismaService.user.update({
             where: { phoneNumber: body.phoneNumber },
             data: { hashedPassword: hashedPassword },

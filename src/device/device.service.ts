@@ -1,9 +1,10 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Device, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateDeviceTokenTO } from './dto';
 import FirebaseService from '../firebase/firebase-app'
 import { nDate } from 'src/common/utils';
+import { errorMessage } from 'src/common/error_message';
 
 @Injectable()
 export class DeviceService {
@@ -20,9 +21,7 @@ export class DeviceService {
             }
         })
 
-        if (!device) throw new ForbiddenException("Device does not exist");
-
-        console.log("new device FCM token", data.deviceToken)
+        if (!device) throw new NotFoundException(errorMessage.DEVICE_NOT_FOUND);
 
         const deviceUpdated = await this.prismaService.device.update({
             where: { id: device.id },

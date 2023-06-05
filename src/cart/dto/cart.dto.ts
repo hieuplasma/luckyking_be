@@ -6,8 +6,6 @@ export class CreateCart {
     @IsNotEmpty()
     lotteryType: string
 
-    @IsNumber()
-    @IsNotEmpty()
     level: number
 
     @IsArray()

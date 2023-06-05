@@ -14,5 +14,14 @@ export const errorMessage = {
     USER_NOT_FOUND: "Người dùng không tồn tại!",
 
     NOT_FOUND: "Bản ghi không tồn tại",
-    UNAUTHORIZED: "Không thể có quyền"
+    UNAUTHORIZED: "Không thể có quyền",
+
+    WRONG_AUTH: "Số điện thoại hoặc mật khẩu không chính xác!",
+    USER_EXISTED: "Số điện thoại này đã được đăng ký!",
+    INVALID_PHONENUMBER: "Số điện thoại không hợp lệ!",
+
+    DEVICE_NOT_FOUND: "Thiết bị không tồn tại!",
+
+    UNABLE_UPDATE_LOTTERY:"Không thể cập nhật vé số!",
+    LOTTERY_NOT_EXIST:"Vé sổ xố không tồn tại!"
 }

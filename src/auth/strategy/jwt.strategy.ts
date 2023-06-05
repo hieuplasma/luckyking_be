@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy, ExtractJwt } from "passport-jwt"
 import { PrismaService } from "../../prisma/prisma.service";
+import { errorMessage } from "src/common/error_message";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -22,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
                 id: payload.sub
             }
         })
-        if (!user) throw new UnauthorizedException('User not found')
+        if (!user) throw new UnauthorizedException(errorMessage.USER_NOT_FOUND)
         delete user.hashedPassword
         return user;
     }
