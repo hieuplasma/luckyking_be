@@ -63,21 +63,35 @@ model BankAccount {
 }
 
 model MoneyAccount {
-  id         String  @id @default(uuid())
-  balance    Int     @default(0)
-  decription String?
-  userId     String  @unique
-  name       String? @default("Ví LuckyKing")
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String                @id @default(uuid())
+  balance             Int                   @default(0)
+  decription          String?
+  userId              String                @unique
+  name                String?               @default("Ví LuckyKing")
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  BalanceFluctuations BalanceFluctuations[]
 }
 
 model RewardWallet {
-  id         String  @id @default(uuid())
-  name       String? @default("Ví nhận thưởng")
-  balance    Int     @default(0)
-  decription String?
-  userId     String  @unique
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String                @id @default(uuid())
+  name                String?               @default("Ví nhận thưởng")
+  balance             Int                   @default(0)
+  decription          String?
+  userId              String                @unique
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  BalanceFluctuations BalanceFluctuations[]
+}
+
+model BalanceFluctuations {
+  id             String        @id @default(uuid())
+  transactionId  String
+  transaction    Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  rewardWalletId String?
+  rewardWallet   RewardWallet? @relation(fields: [rewardWalletId], references: [id], onDelete: Cascade)
+  moneyAccountId String?
+  moneyAccount   MoneyAccount? @relation(fields: [moneyAccountId], references: [id], onDelete: Cascade)
+  balanceBefore  Int
+  balanceAfter   Int
 }
 
 model Cart {
@@ -149,22 +163,23 @@ model NumberLottery {
 }
 
 model Transaction {
-  id                  String   @id @default(uuid())
+  id                  String                @id @default(uuid())
   type                String
-  description         String   @default("")
-  payment             String   @default("")
+  description         String                @default("")
+  payment             String                @default("")
   userId              String
-  amount              Int      @default(0)
+  amount              Int                   @default(0)
   destination         String?
   source              String?
   transactionPersonId String?
-  displayId           Int?     @default(autoincrement())
-  createdAt           DateTime @default(now())
+  displayId           Int?                  @default(autoincrement())
+  createdAt           DateTime              @default(now())
   lotteryId           String?
   orderId             String?
-  Lottery             Lottery? @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
-  Order               Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Lottery             Lottery?              @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
+  Order               Order?                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  User                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  BalanceFluctuations BalanceFluctuations[]
 }
 
 model WithdrawRequest {
