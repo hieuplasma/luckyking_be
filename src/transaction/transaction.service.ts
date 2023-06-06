@@ -197,12 +197,14 @@ export class TransactionService {
     // Transaction mua ve, khong co controller
     async payForOrder(user, amount, payment, source, destination, transactionPersonId, orderId, session?) {
 
+        const prismaService = session ? session : this.prismaService
+
         const wallet = await this.prismaService.moneyAccount.findUnique({
             where: { userId: user.id }
         })
 
         if (wallet.balance < amount) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
-        const transaction = await this.prismaService.transaction.create({
+        const transaction = await prismaService.transaction.create({
             data: {
                 type: TransactionType.BuyLottery,
                 description: "Mua vé xổ số",
@@ -281,7 +283,7 @@ export class TransactionService {
             }
         })
         const walletAfter = await this.updateRewardWalletBalance(userid, amount, WalletEnum.Increase, transaction.id)
-        
+
         // @ts-ignore
         transaction.luckykingBalance = walletAfter.balance
         return transaction
@@ -301,7 +303,7 @@ export class TransactionService {
             }
         })
 
-        await this.prismaService.balanceFluctuations.create({
+        await prismaService.balanceFluctuations.create({
             data: {
                 transaction: {
                     connect: { id: transactionId }

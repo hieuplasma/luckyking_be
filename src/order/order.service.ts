@@ -113,8 +113,8 @@ export class OrderService {
                 TransactionDestination.LUCKY_KING,
                 TransactionDestination.HOST,
                 user.id,
+                order.id,
                 tx,
-                order.id
             )
 
             const lotteryToReturn = []
@@ -243,8 +243,8 @@ export class OrderService {
                 TransactionDestination.LUCKY_KING,
                 TransactionDestination.HOST,
                 user.id,
+                order.id,
                 tx,
-                order.id
             )
 
             const lotteryToReturn = []
@@ -376,8 +376,8 @@ export class OrderService {
                 TransactionDestination.LUCKY_KING,
                 TransactionDestination.HOST,
                 user.id,
+                order.id,
                 tx,
-                order.id
             )
 
             const lotteryToReturn = []
@@ -478,8 +478,8 @@ export class OrderService {
                 TransactionDestination.LUCKY_KING,
                 TransactionDestination.HOST,
                 user.id,
+                order.id,
                 tx,
-                order.id
             )
 
             for (const lotteryId of lotteryIdsToCreate) {
