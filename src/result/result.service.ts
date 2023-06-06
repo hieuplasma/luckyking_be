@@ -648,15 +648,16 @@ export class ResultService {
             where: { id: lottery.id }
         })
         if (benefits > WARNING_REWARD) {
-            await this.prismaService.lottery.update({
+            const update = await this.prismaService.lottery.update({
                 data: { status: OrderStatus.WON, resultTime: new Date(), benefits: benefits, result: result },
                 where: { id: lottery.id },
+                include: { Order: true }
             })
             await this.firebaseService.senNotificationToUser(
                 lottery.userId,
                 FIREBASE_TITLE.WON_PRIZE,
                 FIREBASE_MESSAGE.WON_PRIZE
-                    .replace('ma_don_hang', printCode(lottery.orderId))
+                    .replace('ma_don_hang', printCode(update.Order.displayId))
                     .replace('ky_quay', printDrawCode(lottery.drawCode))
                     .replace('ngay_quay', lottery.drawTime.toDateString())
                     .replace('so_tien', benefits.toString())
@@ -668,7 +669,7 @@ export class ResultService {
             const update = await this.prismaService.lottery.update({
                 data: { status: OrderStatus.PAID, resultTime: new Date(), benefits: benefits, result: result },
                 where: { id: lottery.id },
-                include: {Order: true}
+                include: { Order: true }
             })
             await this.firebaseService.senNotificationToUser(
                 lottery.userId,
