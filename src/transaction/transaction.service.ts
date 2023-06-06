@@ -309,7 +309,7 @@ export class TransactionService {
                     connect: { id: transactionId }
                 },
                 moneyAccountId: moneyAccount.id,
-                balanceBefore: (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
+                balanceBefore: moneyAccount.balance + (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
                 balanceAfter: moneyAccount.balance,
             }
         })
@@ -335,7 +335,7 @@ export class TransactionService {
                     connect: { id: transactionId }
                 },
                 rewardWalletId: rewardWallet.id,
-                balanceBefore: (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
+                balanceBefore: rewardWallet.balance + (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
                 balanceAfter: rewardWallet.balance,
             }
         })
