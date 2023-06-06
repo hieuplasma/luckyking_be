@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { Transaction, User, WithdrawRequest } from '../../node_modules/.prisma/client';
+import { Transaction, User, WithdrawRequest, Lottery } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionDestination, TransactionStatus, TransactionType } from '../common/enum'
 import { AcceptBankWithdrawDTO, RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
@@ -38,6 +38,7 @@ export class TransactionService {
                 transactionPersonId: transactionPerson.id
             },
             select: {
+                id: true,
                 type: true,
                 description: true,
                 amount: true,
@@ -47,7 +48,7 @@ export class TransactionService {
                 destination: true,
             }
         })
-        const moneyAccount = await this.updateLucKyingBalance(user.id, body.amount, WalletEnum.Increase)
+        const moneyAccount = await this.updateLucKyingBalance(user.id, body.amount, WalletEnum.Increase, transaction.id)
 
         await this.firebaseService.senNotificationToUser(
             user.id,
@@ -85,6 +86,7 @@ export class TransactionService {
                 transactionPersonId: user.id
             },
             select: {
+                id: true,
                 type: true,
                 description: true,
                 amount: true,
@@ -94,8 +96,9 @@ export class TransactionService {
                 destination: true,
             }
         })
-        const moneyAccount = await this.updateLucKyingBalance(user.id, body.amount, WalletEnum.Increase)
-        const rewardWallet = await this.updateRewardWalletBalance(user.id, body.amount, WalletEnum.Decrease)
+        const moneyAccount = await this.updateLucKyingBalance(user.id, body.amount, WalletEnum.Increase, transaction.id)
+        const rewardWallet = await this.updateRewardWalletBalance(user.id, body.amount, WalletEnum.Decrease, transaction.id)
+
         delete transaction.User.hashedPassword
         //@ts-ignore
         transaction.luckykingBalance = moneyAccount.balance
@@ -182,7 +185,7 @@ export class TransactionService {
                     transactionPersonId: user.id
                 }
             })
-            await this.updateRewardWalletBalance(user.id, withdrawRequest.amount, WalletEnum.Decrease)
+            await this.updateRewardWalletBalance(user.id, withdrawRequest.amount, WalletEnum.Decrease, transaction.id)
 
             //@ts-ignores
             withdrawRequest.transaction = transaction
@@ -192,15 +195,14 @@ export class TransactionService {
     }
 
     // Transaction mua ve, khong co controller
-    async payForOrder(user, amount, payment, source, destination, transactionPersonId, session?) {
-        const prismaService = session ? session : this.prismaService;
+    async payForOrder(user, amount, payment, source, destination, transactionPersonId, orderId, session?) {
 
         const wallet = await this.prismaService.moneyAccount.findUnique({
             where: { userId: user.id }
         })
 
         if (wallet.balance < amount) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
-        const transaction = await prismaService.transaction.create({
+        const transaction = await this.prismaService.transaction.create({
             data: {
                 type: TransactionType.BuyLottery,
                 description: "Mua vé xổ số",
@@ -211,7 +213,10 @@ export class TransactionService {
                 },
                 source: source,
                 destination: destination,
-                transactionPersonId: transactionPersonId
+                transactionPersonId: transactionPersonId,
+                Order: {
+                    connect: { id: orderId }
+                }
             },
             select: {
                 id: true,
@@ -224,16 +229,8 @@ export class TransactionService {
                 destination: true,
             }
         })
-        const moneyAccount = await this.updateLucKyingBalance(user.id, amount, WalletEnum.Decrease, session);
+        const moneyAccount = await this.updateLucKyingBalance(user.id, amount, WalletEnum.Decrease, transaction.id, session);
 
-        await prismaService.balanceFluctuations.create({
-            data: {
-                transactionId: transaction.id,
-                moneyAccountId: wallet.id,
-                balanceBefore: wallet.balance,
-                balanceAfter: moneyAccount.balance,
-            }
-        })
         //@ts-ignore
         transaction.luckykingBalance = moneyAccount.balance
         return transaction
@@ -254,11 +251,12 @@ export class TransactionService {
     }
 
     // Transaction tra thuong, khong co controller
-    async rewardLottery(userid: string, amount: number, transactionPersonId: string, lotteryType: string) {
+    async rewardLottery(userid: string, amount: number, transactionPersonId: string, lottery: Lottery) {
+
         const transaction = await this.prismaService.transaction.create({
             data: {
                 type: TransactionType.Rewarded,
-                description: "Trả thưởng vé " + lotteryType,
+                description: "Trả thưởng vé " + lottery.type,
                 amount: parseInt(amount.toString()),
                 payment: "Chuyền tiền vào ví nhận thưởng",
                 User: {
@@ -266,7 +264,10 @@ export class TransactionService {
                 },
                 source: TransactionDestination.HOST,
                 destination: TransactionDestination.REWARD,
-                transactionPersonId: transactionPersonId
+                transactionPersonId: transactionPersonId,
+                Lottery: {
+                    connect: { id: lottery.id }
+                }
             },
             select: {
                 id: true,
@@ -279,14 +280,24 @@ export class TransactionService {
                 destination: true,
             }
         })
-        const reward = await this.updateRewardWalletBalance(userid, amount, WalletEnum.Increase)
-        //@ts-ignore
-        transaction.luckykingBalance = reward.balance
+        const walletAfter = await this.updateRewardWalletBalance(userid, amount, WalletEnum.Increase, transaction.id)
+
+        await this.prismaService.balanceFluctuations.create({
+            data: {
+                transactionId: transaction.id,
+                rewardWalletId: walletAfter.id,
+                balanceBefore: walletAfter.balance - parseInt(amount.toString()),
+                balanceAfter: walletAfter.balance,
+            }
+        })
+
+        // @ts-ignore
+        transaction.luckykingBalance = walletAfter.balance
         return transaction
     }
 
     // Private function 
-    private async updateLucKyingBalance(userId, amount, type, session?) {
+    private async updateLucKyingBalance(userId: string, amount: number, type: WalletEnum, transactionId: string, session?) {
         const prismaService = session ? session : this.prismaService;
         // Update so du trong tai khoan vi luckyking
         const moneyAccount = await prismaService.moneyAccount.update({
@@ -295,13 +306,23 @@ export class TransactionService {
             },
             where: { userId: userId },
             select: {
-                balance: true
+                balance: true, id: true
             }
         })
+
+        await this.prismaService.balanceFluctuations.create({
+            data: {
+                transactionId: transactionId,
+                moneyAccountId: moneyAccount.id,
+                balanceBefore: (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
+                balanceAfter: moneyAccount.balance,
+            }
+        })
+
         return moneyAccount
     }
 
-    private async updateRewardWalletBalance(userId, amount, type) {
+    private async updateRewardWalletBalance(userId: string, amount: number, type: WalletEnum, transactionId: string) {
         // Update so du trong tai khoan vi nhan thuong
         const rewardWallet = await this.prismaService.rewardWallet.update({
             data: {
@@ -309,7 +330,16 @@ export class TransactionService {
             },
             where: { userId: userId },
             select: {
-                balance: true
+                balance: true, id: true
+            }
+        })
+
+        await this.prismaService.balanceFluctuations.create({
+            data: {
+                transactionId: transactionId,
+                rewardWalletId: rewardWallet.id,
+                balanceBefore: (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
+                balanceAfter: rewardWallet.balance,
             }
         })
         return rewardWallet

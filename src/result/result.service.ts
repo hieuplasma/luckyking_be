@@ -650,7 +650,7 @@ export class ResultService {
         if (benefits > WARNING_REWARD) {
             await this.prismaService.lottery.update({
                 data: { status: OrderStatus.WON, resultTime: new Date(), benefits: benefits, result: result },
-                where: { id: lottery.id }
+                where: { id: lottery.id },
             })
             await this.firebaseService.senNotificationToUser(
                 lottery.userId,
@@ -664,17 +664,18 @@ export class ResultService {
         }
         // Neu trung thi tao transaction tra thuong
         if (benefits > 0 && benefits <= WARNING_REWARD) {
-            await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPersonId, lottery.type)
-            await this.prismaService.lottery.update({
+            await this.transactionService.rewardLottery(lottery.userId, benefits, transactionPersonId, lottery)
+            const update = await this.prismaService.lottery.update({
                 data: { status: OrderStatus.PAID, resultTime: new Date(), benefits: benefits, result: result },
-                where: { id: lottery.id }
+                where: { id: lottery.id },
+                include: {Order: true}
             })
             await this.firebaseService.senNotificationToUser(
                 lottery.userId,
                 FIREBASE_TITLE.PAID_PRIZE,
                 FIREBASE_MESSAGE.PAID_PRIZE
                     .replace('so_tien', benefits.toString())
-                    .replace('ma_don_hang', printCode(lottery.orderId))
+                    .replace('ma_don_hang', printCode(update.Order.displayId))
             )
         }
         // Service ban notify cho nguoi dung o day .........

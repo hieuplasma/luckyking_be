@@ -90,15 +90,6 @@ export class OrderService {
         let order: Order;
 
         await this.prismaService.$transaction(async (tx) => {
-            const transaction = await this.transactionService.payForOrder(
-                user,
-                totalAmount + surcharge,
-                LUCKY_KING_PAYMENT,
-                TransactionDestination.LUCKY_KING,
-                TransactionDestination.HOST,
-                user.id,
-                tx
-            )
 
             order = await tx.order.create({
                 data: {
@@ -110,11 +101,21 @@ export class OrderService {
                     status: body.status ? body.status : OrderStatus.PENDING,
                     dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                     method: body.method,
-                    surcharge: surcharge,
-                    tradingCode: transaction.id,
+                    surcharge: surcharge
                 },
                 include: { Lottery: { include: { NumberLottery: true } } }
             })
+
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalAmount + surcharge,
+                LUCKY_KING_PAYMENT,
+                TransactionDestination.LUCKY_KING,
+                TransactionDestination.HOST,
+                user.id,
+                tx,
+                order.id
+            )
 
             const lotteryToReturn = []
             for (const lotteryData of lotteries) {
@@ -219,15 +220,6 @@ export class OrderService {
         let order: Order;
 
         await this.prismaService.$transaction(async (tx) => {
-            const transaction = await this.transactionService.payForOrder(
-                user,
-                totalAmount + surcharge,
-                LUCKY_KING_PAYMENT,
-                TransactionDestination.LUCKY_KING,
-                TransactionDestination.HOST,
-                user.id,
-                tx
-            )
 
             order = await tx.order.create({
                 data: {
@@ -240,10 +232,20 @@ export class OrderService {
                     dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                     method: body.method,
                     surcharge: surcharge,
-                    tradingCode: transaction.id,
                 },
                 include: { Lottery: { include: { NumberLottery: true } } }
             })
+
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalAmount + surcharge,
+                LUCKY_KING_PAYMENT,
+                TransactionDestination.LUCKY_KING,
+                TransactionDestination.HOST,
+                user.id,
+                tx,
+                order.id
+            )
 
             const lotteryToReturn = []
             for (const lotteryData of lotteries) {
@@ -350,15 +352,6 @@ export class OrderService {
         let order: Order;
 
         await this.prismaService.$transaction(async (tx) => {
-            const transaction = await this.transactionService.payForOrder(
-                user,
-                totalAmount + surcharge,
-                LUCKY_KING_PAYMENT,
-                TransactionDestination.LUCKY_KING,
-                TransactionDestination.HOST,
-                user.id,
-                tx
-            )
 
             order = await tx.order.create({
                 data: {
@@ -372,10 +365,20 @@ export class OrderService {
                     dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                     method: body.method,
                     surcharge: surcharge,
-                    tradingCode: transaction.id,
                 },
                 include: { Lottery: { include: { NumberLottery: true } } }
             })
+
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalAmount + surcharge,
+                LUCKY_KING_PAYMENT,
+                TransactionDestination.LUCKY_KING,
+                TransactionDestination.HOST,
+                user.id,
+                tx,
+                order.id
+            )
 
             const lotteryToReturn = []
             for (const lotteryData of lotteries) {
@@ -452,18 +455,8 @@ export class OrderService {
         let order: Order;
 
         await this.prismaService.$transaction(async (tx) => {
-            const transaction = await this.transactionService.payForOrder(
-                user,
-                totalMoney,
-                LUCKY_KING_PAYMENT,
-                TransactionDestination.LUCKY_KING,
-                TransactionDestination.HOST,
-                user.id,
-                tx
-            )
 
             const currentDate = new nDate()
-
             order = await tx.order.create({
                 data: {
                     amount: totalAmount,
@@ -474,14 +467,27 @@ export class OrderService {
                     status: OrderStatus.PENDING,
                     dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
                     method: method || OrderMethod.Keep,
-                    surcharge: surcharge,
-                    tradingCode: transaction.id,
-                }
+                    surcharge: surcharge
+                },
             });
+
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalMoney,
+                LUCKY_KING_PAYMENT,
+                TransactionDestination.LUCKY_KING,
+                TransactionDestination.HOST,
+                user.id,
+                tx,
+                order.id
+            )
 
             for (const lotteryId of lotteryIdsToCreate) {
                 await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id, tx);
             }
+
+            //@ts-ignore
+            order.transaction = transaction;
         })
 
         this.firebaseService.sendNotification('Có đơn vé thường mới');
@@ -722,19 +728,6 @@ export class OrderService {
         // const payment = body.payment || LUCKY_KING_PAYMENT
         let confirmBy = ""
         if (user.role == Role.Staff) confirmBy = user.address + " - " + user.personNumber
-
-        // order.Lottery.map(item => {
-        //     if (!(item.imageBack || item.imageFront)) { throw new ForbiddenException("All lotteries must have image!") }
-        // })
-
-        // const transaction = await this.transactionService.payForOrder(
-        //     order.user,
-        //     order.amount + order.surcharge,
-        //     payment,
-        //     "Ví LuckyKing",
-        //     "Ví của nhà phát triển",
-        //     user.id
-        // )
 
         const orderConfirmed = await this.prismaService.order.update({
             data: {
