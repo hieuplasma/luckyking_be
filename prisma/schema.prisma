@@ -84,8 +84,7 @@ model RewardWallet {
 
 model BalanceFluctuations {
   id             String        @id @default(uuid())
-  transactionId  String        @unique
-  transaction    Transaction?  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transaction    Transaction?
   rewardWalletId String?
   rewardWallet   RewardWallet? @relation(fields: [rewardWalletId], references: [id], onDelete: Cascade)
   moneyAccountId String?
@@ -179,7 +178,8 @@ model Transaction {
   Lottery             Lottery?             @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
   Order               Order?               @relation(fields: [orderId], references: [id], onDelete: Cascade)
   User                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  BalanceFluctuations BalanceFluctuations?
+  balanceFlucId       String?              @unique
+  BalanceFluctuations BalanceFluctuations? @relation(fields: [balanceFlucId], references: [id], onDelete: Cascade)
 }
 
 model WithdrawRequest {
