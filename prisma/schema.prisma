@@ -180,26 +180,29 @@ model Transaction {
   User                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   balanceFlucId       String?              @unique
   BalanceFluctuations BalanceFluctuations? @relation(fields: [balanceFlucId], references: [id], onDelete: Cascade)
+  withdrawRequestId   String?              @unique
+  WithdrawRequest     WithdrawRequest?     @relation(fields: [withdrawRequestId], references: [id])
 }
 
 model WithdrawRequest {
-  id                String    @id @default(uuid())
-  displayId         Int?      @default(autoincrement())
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                String       @id @default(uuid())
+  displayId         Int?         @default(autoincrement())
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
   userId            String
   name              String?
   code              String?
   shortName         String?
   accountNumber     String?
-  amount            Int?      @default(0)
-  status            String    @default("pending")
+  amount            Int?         @default(0)
+  status            String       @default("pending")
   statusDescription String?
   confirmAt         DateTime?
   confirmBy         String?
   confirmUserId     String?
   userName          String?
-  User              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction       Transaction?
 }
 
 model ResultKeno {
@@ -265,6 +268,12 @@ model JackPot {
   JackPot1Power BigInt?
   JackPot2Power BigInt?
   JackPotMega   BigInt?
+}
+
+model Config {
+  id                  String @id @default(uuid())
+  autoRewardThreshold Int    @default(5000000)
+  listBank            Json?
 }
 
 model cms_async_ws_call {

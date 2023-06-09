@@ -116,6 +116,7 @@ export function caculateKenoBenefits(lottery: any, resultString: string) {
             case 17:
                 //  Chẵn 11-12
                 if (analysis.even == 11 || analysis.even == 12) benefits = benefits + 2 * MUOI_NGHIN
+                break;
             case 18:
                 //  Lẻ 11-12
                 if (analysis.odd == 11 || analysis.odd == 12) benefits = benefits + 2 * MUOI_NGHIN
