@@ -185,7 +185,7 @@ export class TransactionService {
                     transactionPersonId: user.id
                 }
             })
-            await this.updateRewardWalletBalance(user.id, withdrawRequest.amount, WalletEnum.Decrease, transaction.id)
+            await this.updateRewardWalletBalance(user.id, Number(withdrawRequest.amount), WalletEnum.Decrease, transaction.id)
 
             //@ts-ignores
             withdrawRequest.transaction = transaction
@@ -335,7 +335,7 @@ export class TransactionService {
                     connect: { id: transactionId }
                 },
                 rewardWalletId: rewardWallet.id,
-                balanceBefore: rewardWallet.balance + (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
+                balanceBefore: Number(rewardWallet.balance) + (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
                 balanceAfter: rewardWallet.balance,
             }
         })

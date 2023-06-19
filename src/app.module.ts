@@ -16,6 +16,7 @@ import { join } from 'path';
 import { WebSocketModule } from './webSocket/webSocket.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { DeviceModule } from './device/device.module';
+import { StatisticalModule } from './statistical/statistical.module';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { DeviceModule } from './device/device.module';
     ResultModule,
     CartModule,
     WebSocketModule,
-    FirebaseModule
+    FirebaseModule,
+    StatisticalModule
   ],
   // providers: [FirebaseApp]
 })

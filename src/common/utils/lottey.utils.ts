@@ -493,11 +493,33 @@ function multibagMax3dPro(lottery: any, special: string[], fitst: string[], seco
 
 
 export function serializeBigInt(obj: any) {
-    const returned = JSON.stringify(
-        obj,
-        (key, value) => (typeof value === 'bigint' ? value.toString() : value)
-    )
-    return returned
+    // const returned = JSON.stringify(
+    //     obj,
+    //     (key, value) => (typeof value === 'bigint' ? value.toString() : value)
+    // )
+    // return returned
+    let newObject: any
+    if (Array.isArray(obj)) newObject = [...obj]
+    else newObject = { ...obj }
+
+    for (const key of Object.keys(obj)) {
+
+        if (!obj[key]) continue
+        if (typeof obj[key] === 'bigint') {
+            newObject[key] = Number(obj[key]);
+            continue;
+        }
+
+        if (typeof obj[key] === 'object') {
+            if (obj[key] instanceof Date) continue
+            newObject[key] = serializeBigInt(obj[key]);
+            continue;
+        }
+
+        newObject[key] = obj[key];
+    }
+
+    return newObject;
 }
 
 

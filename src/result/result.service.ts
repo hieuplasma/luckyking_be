@@ -312,7 +312,7 @@ export class ResultService {
                 jackpot2: jackpot2
             }
         })
-        return serializeBigInt(result)
+        return result
     }
 
     async insertOldResultMega(body: OldResultMegaDTO) {
@@ -334,7 +334,7 @@ export class ResultService {
                 jackpot1: jackpot
             }
         })
-        return serializeBigInt(result)
+        return result
     }
 
     async insertOldResultMax3d(body: OldResultMax3dDTO) {
@@ -440,7 +440,7 @@ export class ResultService {
             take: take ? parseInt(take.toString()) : 10,
             skip: skip ? parseInt(skip.toString()) : 0
         })
-        return serializeBigInt(schedule)
+        return schedule
     }
 
     async getResultPower(take: number, skip: number) {
@@ -450,7 +450,7 @@ export class ResultService {
             take: take ? parseInt(take.toString()) : 10,
             skip: skip ? parseInt(skip.toString()) : 0
         })
-        return serializeBigInt(schedule)
+        return schedule
     }
     // ------ End -------
 
@@ -485,7 +485,7 @@ export class ResultService {
             take: take ? parseInt(take.toString()) : 6,
             skip: skip ? parseInt(skip.toString()) : 0
         })
-        return serializeBigInt(schedule)
+        return schedule
     }
 
     async getSchedulePower(take: number, skip: number) {
@@ -598,7 +598,7 @@ export class ResultService {
             where: { drawCode: drawCode },
             data: { drawn: true, result: body.result }
         })
-        const jackPot: JackPot = JSON.parse(await this.getJackPot())
+        const jackPot: JackPot = await this.getJackPot()
         // so ve va update ve
         const listLottery = await this.prismaService.lottery.findMany({
             where: { drawCode: drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Mega },
@@ -624,7 +624,7 @@ export class ResultService {
             where: { drawCode: drawCode },
             data: { drawn: true, result: body.result, specialNumber: parseInt(body.specialNumber.toString()) }
         })
-        const jackPot: JackPot = JSON.parse(await this.getJackPot())
+        const jackPot: JackPot = await this.getJackPot()
         // so ve va update ve
         const listLottery = await this.prismaService.lottery.findMany({
             where: { drawCode: update.drawCode, status: OrderStatus.CONFIRMED, type: LotteryType.Power },
@@ -699,7 +699,7 @@ export class ResultService {
                     JackPotMega: jackPotMega
                 }, select: { JackPot1Power: true, JackPot2Power: true, JackPotMega: true }
             })
-            return serializeBigInt(update)
+            return update
         }
         else {
             //create
@@ -713,15 +713,15 @@ export class ResultService {
                     JackPotMega: jackPotMega
                 }, select: { JackPot1Power: true, JackPot2Power: true, JackPotMega: true }
             })
-            return serializeBigInt(create)
+            return create
         }
     }
 
     async getJackPot() {
         const jackpot = await this.prismaService.jackPot.findFirst({
-            select: { JackPot1Power: true, JackPot2Power: true, JackPotMega: true }
+            // select: { JackPot1Power: true, JackPot2Power: true, JackPotMega: true }
         })
-        return serializeBigInt(jackpot)
+        return jackpot
     }
     // ------ End ------
 
@@ -758,6 +758,6 @@ export class ResultService {
             default:
                 break;
         }
-        return serializeBigInt(result)
+        return result
     }
 }

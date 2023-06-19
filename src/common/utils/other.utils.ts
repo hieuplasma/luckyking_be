@@ -1,5 +1,7 @@
 import { Prisma } from "@prisma/client"
 import { EVEN_ODD, SMALL_BIG } from "../enum"
+import { serialize } from "class-transformer"
+import { serializeBigInt } from "./lottey.utils"
 
 export const mapDataFromScanner = {
     '11': '81', // Lớn
@@ -84,13 +86,14 @@ export function kenoAnalysis(param: number[]) {
 }
 
 export function convertObjectToJsonValue(obj: object): Prisma.JsonValue {
-    const jsonString = JSON.stringify(obj);
+    const jsonString = JSON.stringify(serializeBigInt(obj));
     const jsonValue = JSON.parse(jsonString) as Prisma.JsonValue;
+    console.log("jsonValue", jsonValue)
     return jsonValue;
 }
 
 export function convertArrayToJsonValue(array: object[]): Prisma.JsonValue {
-    const jsonString = JSON.stringify(array);
+    const jsonString = JSON.stringify(serializeBigInt(array));
     const jsonValue = JSON.parse(jsonString) as Prisma.JsonValue;
     return jsonValue;
 }
