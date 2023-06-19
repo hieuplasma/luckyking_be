@@ -498,13 +498,14 @@ export function serializeBigInt(obj: any) {
     //     (key, value) => (typeof value === 'bigint' ? value.toString() : value)
     // )
     // return returned
+    console.log(obj)
     let newObject: any
     if (Array.isArray(obj)) newObject = [...obj]
     else newObject = { ...obj }
 
     for (const key of Object.keys(obj)) {
 
-        if (!obj[key]) continue
+        if (!obj[key] && obj[key] !== BigInt(0)) continue
         if (typeof obj[key] === 'bigint') {
             newObject[key] = Number(obj[key]);
             continue;
@@ -519,9 +520,9 @@ export function serializeBigInt(obj: any) {
         newObject[key] = obj[key];
     }
 
+    console.log(newObject)
     return newObject;
 }
-
 
 export function fileNameConvert(id: string) {
     return dateConvert(new Date()) + '_' + id + '_' + uuidv4();
