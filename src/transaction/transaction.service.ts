@@ -309,7 +309,7 @@ export class TransactionService {
                     connect: { id: transactionId }
                 },
                 moneyAccountId: moneyAccount.id,
-                balanceBefore: moneyAccount.balance + (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
+                balanceBefore: Number(moneyAccount.balance) + (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
                 balanceAfter: moneyAccount.balance,
             }
         })

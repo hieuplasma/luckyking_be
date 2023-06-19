@@ -498,7 +498,6 @@ export function serializeBigInt(obj: any) {
     //     (key, value) => (typeof value === 'bigint' ? value.toString() : value)
     // )
     // return returned
-    console.log(obj)
     let newObject: any
     if (Array.isArray(obj)) newObject = [...obj]
     else newObject = { ...obj }
@@ -519,8 +518,6 @@ export function serializeBigInt(obj: any) {
 
         newObject[key] = obj[key];
     }
-
-    console.log(newObject)
     return newObject;
 }
 
