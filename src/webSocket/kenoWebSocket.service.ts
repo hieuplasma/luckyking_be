@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Lottery, User } from "@prisma/client";
 import { Server, Socket } from 'socket.io';
+import { serializeBigInt } from "src/common/utils";
 import { PrismaService } from "src/prisma/prisma.service";
 
 
@@ -36,6 +37,6 @@ export class KenoSocketService {
     }
 
     sendKenoLottery(lotteries: Lottery[]) {
-        this.server.emit('NewKenoLottery', { lotteries });
+        this.server.emit('NewKenoLottery', { lotteries: serializeBigInt(lotteries) });
     }
 }
