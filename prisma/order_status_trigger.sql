@@ -68,7 +68,7 @@ EXECUTE FUNCTION update_order_status();
 CREATE OR REPLACE FUNCTION update_order_benefits()
 RETURNS TRIGGER AS $$
 DECLARE
-  total_benefits INT;
+  total_benefits BIGINT;
 BEGIN
   SELECT COALESCE(SUM(benefits), 0) INTO total_benefits
   FROM "Lottery"

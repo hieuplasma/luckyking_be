@@ -54,7 +54,7 @@ model BankAccount {
   code          String?
   shortName     String?  @unique
   accountNumber String?
-  amount        Int?     @default(0)
+  amount        BigInt?  @default(0)
   userName      String?
   logo          String?
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -64,7 +64,7 @@ model BankAccount {
 
 model MoneyAccount {
   id                  String                @id @default(uuid())
-  balance             Int                   @default(0)
+  balance             BigInt                @default(0)
   decription          String?
   userId              String                @unique
   name                String?               @default("Ví LuckyKing")
@@ -75,7 +75,7 @@ model MoneyAccount {
 model RewardWallet {
   id                  String                @id @default(uuid())
   name                String?               @default("Ví nhận thưởng")
-  balance             Int                   @default(0)
+  balance             BigInt                @default(0)
   decription          String?
   userId              String                @unique
   user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -89,8 +89,8 @@ model BalanceFluctuations {
   rewardWallet   RewardWallet? @relation(fields: [rewardWalletId], references: [id], onDelete: Cascade)
   moneyAccountId String?
   moneyAccount   MoneyAccount? @relation(fields: [moneyAccountId], references: [id], onDelete: Cascade)
-  balanceBefore  Int
-  balanceAfter   Int
+  balanceBefore  BigInt
+  balanceAfter   BigInt
 }
 
 model Cart {
@@ -103,7 +103,7 @@ model Cart {
 
 model Order {
   id                String        @id @default(uuid())
-  amount            Int
+  amount            BigInt
   userId            String
   description       String?
   statusDescription String?
@@ -119,7 +119,7 @@ model Order {
   displayId         Int?          @default(autoincrement())
   createdAt         DateTime      @default(now())
   ticketType        String?       @default("basic")
-  benefits          Int           @default(0)
+  benefits          BigInt        @default(0)
   Lottery           Lottery[]
   user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transaction       Transaction[]
@@ -131,7 +131,7 @@ model Lottery {
   buyTime       DateTime       @default(now())
   resultTime    DateTime?
   deleteTime    DateTime?
-  benefits      Int?           @default(0)
+  benefits      BigInt?        @default(0)
   userId        String
   imageFront    String?
   orderId       String?
@@ -167,7 +167,7 @@ model Transaction {
   description         String               @default("")
   payment             String               @default("")
   userId              String
-  amount              Int                  @default(0)
+  amount              BigInt               @default(0)
   destination         String?
   source              String?
   transactionPersonId String?
@@ -194,7 +194,7 @@ model WithdrawRequest {
   code              String?
   shortName         String?
   accountNumber     String?
-  amount            Int?         @default(0)
+  amount            BigInt?      @default(0)
   status            String       @default("pending")
   statusDescription String?
   confirmAt         DateTime?
