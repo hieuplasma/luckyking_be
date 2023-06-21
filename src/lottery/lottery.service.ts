@@ -307,7 +307,7 @@ export class LotteryService {
         const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
         if (!lottery) throw new NotFoundException(errorMessage.LOTTERY_NOT_EXIST)
 
-        if (lottery.status === OrderStatus.PRINTED) return false;
+        if (lottery.status === OrderStatus.PRINTED || lottery.status === OrderStatus.RETURNED) return false;
 
         await this.prismaService.lottery.update({
             where: { id: lotteryId },
