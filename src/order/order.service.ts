@@ -667,7 +667,7 @@ export class OrderService {
         }
     }
 
-    async countKenoPendingOrder(): Promise<number> {
+    async countKenoPendingOrder(): Promise<any> {
         const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findFirst({
             where: { drawn: false, drawTime: { gt: now } },
@@ -682,7 +682,7 @@ export class OrderService {
             }
         })
 
-        return ordersCount;
+        return { count: ordersCount };
     }
 
     async returnOrder(user: User, body: ReturnOrderDTO): Promise<Order> {
@@ -742,14 +742,21 @@ export class OrderService {
             where: { id: body.orderId },
             include: { Lottery: { include: { NumberLottery: true } } }
         })
-        await this.prismaService.$transaction(
-            orderConfirmed.Lottery.map((child) =>
-                this.prismaService.lottery.update({
-                    where: { id: child.id },
-                    data: { status: newStatus },
-                })
-            )
-        )
+
+        await this.prismaService.$transaction(async (tx) => {
+            for (const lottery of orderConfirmed.Lottery) {
+                if (lottery.status !== OrderStatus.RETURNED) {
+                    await tx.lottery.update({
+                        where: {
+                            id: lottery.id,
+                        },
+                        data: {
+                            status: newStatus
+                        }
+                    })
+                }
+            }
+        })
         //@ts-ignore
         // orderConfirmed.transaction = transaction
 
@@ -812,7 +819,7 @@ export class OrderService {
                 include: { user: true, Lottery: true }
             })
 
-            if (order.status != OrderStatus.PENDING) { throw new ForbiddenException(errorMessage.RESOLVED_ORDER) }
+            if (order.status !== OrderStatus.PENDING) { throw new ForbiddenException(errorMessage.RESOLVED_ORDER) }
 
             // const payment = body.payment || LUCKY_KING_PAYMENT
             let confirmBy = ""
@@ -830,14 +837,20 @@ export class OrderService {
                 where: { id: orderId },
                 include: { Lottery: { include: { NumberLottery: true } } }
             })
-            await this.prismaService.$transaction(
-                lockedOrder.Lottery.map((child) =>
-                    this.prismaService.lottery.update({
-                        where: { id: child.id },
-                        data: { status: newStatus },
-                    })
-                )
-            )
+            await this.prismaService.$transaction(async (tx) => {
+                for (const lottery of lockedOrder.Lottery) {
+                    if (lottery.status !== OrderStatus.RETURNED) {
+                        await tx.lottery.update({
+                            where: {
+                                id: lottery.id,
+                            },
+                            data: {
+                                status: newStatus
+                            }
+                        })
+                    }
+                }
+            })
 
             lockedOrderIds.push(lockedOrder.id)
         }
