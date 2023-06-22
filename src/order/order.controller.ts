@@ -76,6 +76,17 @@ export class OrderController {
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('basic-available')
+    @Roles(Role.Staff)
+    getBasicOrdersAvailable(
+        @GetUser() user: User,
+        @Query('startDate') startDate: Date,
+        @Query('endDate') endDate: Date,
+    ): Promise<Order[]> {
+        return this.orderService.getBasicOrdersAvailable(user, startDate, endDate)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
     @Get('keno-display-id/:id')
     @Roles(Role.Staff)
     getOrderKenoByDisplayId(

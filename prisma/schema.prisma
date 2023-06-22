@@ -33,6 +33,7 @@ model User {
   RewardWallet    RewardWallet?
   Transaction     Transaction[]
   WithdrawRequest WithdrawRequest[]
+  OrderAssigned   Order[]           @relation(name: "assignedTo")
 }
 
 model Device {
@@ -107,6 +108,8 @@ model Order {
   userId            String
   description       String?
   statusDescription String?
+  assignedStaffId   String?
+  assignedStaff     User?         @relation(name: "assignedTo", references: [id], fields: [assignedStaffId])
   confirmAt         DateTime?
   confirmBy         String?
   payment           String?
