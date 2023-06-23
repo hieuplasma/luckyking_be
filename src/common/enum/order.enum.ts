@@ -3,6 +3,11 @@ export enum OrderMethod {
     Deliver = "deliver"
 }
 
+export enum TicketOrderType {
+    Keno = "keno",
+    Basic = "basic"
+}
+
 // export enum OrderStatus {
 //     PENDING = "pending",// chưa xử lý
 //     CONFIRMED = "confirmed",//đã nhận tiền
