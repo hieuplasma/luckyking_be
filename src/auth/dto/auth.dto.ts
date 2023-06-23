@@ -20,8 +20,8 @@ export class CheckAuthDTO {
     @IsNotEmpty()
     phoneNumber: string
 
-    @IsNotEmpty()
-    @IsString()
+    // @IsNotEmpty()
+    // @IsString()
     deviceId: string
 }
 
