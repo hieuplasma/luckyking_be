@@ -8,8 +8,7 @@ import {
     caculateKenoBenefits, caculateMax3dBenefits,
     caculateMax3dProBenefits, caculateMax3PlusdBenefits,
     caculateMegaBenefits, caculatePowerBenefits,
-    getNearestTimeDay,
-    nDate, serializeBigInt
+    getNearestTimeDay, nDate
 } from 'src/common/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionService } from 'src/transaction/transaction.service';

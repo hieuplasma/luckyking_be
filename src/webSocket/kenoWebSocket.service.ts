@@ -4,7 +4,6 @@ import { Server, Socket } from 'socket.io';
 import { serializeBigInt } from "src/common/utils";
 import { PrismaService } from "src/prisma/prisma.service";
 
-
 interface ISocketClient {
     socket: Socket
     isReady: boolean

@@ -14,4 +14,19 @@ export class StatisticalController {
     statisticalKenoNumber(@Query('take') take: number) {
         return this.statisticalService.statisticalKenoNumber(take)
     }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('keno-headtail')
+    @Roles(Role.User)
+    statisticalKenoHeadTail(@Query('take') take: number) {
+        return this.statisticalService.statisticalKenoHeadTail(take)
+    }
+
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('keno-bigsmall')
+    @Roles(Role.User)
+    statisticalKenoBigSmall(@Query('take') take: number) {
+        return this.statisticalService.statisticalKenoBigSmall(take)
+    }
 }
