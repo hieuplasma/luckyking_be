@@ -21,7 +21,7 @@ export class LotteryController {
             setTimeout(() => {
                 console.log(data)
                 res('ok')
-            }, 1000)
+            }, 300)
 
         })
     }

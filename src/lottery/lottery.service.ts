@@ -96,12 +96,15 @@ export class LotteryService {
     }
 
     async confirmLottery(user: User, lotteryId: string): Promise<Lottery> {
+        const now = new nDate();
         const confirmedLottery = await this.prismaService.lottery.update({
             where: {
                 id: lotteryId,
             },
             data: {
                 status: OrderStatus.CONFIRMED,
+                confirmedAt: now,
+                assignedStaffId: user.id,
             },
             include: { Order: { include: { Lottery: true } } }
         })
@@ -118,13 +121,13 @@ export class LotteryService {
             },
             data: {
                 status: OrderStatus.CONFIRMED,
-                confirmAt: new nDate(),
+                confirmAt: now,
                 confirmBy: user.fullName,
                 confrimUserId: user.id,
             }
         })
 
-        await this.firebaseService.senNotificationToUser(
+        this.firebaseService.senNotificationToUser(
             confirmedLottery.userId,
             FIREBASE_TITLE.PRINTED_LOTTERY,
             FIREBASE_MESSAGE.PRINTED_LOTTERY

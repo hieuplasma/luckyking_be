@@ -33,7 +33,7 @@ model User {
   RewardWallet    RewardWallet?
   Transaction     Transaction[]
   WithdrawRequest WithdrawRequest[]
-  OrderAssigned   Order[]           @relation(name: "assignedTo")
+  LotteryAssigned Lottery[]         @relation(name: "assignedTo")
 }
 
 model Device {
@@ -108,8 +108,6 @@ model Order {
   userId            String
   description       String?
   statusDescription String?
-  assignedStaffId   String?
-  assignedStaff     User?         @relation(name: "assignedTo", references: [id], fields: [assignedStaffId])
   confirmAt         DateTime?
   confirmBy         String?
   payment           String?
@@ -129,30 +127,33 @@ model Order {
 }
 
 model Lottery {
-  id            String         @id @default(uuid())
-  type          String
-  buyTime       DateTime       @default(now())
-  resultTime    DateTime?
-  deleteTime    DateTime?
-  benefits      BigInt?        @default(0)
-  userId        String
-  imageFront    String?
-  orderId       String?
-  status        OrderStatus?
-  imageBack     String?
-  cartId        String?
-  updatedAt     DateTime       @updatedAt
-  amount        Int            @default(0)
-  bets          Int[]
-  displayId     Int?           @default(autoincrement())
-  drawCode      Int
-  drawTime      DateTime
-  result        Json?
-  Cart          Cart?          @relation(fields: [cartId], references: [id])
-  Order         Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  NumberLottery NumberLottery?
-  transaction   Transaction[]
+  id              String         @id @default(uuid())
+  type            String
+  buyTime         DateTime       @default(now())
+  resultTime      DateTime?
+  deleteTime      DateTime?
+  confirmedAt     DateTime?
+  benefits        BigInt?        @default(0)
+  userId          String
+  imageFront      String?
+  orderId         String?
+  status          OrderStatus?
+  imageBack       String?
+  cartId          String?
+  updatedAt       DateTime       @updatedAt
+  amount          Int            @default(0)
+  bets            Int[]
+  displayId       Int?           @default(autoincrement())
+  drawCode        Int
+  drawTime        DateTime
+  result          Json?
+  Cart            Cart?          @relation(fields: [cartId], references: [id])
+  Order           Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedStaffId String?
+  assignedStaff   User?          @relation(name: "assignedTo", references: [id], fields: [assignedStaffId])
+  NumberLottery   NumberLottery?
+  transaction     Transaction[]
 }
 
 model NumberLottery {
