@@ -138,8 +138,8 @@ export class OrderService {
             order.Lottery = lotteryToReturn;
         })
 
-        await this.firebaseService.sendNotification('Có đơn PowerMega mới');
-        await this.firebaseService.senNotificationToUser(
+        this.firebaseService.sendNotification('Có đơn PowerMega mới');
+        this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
             FIREBASE_MESSAGE.ORDER_SUCCESS
@@ -269,8 +269,8 @@ export class OrderService {
         })
 
 
-        await this.firebaseService.sendNotification('Có đơn max3D mới');
-        await this.firebaseService.senNotificationToUser(
+        this.firebaseService.sendNotification('Có đơn max3D mới');
+        this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
             FIREBASE_MESSAGE.ORDER_SUCCESS
@@ -416,7 +416,7 @@ export class OrderService {
             this.kenoSocketService.sendKenoLottery(lotteriesToSend);
         }
 
-        await this.firebaseService.senNotificationToUser(
+        this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
             FIREBASE_MESSAGE.ORDER_SUCCESS
@@ -491,7 +491,7 @@ export class OrderService {
         })
 
         this.firebaseService.sendNotification('Có đơn vé thường mới');
-        await this.firebaseService.senNotificationToUser(
+        this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
             FIREBASE_MESSAGE.ORDER_SUCCESS
@@ -505,7 +505,15 @@ export class OrderService {
     async getOrderById(orderId: string): Promise<Order> {
         const order = await this.prismaService.order.findUnique({
             where: { id: orderId },
-            include: { Lottery: { include: { NumberLottery: true } }, user: true }
+            include: {
+                Lottery: {
+                    orderBy: {
+                        displayId: 'asc',
+                    },
+                    include: { NumberLottery: true }
+                },
+                user: true
+            },
         })
         return order
     }
@@ -513,7 +521,15 @@ export class OrderService {
     async getOrderByDisplayId(displayId: number): Promise<Order> {
         const order = await this.prismaService.order.findFirst({
             where: { displayId: displayId },
-            include: { Lottery: { include: { NumberLottery: true } }, user: true }
+            include: {
+                Lottery: {
+                    orderBy: {
+                        displayId: 'desc',
+                    },
+                    include: { NumberLottery: true }
+                },
+                user: true
+            },
         })
 
         return order
@@ -588,33 +604,54 @@ export class OrderService {
         return orders;
     }
 
+    async getOrderDetailByStaff(user: User, orderId: string): Promise<Order> {
+        const staff = await this.prismaService.user.findUnique({
+            where: { id: user.id },
+            include: {
+                LotteryAssigned: {
+                    where: {
+                        status: { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] }
+                    }
+                },
+            }
+        })
 
-    async getBasicOrdersAvailable(user: User, startTime?: Date, endTime?: Date): Promise<Order[]> {
-        const query: { [key: string]: any } = {};
+        const lotteryIds = staff.LotteryAssigned.map(lottery => lottery.id);
 
-        query.status = { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] };
-        query.ticketType = TicketOrderType.Basic;
-        query.confirmAt = {};
+        const order = await this.prismaService.order.findUnique({
+            where: { id: orderId },
+            include: {
+                Lottery: {
+                    where: { id: { in: lotteryIds } },
+                    orderBy: {
+                        displayId: 'asc',
+                    },
+                    include: { NumberLottery: true }
+                },
+                user: true
+            },
+        })
 
-        if (startTime) {
-            query.confirmAt.gte = new Date(startTime);
-        }
-        if (endTime) {
-            query.confirmAt.lte = new Date(endTime);
-        }
+        return order
+    }
 
+
+    async getBasicOrdersAvailable(user: User): Promise<Order[]> {
+        const now = new nDate();
+        const numberOfLotteries = 5;
 
         const staff = await this.prismaService.user.findUnique({
             where: {
                 id: user.id,
             },
             include: {
-                OrderAssigned: {
+                LotteryAssigned: {
                     where: {
+                        drawTime: { gt: now },
                         status: { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] }
                     },
                     include: {
-                        Lottery: { include: { NumberLottery: true } },
+                        NumberLottery: true,
                         user: true
                     }
                 },
@@ -622,36 +659,78 @@ export class OrderService {
         });
 
 
-        if (staff.OrderAssigned.length !== 0) {
-            return staff.OrderAssigned;
-        }
+        if (staff.LotteryAssigned.length !== 0) {
+            const lotteryIds = staff.LotteryAssigned.map(lottery => lottery.id);
+            let orderIds = staff.LotteryAssigned.map(lottery => lottery.orderId);
+            const setOrderIds = new Set(orderIds);
+            orderIds = Array.from(setOrderIds)
 
-        let orders = await this.prismaService.order.findMany({
-            where: { ...query, assignedStaffId: null },
-            take: 10,
-            orderBy: {
-                displayId: 'asc',
-                // confirmAt: 'asc',
-            },
-            include: {
-                Lottery: { include: { NumberLottery: true } },
-                user: true
-            }
-        });
-
-        // Assign order to staff
-        for (const order of orders) {
-            await this.prismaService.order.update({
+            const orders = await this.prismaService.order.findMany({
                 where: {
-                    id: order.id,
+                    id: { in: orderIds }
+                },
+                include: {
+                    Lottery: {
+                        where: {
+                            id: { in: lotteryIds }
+                        },
+                        orderBy: {
+                            displayId: 'asc'
+                        },
+                        include: { NumberLottery: true }
+                    },
+                    user: true
+                }
+            });
+
+            return orders;
+
+        } else {
+            const lotteries = await this.prismaService.lottery.findMany({
+                where: {
+                    assignedStaffId: null,
+                    type: { not: LotteryType.Keno },
+                    drawTime: { gt: now },
+                    status: { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] },
+                },
+                take: numberOfLotteries
+            });
+
+
+            const lotteryIds = lotteries.map(lottery => lottery.id);
+            let orderIds = lotteries.map(lottery => lottery.orderId);
+            const setOrderIds = new Set(orderIds);
+            orderIds = Array.from(setOrderIds)
+
+            const orders = await this.prismaService.order.findMany({
+                where: {
+                    id: { in: orderIds }
+                },
+                include: {
+                    Lottery: {
+                        where: {
+                            id: { in: lotteryIds }
+                        },
+                        orderBy: {
+                            displayId: 'asc'
+                        },
+                        include: { NumberLottery: true }
+                    },
+                    user: true
+                }
+            });
+
+            await this.prismaService.lottery.updateMany({
+                where: {
+                    id: { in: lotteryIds },
                 },
                 data: {
                     assignedStaffId: user.id,
                 }
-            })
-        }
+            });
 
-        return orders;
+            return orders;
+        }
     }
 
     async setOrderLotteryToPending(orderId: string) {
@@ -773,17 +852,44 @@ export class OrderService {
                 }
             }
         })
-        //@ts-ignore
-        // orderConfirmed.transaction = transaction
-
-        await this.firebaseService.senNotificationToUser(
-            order.userId,
-            FIREBASE_TITLE.PRINTED_LOTTERY,
-            FIREBASE_MESSAGE.PRINTED_LOTTERY
-                .replace('ma_don_hang', printCode(order.displayId))
-        )
 
         return orderConfirmed
+    }
+
+    async confirmOrderByStaff(user: User, orderId: string): Promise<any> {
+        const now = new nDate();
+
+        const staff = await this.prismaService.user.findUnique({
+            where: {
+                id: user.id
+            },
+            include: {
+                LotteryAssigned: {
+                    where: {
+                        orderId: orderId,
+                        status: OrderStatus.PRINTED
+                    }
+                }
+            }
+        });
+
+        await this.prismaService.$transaction(async (tx) => {
+            for (const lottery of staff.LotteryAssigned) {
+                await tx.lottery.update({
+                    where: {
+                        id: lottery.id,
+                    },
+                    data: {
+                        confirmedAt: now,
+                        status: OrderStatus.CONFIRMED
+                    }
+                })
+            }
+        })
+
+        return {
+            message: 'ok'
+        }
     }
 
     async updateKenoOrderStatus(user: User): Promise<Order[]> {
@@ -872,6 +978,47 @@ export class OrderService {
         }
 
         return lockedOrderIds
+    }
+
+    async lockOrderByStaff(user: User, { orderIds, description, payment }: lockMultiOrderDTO): Promise<String[]> {
+        const staff = await this.prismaService.user.findUnique({
+            where: {
+                id: user.id,
+            },
+            include: {
+                LotteryAssigned: {
+                    where: {
+                        orderId: { in: orderIds },
+                        status: OrderStatus.PENDING,
+                    }
+                }
+            }
+        })
+
+        await this.prismaService.$transaction(async (tx) => {
+            for (const lottery of staff.LotteryAssigned) {
+                await tx.lottery.update({
+                    where: {
+                        id: lottery.id,
+                    },
+                    data: {
+                        status: OrderStatus.LOCK,
+                    }
+                })
+
+            }
+
+            await tx.order.updateMany({
+                where: {
+                    id: { in: orderIds }
+                },
+                data: {
+                    status: OrderStatus.LOCK,
+                }
+            })
+        })
+
+        return orderIds;
     }
 
     async getAllOrderByDraw(user: User, drawCode: number, type: LotteryType) {

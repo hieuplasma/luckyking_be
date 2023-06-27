@@ -62,6 +62,12 @@ export class OrderController {
         return this.orderService.getOrderByDisplayId(+displayId)
     }
 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-by-staff/:orderId')
+    @Roles(Role.Staff, Role.Admin)
+    getOrderDetailByStaff(@GetUser() user: User, @Param('orderId') orderId: string): Promise<Order> {
+        return this.orderService.getOrderDetailByStaff(user, orderId)
+    }
 
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-all-order')
@@ -80,10 +86,8 @@ export class OrderController {
     @Roles(Role.Staff)
     getBasicOrdersAvailable(
         @GetUser() user: User,
-        @Query('startDate') startDate: Date,
-        @Query('endDate') endDate: Date,
     ): Promise<Order[]> {
-        return this.orderService.getBasicOrdersAvailable(user, startDate, endDate)
+        return this.orderService.getBasicOrdersAvailable(user)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
@@ -119,6 +123,14 @@ export class OrderController {
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('confirm-by-staff')
+    @Roles(Role.Staff)
+    async confirmOrderByStaff(@GetUser() user: User, @Body() body: ConfirmOrderDTO) {
+        const { orderId } = body;
+        return await this.orderService.confirmOrderByStaff(user, orderId);
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
     @Post('update-status')
     @Roles(Role.Staff)
     updateOrderStatus(@GetUser() user: User) {
@@ -130,6 +142,13 @@ export class OrderController {
     @Roles(Role.Staff)
     lockOrder(@GetUser() user: User, @Body() body: lockMultiOrderDTO) {
         return this.orderService.lockOrder(user, body)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('lock-by-staff')
+    @Roles(Role.Staff)
+    async lockOrderByStaff(@GetUser() user: User, @Body() body: lockMultiOrderDTO) {
+        return await this.orderService.lockOrderByStaff(user, body)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
