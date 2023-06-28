@@ -590,7 +590,7 @@ export class OrderService {
 
         let orders = await this.prismaService.order.findMany({
             where: query,
-            take: 20,
+            // take: 20,
             orderBy: {
                 displayId: 'asc',
                 // confirmAt: 'asc',
@@ -638,7 +638,7 @@ export class OrderService {
 
     async getBasicOrdersAvailable(user: User): Promise<Order[]> {
         const now = new nDate();
-        const numberOfLotteries = 5;
+        // const numberOfLotteries = 5;
 
         const staff = await this.prismaService.user.findUnique({
             where: {
@@ -693,7 +693,7 @@ export class OrderService {
                     drawTime: { gt: now },
                     status: { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] },
                 },
-                take: numberOfLotteries
+                // take: numberOfLotteries
             });
 
 
