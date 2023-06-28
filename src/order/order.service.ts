@@ -885,6 +885,15 @@ export class OrderService {
                     }
                 })
             }
+
+            await tx.order.update({
+                where: {
+                    id: orderId,
+                },
+                data: {
+                    confirmAt: now,
+                }
+            })
         })
 
         return {
