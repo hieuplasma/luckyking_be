@@ -62,17 +62,17 @@ export class LotteryService {
         });
 
         // Update lottery expired
-        await this.prismaService.lottery.updateMany({
-            where: {
-                type: LotteryType.Keno,
-                drawTime: { lte: now },
-                status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
-            },
-            data: {
-                drawCode: schedule.drawCode,
-                drawTime: schedule.drawTime,
-            }
-        })
+        // await this.prismaService.lottery.updateMany({
+        //     where: {
+        //         type: LotteryType.Keno,
+        //         drawTime: { lte: now },
+        //         status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
+        //     },
+        //     data: {
+        //         drawCode: schedule.drawCode,
+        //         drawTime: schedule.drawTime,
+        //     }
+        // })
 
         const Lotteries = await this.prismaService.lottery.findMany({
             where: {
@@ -85,7 +85,7 @@ export class LotteryService {
                     displayId: 'asc'
                 }
             },
-            take: 3,
+            // take: 3,
             include: {
                 Order: true,
                 NumberLottery: true
@@ -363,12 +363,29 @@ export class LotteryService {
             orderBy: { drawCode: 'asc' },
         });
 
-        // Update lottery expired
-        await this.prismaService.lottery.updateMany({
+        const expiredLotteries = await this.prismaService.lottery.findMany({
             where: {
                 type: LotteryType.Keno,
                 drawTime: { lte: now },
                 status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
+            },
+            select: {
+                id: true,
+                userId: true,
+            }
+        })
+
+        const userIds = Array.from(new Set(expiredLotteries.map(lottery => lottery.userId)));
+
+        for (const userId of userIds) {
+            this.firebaseService.senNotificationToUser(userId, FIREBASE_TITLE.PUSH_PERIOD, FIREBASE_MESSAGE.PUSH_PERIOD);
+        }
+
+        // Update lottery expired
+        const expiredLotteryIds = expiredLotteries.map(lottery => lottery.id);
+        await this.prismaService.lottery.updateMany({
+            where: {
+                id: { in: expiredLotteryIds }
             },
             data: {
                 drawCode: schedule.drawCode,
@@ -387,7 +404,7 @@ export class LotteryService {
                     displayId: 'asc'
                 }
             },
-            take: 3,
+            // take: 3,
             include: {
                 Order: true,
                 NumberLottery: true

@@ -11,7 +11,8 @@ export const FIREBASE_TITLE = {
     WITHDRAW_BANK_ACOUNT: "LuckyKing - Đổi thưởng thành công",
     WON_PRIZE: "LuckyKing - Thông báo trúng thưởng",
     PAID_PRIZE: "LuckyKing _ Xin chúc mừng!",
-    RETURN_MONEY: "LuckyKing - Hoàn tiền thành công"
+    RETURN_MONEY: "LuckyKing - Hoàn tiền thành công",
+    PUSH_PERIOD: "LuckyKing - Thông báo keno"
 }
 
 export const FIREBASE_MESSAGE = {
@@ -23,6 +24,6 @@ export const FIREBASE_MESSAGE = {
     WITHDRAW_BANK_ACOUNT: "Quý Khách đã thực hiện đổi thưởng so_tienVND từ Tài khoản trả thưởng về tài khoản ngân hàng thành công. Mọi thắc mắc xin liên hệ hotline 0586.79.88.79",
     WON_PRIZE: "Đơn hàng ma_don_hang kỳ quay ky_quay ngày ngay_quay đã trúng thưởng với số tiền là so_tienVND",
     PAID_PRIZE: "LuckyKing đã trả thưởng so_tienVND từ đơn hàng ma_don_hang vào Tài khoản trả thưởng của Quý khách",
-    RETURN_MONEY: "LuckyKing đã hoàn so_tien VND từ đơn hàng ma_don_hang vào Tài khoản mua vé của Quý khách"
-
+    RETURN_MONEY: "LuckyKing đã hoàn so_tien VND từ đơn hàng ma_don_hang vào Tài khoản mua vé của Quý khách",
+    PUSH_PERIOD: "LuckyKing xin lỗi vì sự bất tiện! Vé Keno của bạn sẽ được chuyển sang kỳ quay số tiếp theo"
 }
