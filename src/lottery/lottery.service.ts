@@ -110,7 +110,8 @@ export class LotteryService {
         })
 
         for (const lottery of confirmedLottery.Order.Lottery) {
-            if (lottery.status !== OrderStatus.CONFIRMED) {
+            const statusBeforeConfirmed: OrderStatus[] = [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED];
+            if (statusBeforeConfirmed.includes(lottery.status)) {
                 return confirmedLottery;
             }
         }

@@ -91,6 +91,18 @@ export class OrderController {
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('list-sold-orders')
+    @Roles(Role.Staff)
+    getListSoldOrders(
+        @GetUser() user: User,
+        @Query('ticketType') ticketType: string,
+        @Query('startDate') startDate: Date,
+        @Query('endDate') endDate: Date,
+    ): Promise<Order[]> {
+        return this.orderService.getListSoldOrders(user, ticketType, startDate, endDate)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
     @Get('keno-display-id/:id')
     @Roles(Role.Staff)
     getOrderKenoByDisplayId(

@@ -569,7 +569,6 @@ export class OrderService {
         return orders
     }
 
-    // Basic order, not for keno
     async getAllOrder(status: (keyof typeof OrderStatus)[], ticketType: string, startTime?: Date, endTime?: Date): Promise<Order[]> {
         const query: { [key: string]: any } = {};
 
@@ -600,6 +599,49 @@ export class OrderService {
                 user: true
             }
         })
+
+        return orders;
+    }
+
+    async getListSoldOrders(user: User, ticketType: string, startTime?: Date, endTime?: Date): Promise<Order[]> {
+        const lotteries = await this.prismaService.lottery.findMany({
+            where: {
+                assignedStaffId: user.id,
+                confirmedAt: {
+                    lte: endTime ? new Date(endTime) : undefined,
+                    gte: startTime ? new Date(startTime) : undefined,
+                },
+                status: { in: [OrderStatus.CONFIRMED, OrderStatus.WON, OrderStatus.PAID, OrderStatus.NO_PRIZE] },
+            },
+        });
+
+
+        const lotteryIds = lotteries.map(lottery => lottery.id);
+        let orderIds = lotteries.map(lottery => lottery.orderId);
+        const setOrderIds = new Set(orderIds);
+        orderIds = Array.from(setOrderIds)
+
+        const orders = await this.prismaService.order.findMany({
+            where: {
+                id: { in: orderIds },
+                ticketType: ticketType
+            },
+            orderBy: {
+                displayId: 'desc'
+            },
+            include: {
+                Lottery: {
+                    where: {
+                        id: { in: lotteryIds }
+                    },
+                    // orderBy: {
+                    //     displayId: 'asc'
+                    // },
+                    include: { NumberLottery: true }
+                },
+                user: true
+            }
+        });
 
         return orders;
     }
