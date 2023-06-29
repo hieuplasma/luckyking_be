@@ -305,9 +305,7 @@ export class TransactionService {
 
         await prismaService.balanceFluctuations.create({
             data: {
-                transaction: {
-                    connect: { id: transactionId }
-                },
+                transactionId: transactionId,
                 moneyAccountId: moneyAccount.id,
                 balanceBefore: Number(moneyAccount.balance) + (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
                 balanceAfter: moneyAccount.balance,
@@ -331,13 +329,11 @@ export class TransactionService {
 
         await this.prismaService.balanceFluctuations.create({
             data: {
-                transaction: {
-                    connect: { id: transactionId }
-                },
+                transactionId: transactionId,
                 rewardWalletId: rewardWallet.id,
                 balanceBefore: Number(rewardWallet.balance) + (type == WalletEnum.Increase ? -1 : 1) * parseInt(amount.toString()),
                 balanceAfter: rewardWallet.balance,
-            }
+            },
         })
         return rewardWallet
     }
