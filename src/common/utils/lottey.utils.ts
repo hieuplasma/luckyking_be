@@ -319,7 +319,7 @@ export function caculatePowerBenefits(lottery: any, resultString: string, specia
                 if (duplicate == 3) benefits = benefits + 100 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + 7 * TRIEU
                 if (duplicate == 5) benefits = benefits + 177 * TRIEU
-                if (duplicate == 6) benefits = benefits + jackpot1 + 743 * TRIEU + 10 * MUOI_NGHIN
+                if (duplicate == 6) benefits = benefits + jackpot1 + 743 * TRIEU + 50 * MUOI_NGHIN
                 break;
             case 10:
                 if (duplicate == 3) benefits = benefits + TRIEU + 75 * MUOI_NGHIN
