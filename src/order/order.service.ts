@@ -512,7 +512,8 @@ export class OrderService {
                     },
                     include: { NumberLottery: true }
                 },
-                user: true
+                user: true,
+                transaction: true
             },
         })
         return order
@@ -528,7 +529,8 @@ export class OrderService {
                     },
                     include: { NumberLottery: true }
                 },
-                user: true
+                user: true,
+                transaction: true
             },
         })
 
@@ -555,6 +557,7 @@ export class OrderService {
                     },
                     include: { NumberLottery: true }
                 },
+                transaction: true
             }
         })
 
@@ -564,7 +567,7 @@ export class OrderService {
     async getListOrderByUser(me: User, status: keyof typeof OrderStatus, ticketType: string): Promise<Order[]> {
         const orders = await this.prismaService.order.findMany({
             where: { AND: { userId: me.id, status, ticketType } },
-            include: { Lottery: { include: { NumberLottery: true } } }
+            include: { Lottery: { include: { NumberLottery: true } } , transaction: true}
         })
         return orders
     }
@@ -596,7 +599,8 @@ export class OrderService {
             },
             include: {
                 Lottery: { include: { NumberLottery: true } },
-                user: true
+                user: true,
+                transaction: true
             }
         })
 
