@@ -567,7 +567,7 @@ export class OrderService {
     async getListOrderByUser(me: User, status: keyof typeof OrderStatus, ticketType: string): Promise<Order[]> {
         const orders = await this.prismaService.order.findMany({
             where: { AND: { userId: me.id, status, ticketType } },
-            include: { Lottery: { include: { NumberLottery: true } } , transaction: true}
+            include: { Lottery: { include: { NumberLottery: true } }, transaction: true }
         })
         return orders
     }
@@ -605,6 +605,32 @@ export class OrderService {
         })
 
         return orders;
+    }
+
+    // Will update later
+    async getPendingOrderByDisplayId(displayId: number): Promise<Order> {
+        const now = new nDate();
+
+        const order = await this.prismaService.order.findFirst({
+            where: { displayId: displayId },
+            include: {
+                Lottery: {
+                    where: {
+                        assignedStaffId: null,
+                        status: { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] },
+                        drawTime: { gt: now },
+                    },
+                    orderBy: {
+                        displayId: 'desc',
+                    },
+                    include: { NumberLottery: true }
+                },
+                user: true,
+                transaction: true
+            },
+        })
+
+        return order
     }
 
     async getListSoldOrders(user: User, ticketType: string, startTime?: Date, endTime?: Date): Promise<Order[]> {
@@ -650,12 +676,15 @@ export class OrderService {
     }
 
     async getOrderDetailByStaff(user: User, orderId: string): Promise<Order> {
+        const now = new nDate();
+
         const staff = await this.prismaService.user.findUnique({
             where: { id: user.id },
             include: {
                 LotteryAssigned: {
                     where: {
-                        status: { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] }
+                        status: { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] },
+                        drawTime: { gt: now },
                     }
                 },
             }
