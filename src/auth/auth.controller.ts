@@ -1,6 +1,7 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AuthDTO, CheckAuthDTO, CreateStaffDTO, ForgotPassWordDTO, UpdatePassWordDTO } from "./dto";
+import { RegisterDTO } from "./dto/register.dto";
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) {
@@ -12,12 +13,12 @@ export class AuthController {
     }
 
     @Post("register")
-    registerCheate(@Body() body: AuthDTO) {
+    registerCheate(@Body() body: RegisterDTO) {
         return this.authService.register(body)
     }
 
     @Post("sercure/register")
-    register(@Body() body: AuthDTO) {
+    register(@Body() body: RegisterDTO) {
         return this.authService.register(body)
     }
 

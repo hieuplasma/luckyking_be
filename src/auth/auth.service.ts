@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import { Role, UserStatus } from 'src/common/enum';
 import { nDate } from 'src/common/utils';
 import { errorMessage } from 'src/common/error_message';
+import { RegisterDTO } from './dto/register.dto';
 
 @Injectable({})
 export class AuthService {
@@ -25,7 +26,7 @@ export class AuthService {
     private prismaService: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   async check(checkAuthDTO: CheckAuthDTO) {
     const user = await this.prismaService.user.findUnique({
@@ -37,27 +38,31 @@ export class AuthService {
     else return { registered: true };
   }
 
-  async register(authDTO: AuthDTO) {
-    const hashedPassword = await argon.hash(authDTO.password);
+  async register(authDTO: RegisterDTO) {
+    const { phoneNumber, password, identify, fullName, email, deviceId } = authDTO;
+    const hashedPassword = await argon.hash(password);
     try {
       const user = await this.prismaService.user.create({
         data: {
-          phoneNumber: authDTO.phoneNumber,
+          phoneNumber: phoneNumber,
           hashedPassword: hashedPassword,
+          fullName: fullName,
+          email: email,
+          identify: identify,
           status: UserStatus.Acticve,
           updateAt: new nDate(),
           Device: {
             create: {
-              deviceId: authDTO.deviceId,
+              deviceId: deviceId,
               lastLogin: new nDate(),
             },
           },
           role: Role.User,
           MoneyAccount: {
-            create: { decription: 'Ví LuckyKing của ' + authDTO.phoneNumber },
+            create: { decription: 'Ví LuckyKing của ' + phoneNumber },
           },
           RewardWallet: {
-            create: { decription: 'Ví nhận thưởng của ' + authDTO.phoneNumber },
+            create: { decription: 'Ví nhận thưởng của ' + phoneNumber },
           },
           Cart: { create: {} },
         },
