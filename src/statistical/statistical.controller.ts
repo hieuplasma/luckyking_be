@@ -29,4 +29,12 @@ export class StatisticalController {
     statisticalKenoBigSmall(@Query('take') take: number) {
         return this.statisticalService.statisticalKenoBigSmall(take)
     }
+
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('keno-evenodd')
+    @Roles(Role.User)
+    statisticalKenoEvenOdd(@Query('take') take: number) {
+        return this.statisticalService.statisticalKenoEvenOdd(take)
+    }
 }
