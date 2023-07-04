@@ -641,7 +641,6 @@ export class OrderService {
                     // orderBy: {
                     //     displayId: 'asc'
                     // },
-                    include: { NumberLottery: true }
                 },
                 user: true
             }
