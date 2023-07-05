@@ -31,6 +31,14 @@ export class LotteryController {
         const { lotteryId } = data;
         // return true
         return await this.lotteryService.confirmPrintLottery(lotteryId);
+
+    }
+
+    @Patch('set-pending')
+    async setPendingLottery(@Body() data: PrintDTO) {
+        const { lotteryId } = data;
+        // return true
+        return await this.lotteryService.setPendingLottery(lotteryId);
     }
 
     @Get(':lotteryId')
