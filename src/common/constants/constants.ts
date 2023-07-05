@@ -25,5 +25,5 @@ export const FIREBASE_MESSAGE = {
     WON_PRIZE: "Đơn hàng ma_don_hang kỳ quay ky_quay ngày ngay_quay đã trúng thưởng với số tiền là so_tienVND",
     PAID_PRIZE: "LuckyKing đã trả thưởng so_tienVND từ đơn hàng ma_don_hang vào Tài khoản trả thưởng của Quý khách",
     RETURN_MONEY: "LuckyKing đã hoàn so_tien VND từ đơn hàng ma_don_hang vào Tài khoản mua vé của Quý khách",
-    PUSH_PERIOD: "LuckyKing xin lỗi vì sự bất tiện! Vé Keno của bạn sẽ được chuyển sang kỳ quay số tiếp theo"
+    PUSH_PERIOD: "Vé Keno của bạn sẽ được chuyển sang kỳ quay số tiếp theo"
 }

@@ -501,6 +501,7 @@ export function serializeBigInt(obj: any) {
 
     if (typeof obj === 'number') return obj;
     if (typeof obj === 'string') return obj;
+    if (typeof obj === 'boolean') return obj;
 
     let newObject: any
     if (Array.isArray(obj)) newObject = [...obj]

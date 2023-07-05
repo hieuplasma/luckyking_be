@@ -62,23 +62,23 @@ export class LotteryService {
         });
 
         // Update lottery expired
-        // await this.prismaService.lottery.updateMany({
-        //     where: {
-        //         type: LotteryType.Keno,
-        //         drawTime: { lte: now },
-        //         status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
-        //     },
-        //     data: {
-        //         drawCode: schedule.drawCode,
-        //         drawTime: schedule.drawTime,
-        //     }
-        // })
+        await this.prismaService.lottery.updateMany({
+            where: {
+                type: LotteryType.Keno,
+                drawTime: { lte: now },
+                status: OrderStatus.PENDING,
+            },
+            data: {
+                drawCode: schedule.drawCode,
+                drawTime: schedule.drawTime,
+            }
+        })
 
         const Lotteries = await this.prismaService.lottery.findMany({
             where: {
                 type: LotteryType.Keno,
                 drawCode: schedule.drawCode,
-                status: OrderStatus.PENDING             // Lock??
+                status: { in: [OrderStatus.PENDING, OrderStatus.PRINTED] }           // Lock??
             },
             orderBy: {
                 Order: {
@@ -330,6 +330,22 @@ export class LotteryService {
         return true;
     }
 
+    async setPendingLottery(lotteryId: string): Promise<Boolean> {
+        const lottery = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } });
+        if (!lottery) throw new NotFoundException(errorMessage.LOTTERY_NOT_EXIST)
+
+        if (lottery.status === OrderStatus.RETURNED) return false;
+
+        await this.prismaService.lottery.update({
+            where: { id: lotteryId },
+            data: {
+                status: OrderStatus.PENDING,
+            }
+        })
+
+        return true;
+    }
+
     async deleteLottery(lotteryId: string): Promise<Lottery> {
         const find = await this.prismaService.lottery.findUnique({ where: { id: lotteryId } })
         if (!find) throw new NotFoundException(errorMessage.LOTTERY_NOT_EXIST);
@@ -368,7 +384,7 @@ export class LotteryService {
             where: {
                 type: LotteryType.Keno,
                 drawTime: { lte: now },
-                status: { in: [OrderStatus.PENDING, OrderStatus.LOCK] },
+                status: OrderStatus.PENDING,
             },
             select: {
                 id: true,
@@ -398,7 +414,7 @@ export class LotteryService {
             where: {
                 type: LotteryType.Keno,
                 drawCode: schedule.drawCode,
-                status: OrderStatus.PENDING             // Lock??
+                status: { in: [OrderStatus.PENDING, OrderStatus.PRINTED] }           // Lock??
             },
             orderBy: {
                 Order: {
