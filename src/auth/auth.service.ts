@@ -19,6 +19,7 @@ import { Role, UserStatus } from 'src/common/enum';
 import { nDate } from 'src/common/utils';
 import { errorMessage } from 'src/common/error_message';
 import { RegisterDTO } from './dto/register.dto';
+import { Device } from '@prisma/client';
 
 @Injectable({})
 export class AuthService {
@@ -102,27 +103,37 @@ export class AuthService {
       throw new UnauthorizedException(errorMessage.WRONG_AUTH);
     }
     delete user.hashedPassword;
-    const deviceId = await this.prismaService.device.findFirst({
+
+    let device = await this.prismaService.device.findFirst({
       where: {
-        AND: { userId: user.id, deviceId: authDTO.deviceId },
-      },
-    });
-    if (!deviceId)
-      await this.prismaService.device.create({
+        deviceId: authDTO.deviceId,
+        userId: user.id
+      }
+    })
+    if (!device) {
+      device = await this.prismaService.device.create({
         data: {
           deviceId: authDTO.deviceId,
+          userId: user.id,
           lastLogin: new nDate(),
-          user: {
-            connect: { id: user.id },
-          },
-        },
-      });
+        }
+      })
+    }
+    else {
+      await this.prismaService.device.update({
+        where: { id: device.id },
+        data: {
+          lastLogin: new nDate()
+        }
+      })
+    }
 
     const { accessToken } = await this.signJwtToken(user.id, user.phoneNumber);
 
     return {
       accessToken,
       printerUrl: user.printerUrl,
+      deviceId: device.deviceId
     };
   }
 

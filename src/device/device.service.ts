@@ -1,10 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Device, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateDeviceTokenTO } from './dto';
 import FirebaseService from '../firebase/firebase-app'
 import { nDate } from 'src/common/utils';
-import { errorMessage } from 'src/common/error_message';
 
 @Injectable()
 export class DeviceService {
@@ -14,24 +13,33 @@ export class DeviceService {
     ) { }
 
     async updateDeviceToken(user: User, data: UpdateDeviceTokenTO): Promise<Device> {
-        const device = await this.prismaService.device.findFirst({
+        let device = await this.prismaService.device.findFirst({
             where: {
                 deviceId: data.deviceId,
                 userId: user.id
             }
         })
+        if (!device) {
+            device = await this.prismaService.device.create({
+                data: {
+                    deviceId: data.deviceId,
+                    userId: user.id,
+                    lastLogin: new nDate(),
+                    deviceToken: data.deviceToken
+                }
+            })
+        }
+        else {
+            device = await this.prismaService.device.update({
+                where: { id: device.id },
+                data: {
+                    lastLogin: new nDate(),
+                    deviceToken: data.deviceToken
+                }
+            })
+        }
 
-        if (!device) throw new NotFoundException(errorMessage.DEVICE_NOT_FOUND);
-
-        const deviceUpdated = await this.prismaService.device.update({
-            where: { id: device.id },
-            data: {
-                deviceToken: data.deviceToken,
-                lastLogin: new nDate()
-            }
-        })
-
-        return deviceUpdated;
+        return device;
     }
 
     async getFirebaseToken(user: User) {
