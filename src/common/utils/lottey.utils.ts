@@ -146,7 +146,7 @@ export function caculateMegaBenefits(lottery: any, resultString: string, jackPot
             case 5:
                 if (duplicate == 2) benefits = benefits + 12 * MUOI_NGHIN
                 if (duplicate == 3) benefits = benefits + 2 * TRIEU + MUOI_NGHIN
-                if (duplicate == 4) benefits = benefits + 21 * TRIEU + 4 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 31 * TRIEU + 4 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + jackPot + 390 * TRIEU
                 break;
             case 6:
@@ -341,14 +341,14 @@ export function caculatePowerBenefits(lottery: any, resultString: string, specia
                 break;
             case 13:
                 if (duplicate == 3) benefits = benefits + 6 * TRIEU
-                if (duplicate == 4) benefits = benefits + 34 * TRIEU + 88 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 34 * TRIEU + 80 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 418 * TRIEU
                 if (duplicate == 6) benefits = benefits + jackpot1 + 1870 * TRIEU
                 break;
             case 14:
                 if (duplicate == 3) benefits = benefits + 8 * TRIEU + 25 * MUOI_NGHIN
-                if (duplicate == 4) benefits = benefits + 46 * TRIEU + 5 * MUOI_NGHIN
-                if (duplicate == 5) benefits = benefits + 492 * TRIEU + 20 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + 46 * TRIEU + 50 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 492 * TRIEU
                 if (duplicate == 6) benefits = benefits + jackpot1 + 2180 * TRIEU
                 break;
             case 15:
@@ -360,7 +360,7 @@ export function caculatePowerBenefits(lottery: any, resultString: string, specia
             case 18:
                 if (duplicate == 3) benefits = benefits + 22 * TRIEU + 75 * MUOI_NGHIN
                 if (duplicate == 4) benefits = benefits + 118 * TRIEU + 30 * MUOI_NGHIN
-                if (duplicate == 5) benefits = benefits + 858 * TRIEU + 80 * MUOI_NGHIN
+                if (duplicate == 5) benefits = benefits + 858 * TRIEU
                 if (duplicate == 6) benefits = benefits + jackpot1 + 3590 * TRIEU
                 break;
             default:
