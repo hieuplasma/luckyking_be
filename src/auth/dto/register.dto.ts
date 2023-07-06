@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsPhoneNumber, IsString, IsEmail } from "class-validator"
+import { IsNotEmpty, IsPhoneNumber, IsString, IsEmail, IsOptional } from "class-validator"
 import { errorMessage } from "src/common/error_message"
 
 
@@ -12,12 +12,15 @@ export class RegisterDTO {
   password: string
 
   @IsString()
+  @IsOptional()
   fullName: string
 
   @IsString()
+  @IsOptional()
   identify: string
 
   @IsEmail()
+  @IsOptional()
   email: string
 
   @IsString()
