@@ -24,6 +24,10 @@ export class RegisterDTO {
   email: string
 
   @IsString()
+  @IsOptional()
+  address: string
+
+  @IsString()
   @IsNotEmpty()
   deviceId: string
 }

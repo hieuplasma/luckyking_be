@@ -50,6 +50,7 @@ export class AuthService {
           fullName: fullName,
           email: email,
           identify: identify,
+          address: authDTO.address,
           status: UserStatus.Acticve,
           updateAt: new nDate(),
           Device: {

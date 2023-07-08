@@ -157,7 +157,7 @@ export function caculateMegaBenefits(lottery: any, resultString: string, jackPot
                 break;
             case 7:
                 if (duplicate == 3) benefits = benefits + 12 * MUOI_NGHIN
-                if (duplicate == 4) benefits = benefits + TRIEU + 3 * MUOI_NGHIN
+                if (duplicate == 4) benefits = benefits + TRIEU + 2 * MUOI_NGHIN
                 if (duplicate == 5) benefits = benefits + 21 * TRIEU + 50 * MUOI_NGHIN
                 if (duplicate == 6) benefits = benefits + jackPot + 60 * TRIEU
                 break;
