@@ -1,4 +1,5 @@
 import { TIME_OFFSET } from "../constants/constants";
+import { printNumber } from "./other.utils";
 
 export function dateConvert(param: Date) {
     const date = param.getDate()
@@ -31,6 +32,14 @@ export function getNearestTimeDay(current: Date, day: number, hour: number, minu
     let nextWednesday = new Date(currentDate.getTime() + (diff * 24 * 60 * 60 * 1000));
     nextWednesday.setHours(hour, minute, 0, 0);
     return nextWednesday
+}
+
+export function formattedDate(param: Date) {
+    const day = param.getDate();
+    const month = param.getMonth() + 1;
+    const year = param.getFullYear();
+    const formattedDate = printNumber(day) + '/' + printNumber(month) + '/' + year;
+    return formattedDate
 }
 
 // Lay thoi gian gmt+7

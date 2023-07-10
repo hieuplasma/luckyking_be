@@ -270,7 +270,7 @@ export class AuthService {
       phoneNumber,
     };
     const jwtString = await this.jwtService.signAsync(payload, {
-      expiresIn: '2 days',
+      expiresIn: '7 days',
       secret: this.configService.get('JWT_SECRET'),
     });
     return {

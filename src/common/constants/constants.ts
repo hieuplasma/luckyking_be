@@ -1,3 +1,5 @@
+import { OrderStatus } from "@prisma/client"
+
 export const TIMEZONE = 'Asia/Ho_Chi_Minh'
 export const TIME_OFFSET = 25200000 //7 * 60 * 60 * 3600
 export const TIME_TO_HANDLE_LOTTERY = 25000 // 25000 millisecond
@@ -26,4 +28,15 @@ export const FIREBASE_MESSAGE = {
     PAID_PRIZE: "LuckyKing đã trả thưởng so_tienVND từ đơn hàng ma_don_hang vào Tài khoản trả thưởng của Quý khách",
     RETURN_MONEY: "LuckyKing đã hoàn so_tien VND từ đơn hàng ma_don_hang vào Tài khoản mua vé của Quý khách",
     PUSH_PERIOD: "Vé Keno của bạn sẽ được chuyển sang kỳ quay số tiếp theo"
+}
+
+export const LIST_STATUS = {
+    PRINTED: [OrderStatus.CONFIRMED, OrderStatus.WON, OrderStatus.PAID, OrderStatus.NO_PRIZE],
+    BOOKED: [OrderStatus.PENDING, OrderStatus.LOCK,
+    OrderStatus.CONFIRMED, OrderStatus.PRINTED,
+    OrderStatus.WON, OrderStatus.PAID, OrderStatus.NO_PRIZE],
+    PENDING: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED],
+    WAITING: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED, OrderStatus.CONFIRMED],
+    DONE: [OrderStatus.WON, OrderStatus.PAID, OrderStatus.NO_PRIZE],
+    ERROR: [OrderStatus.ERROR, OrderStatus.RETURNED]
 }

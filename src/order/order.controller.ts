@@ -38,7 +38,6 @@ export class OrderController {
         return this.orderService.createOrderFromCart(user, lotteryIds, method);
     }
 
-
     @UseGuards(MyJwtGuard, RolesGuard)
     @Get('get-all')
     @Roles(Role.User)
@@ -46,6 +45,15 @@ export class OrderController {
         @GetUser() user: User, @Query('status') status: keyof typeof OrderStatus,
         @Query('ticketType') ticketType: string): Promise<Order[]> {
         return this.orderService.getListOrderByUser(user, status, ticketType)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-all-group')
+    @Roles(Role.User)
+    getGroupOrderByUser(
+        @GetUser() user: User, @Query('status') status: any,
+        @Query('ticketType') ticketType: string): Promise<Order[]> {
+        return this.orderService.getListOrderByUser2(user, status, ticketType)
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)

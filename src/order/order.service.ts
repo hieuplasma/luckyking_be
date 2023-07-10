@@ -4,17 +4,16 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, OrderByDrawDTO, ReturnOrderDTO } from './dto';
 import { LotteryType, OrderMethod, Role, TicketOrderType, TransactionDestination } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
-import { caculateSurcharge, nDate } from 'src/common/utils';
+import { caculateSurcharge, formattedDate, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
 import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { LotteryService } from 'src/lottery/lottery.service';
-import { FIREBASE_MESSAGE, FIREBASE_TITLE } from 'src/common/constants/constants';
+import { FIREBASE_MESSAGE, FIREBASE_TITLE, LIST_STATUS } from 'src/common/constants/constants';
 import FirebaseService from '../firebase/firebase-app'
 import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
 import { printCode } from 'src/common/utils/other.utils';
 import { errorMessage } from 'src/common/error_message';
-
 
 @Injectable()
 export class OrderService {
@@ -229,7 +228,7 @@ export class OrderService {
                     },
                     //@ts-ignore
                     status: body.status ? body.status : OrderStatus.PENDING,
-                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    dataPart: formattedDate(currentDate),
                     method: body.method,
                     surcharge: surcharge,
                 },
@@ -362,7 +361,7 @@ export class OrderService {
                     //@ts-ignore
                     status: body.status ? body.status : OrderStatus.PENDING,
                     ticketType: "keno",
-                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    dataPart: formattedDate(currentDate),
                     method: body.method,
                     surcharge: surcharge,
                 },
@@ -465,7 +464,7 @@ export class OrderService {
                     },
                     //@ts-ignore
                     status: OrderStatus.PENDING,
-                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    dataPart: formattedDate(currentDate),
                     method: method || OrderMethod.Keep,
                     surcharge: surcharge
                 },
@@ -567,9 +566,29 @@ export class OrderService {
     async getListOrderByUser(me: User, status: keyof typeof OrderStatus, ticketType: string): Promise<Order[]> {
         const orders = await this.prismaService.order.findMany({
             where: { AND: { userId: me.id, status, ticketType } },
-            include: { Lottery: { include: { NumberLottery: true } }, transaction: true }
+            include: { Lottery: { include: { NumberLottery: true } }, transaction: true },
+            orderBy: {
+                createdAt: 'desc'
+            }
         })
         return orders
+    }
+
+    async getListOrderByUser2(me: User, status: any, ticketType: string): Promise<Order[]> {
+        let listStatus: OrderStatus[] = []
+        if (status == 'booked') listStatus = LIST_STATUS.BOOKED
+        if (status == 'pending') listStatus = LIST_STATUS.PENDING
+        if (status == 'complete') listStatus = LIST_STATUS.PRINTED
+        if (status == 'returned') listStatus = LIST_STATUS.ERROR
+        const orders = await this.prismaService.order.findMany({
+            where: { AND: { userId: me.id, status: { in: listStatus }, ticketType } },
+            include: { Lottery: { include: { NumberLottery: true } }, transaction: true },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+        let group = groupBySortedArr(orders, 'dataPart')
+        return group
     }
 
     async getAllOrder(status: (keyof typeof OrderStatus)[], ticketType: string, startTime?: Date, endTime?: Date): Promise<Order[]> {
@@ -603,7 +622,6 @@ export class OrderService {
                 transaction: true
             }
         })
-
         return orders;
     }
 
@@ -815,7 +833,6 @@ export class OrderService {
             },
             // take: numberOfLotteries
         });
-
 
         const lotteryIdsToAssignToStaff = lotteries.map(lottery => lottery.id);
         const lotteryIds = lotteries.map(lottery => lottery.id).concat(staff.LotteryAssigned.map(lottery => lottery.id));
@@ -1183,3 +1200,22 @@ export class OrderService {
     }
 }
 
+const groupBySortedArr = (sortedArray: any[], properties: string) => {
+    const res: any[] = []
+    let currentValue = undefined
+    let currentIndex = -1;
+    for (const element of sortedArray) {
+        if (element[properties] == currentValue) {
+            res[currentIndex].data.push(element)
+        }
+        else {
+            currentIndex++;
+            currentValue = element[properties]
+            res[currentIndex] = {
+                key: currentValue,
+                data: [element]
+            }
+        }
+    }
+    return res
+};

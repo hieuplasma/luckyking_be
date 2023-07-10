@@ -107,3 +107,7 @@ export function printDrawCode(param: any) {
     const code = parseInt(param.toString())
     return "#" + code.toString().padStart(7, "0")
 }
+
+export function printNumber(param: any) {
+    return param.toString().padStart(2, "0")
+}
