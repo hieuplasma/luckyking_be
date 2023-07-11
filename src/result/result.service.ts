@@ -567,7 +567,13 @@ export class ResultService {
         // Cap nhat ket qua
         const update = await this.prismaService.resultKeno.update({
             where: { drawCode: drawCode },
-            data: { drawn: true, result: body.result }
+            data: {
+                drawn: true,
+                result: body.result,
+                approved: true,
+                approvedAt: new nDate(),
+                approvedUserId: transactionPerson.id
+            }
         })
         // so ve va update ve
         const listLottery = await this.prismaService.lottery.findMany({
