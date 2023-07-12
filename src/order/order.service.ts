@@ -50,7 +50,9 @@ export class OrderService {
             let list = new LotteryNumber();
 
             for (let i = 0; i < lotteryNumbers.length; i++) {
-                list.add(new NumberDetail(lotteryNumbers[i], parseInt(bets[i]) || DEFAULT_BET));
+                let tuChon = false
+                if (lotteryNumbers[i].includes('TC')) tuChon = true
+                list.add(new NumberDetail(lotteryNumbers[i], parseInt(bets[i]) || DEFAULT_BET, tuChon));
                 amount += parseInt(bets[i]) || DEFAULT_BET;
             }
 
@@ -137,7 +139,7 @@ export class OrderService {
             order.Lottery = lotteryToReturn;
         })
 
-        this.firebaseService.sendNotification('Có đơn PowerMega mới');
+        this.firebaseService.sendNotification('Có đơn Power|Mega mới');
         this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
@@ -180,7 +182,9 @@ export class OrderService {
             let list = new LotteryNumber();
 
             for (let i = 0; i < setOfNumbers[j].length; i++) {
-                list.add(new NumberDetail(setOfNumbers[j][i], parseInt(setOfBets[j][i]) || DEFAULT_BET));
+                let tuChon = false
+                if (setOfNumbers[j][i].includes('TC')) tuChon = true
+                list.add(new NumberDetail(setOfNumbers[j][i], parseInt(setOfBets[j][i]) || DEFAULT_BET, tuChon));
                 amount += parseInt(setOfBets[j][i]) || DEFAULT_BET;
             }
 
@@ -311,7 +315,9 @@ export class OrderService {
             let list = new LotteryNumber();
 
             for (let i = 0; i < setOfNumbers[j].length; i++) {
-                list.add(new NumberDetail(setOfNumbers[j][i], parseInt(setOfBets[j][i]) || DEFAULT_BET));
+                let tuChon = false
+                if (setOfNumbers[j][i].includes('TC')) tuChon = true
+                list.add(new NumberDetail(setOfNumbers[j][i], parseInt(setOfBets[j][i]) || DEFAULT_BET, tuChon));
                 amount += parseInt(setOfBets[j][i]) || DEFAULT_BET;
             }
 

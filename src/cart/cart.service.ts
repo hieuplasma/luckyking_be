@@ -40,7 +40,9 @@ export class CartService {
                 let list = new LotteryNumber();
 
                 lotteryNumbers.map((item: any, index: number) => {
-                    list.add(new NumberDetail(item, bets ? parseInt(bets[index]) : DEFAULT_BET));
+                    let tuChon = false
+                    if (item.includes('TC')) tuChon = true
+                    list.add(new NumberDetail(item, bets ? parseInt(bets[index]) : DEFAULT_BET, tuChon));
                     amount += bets ? parseInt(bets[index]) : DEFAULT_BET;
                 })
 
@@ -119,7 +121,9 @@ export class CartService {
                 let list = new LotteryNumber();
 
                 lotteryNumbers.map((item: any, index: number) => {
-                    list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET));
+                    let tuChon = false
+                    if (item.includes('TC')) tuChon = true
+                    list.add(new NumberDetail(item, body.bets ? parseInt(body.bets[index]) : DEFAULT_BET, tuChon));
                     amount += body.bets ? parseInt(body.bets[index]) : DEFAULT_BET;
                 })
 
@@ -178,7 +182,9 @@ export class CartService {
                 let list = new LotteryNumber();
 
                 setOfNumbers[j].map((item: any, index: number) => {
-                    list.add(new NumberDetail(item, setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET));
+                    let tuChon = false
+                    if (setOfNumbers[j][i].includes('TC')) tuChon = true
+                    list.add(new NumberDetail(item, setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET, tuChon));
                     amount += setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET;
                 })
 

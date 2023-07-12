@@ -9,9 +9,11 @@ export type INumberDetail = {
 export class NumberDetail {
     boSo: string = ""
     tienCuoc: number = 0
-    constructor(boSo: string, tienCuoc: number) {
+    tuChon: boolean | undefined = false
+    constructor(boSo: string, tienCuoc: number, tuChon: boolean = false) {
         this.boSo = boSo
         this.tienCuoc = tienCuoc
+        this.tuChon = tuChon
     }
 }
 
