@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { Transaction, User, WithdrawRequest, Lottery } from '../../node_modules/.prisma/client';
+import { Transaction, User, WithdrawRequest, Lottery, BalanceFluctuations } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionDestination, TransactionStatus, TransactionType } from '../common/enum'
 import { AcceptBankWithdrawDTO, RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
@@ -287,6 +287,43 @@ export class TransactionService {
         // @ts-ignore
         transaction.luckykingBalance = walletAfter.balance
         return transaction
+    }
+
+    async getHistoryMoneyAccount(userId: string, skip: number, take: number): Promise<BalanceFluctuations[]> {
+        const wallet = await this.prismaService.moneyAccount.findUnique({
+            where: { userId: userId }
+        })
+
+        const list = await this.prismaService.balanceFluctuations.findMany({
+            where: { moneyAccountId: wallet.id },
+            orderBy: {
+                transaction: { createdAt: 'desc' }
+            },
+            skip: skip ? parseInt(skip.toString()) : 0,
+            take: take ? parseInt(take.toString()) : 20,
+            include: { transaction: true }
+        })
+
+        return list
+    }
+
+
+    async getHistoryRewardWallet(userId: string, skip: number, take: number): Promise<BalanceFluctuations[]> {
+        const wallet = await this.prismaService.rewardWallet.findUnique({
+            where: { userId: userId }
+        })
+
+        const list = await this.prismaService.balanceFluctuations.findMany({
+            where: { rewardWalletId: wallet.id },
+            orderBy: {
+                transaction: { createdAt: 'desc' }
+            },
+            skip: skip ? parseInt(skip.toString()) : 0,
+            take: take ? parseInt(take.toString()) : 20,
+            include: { transaction: true }
+        })
+
+        return list
     }
 
     // Private function 
