@@ -394,7 +394,21 @@ export class OrderService {
                             connect: { id: order.id }
                         }
                     },
-                    include: { NumberLottery: true }
+                    select: {
+                        id: true,
+                        type: true,
+                        buyTime: true,
+                        status: true,
+                        orderId: true,
+                        userId: true,
+                        amount: true,
+                        bets: true,
+                        displayId: true,
+                        drawCode: true,
+                        drawTime: true,
+                        assignedStaffId: true,
+                        NumberLottery: true,
+                    },
                 })
 
                 lotteryToReturn.push(lottery)
@@ -418,7 +432,7 @@ export class OrderService {
         lotteriesToSend.map((lottery: any) => lottery.Order = { displayId: order.displayId })
         if (lotteriesToSend.length) {
             this.firebaseService.sendNotification('Có đơn keno mới');
-            this.kenoSocketService.sendKenoLottery(lotteriesToSend);
+            this.kenoSocketService.pushLotteriesToQueue(lotteriesToSend);
         }
 
         this.firebaseService.senNotificationToUser(
