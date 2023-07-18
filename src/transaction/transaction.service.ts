@@ -50,7 +50,7 @@ export class TransactionService {
         })
         const moneyAccount = await this.updateLucKyingBalance(user.id, body.amount, WalletEnum.Increase, transaction.id)
 
-        await this.firebaseService.senNotificationToUser(
+        this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.RECHARGE_SUCCESS,
             FIREBASE_MESSAGE.RECHARGE_SUCCESS.replace('so_tien', amount + '').replace('nguon_tien', body.payment)
@@ -105,7 +105,7 @@ export class TransactionService {
         //@ts-ignore
         transaction.rewardWalletBalance = rewardWallet.balance
 
-        await this.firebaseService.senNotificationToUser(
+        this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.WITHDRAW_LUCKYKING,
             FIREBASE_MESSAGE.WITHDRAW_LUCKYKING.replace('so_tien', amount + '')

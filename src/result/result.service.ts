@@ -658,7 +658,7 @@ export class ResultService {
                 where: { id: lottery.id },
                 include: { Order: true }
             })
-            await this.firebaseService.senNotificationToUser(
+            this.firebaseService.senNotificationToUser(
                 lottery.userId,
                 FIREBASE_TITLE.WON_PRIZE,
                 FIREBASE_MESSAGE.WON_PRIZE
@@ -676,7 +676,7 @@ export class ResultService {
                 where: { id: lottery.id },
                 include: { Order: true }
             })
-            await this.firebaseService.senNotificationToUser(
+            this.firebaseService.senNotificationToUser(
                 lottery.userId,
                 FIREBASE_TITLE.PAID_PRIZE,
                 FIREBASE_MESSAGE.PAID_PRIZE

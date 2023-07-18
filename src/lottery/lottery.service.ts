@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { Lottery, OrderStatus, Prisma, User } from '@prisma/client';
 import { Cron } from '@nestjs/schedule';
 import { FIREBASE_MESSAGE, FIREBASE_TITLE, TIMEZONE } from 'src/common/constants/constants';
@@ -16,12 +16,16 @@ import { printCode } from 'src/common/utils/other.utils';
 import { errorMessage } from 'src/common/error_message';
 
 @Injectable()
-export class LotteryService {
+export class LotteryService implements OnModuleInit {
     constructor(
         private prismaService: PrismaService,
         private firebaseService: FirebaseService,
         private kenoSocketService: KenoSocketService,
     ) { }
+
+    onModuleInit() {
+        this.kenoSchedule();
+    }
 
     async getLotteryById(lotteryId: string): Promise<Lottery> {
         const lotteryInfo = await this.prismaService.lottery.findUnique({
@@ -31,6 +35,7 @@ export class LotteryService {
         return lotteryInfo;
     }
 
+    // This function can be optimized in the future
     async getKenoPendingByDisplayId(displayId: string): Promise<Lottery> {
         const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findFirst({
@@ -54,7 +59,7 @@ export class LotteryService {
         return kenoPendingLottery;
     }
 
-    async getKenoNextPending(): Promise<Lottery[]> {
+    async getKenoNextPending(user: User): Promise<Lottery[]> {
         const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findFirst({
             where: { drawn: false, drawTime: { gt: now } },
@@ -74,23 +79,55 @@ export class LotteryService {
             }
         })
 
-        const Lotteries = await this.prismaService.lottery.findMany({
+        let Lotteries = await this.prismaService.lottery.findMany({
             where: {
                 type: LotteryType.Keno,
                 drawCode: schedule.drawCode,
-                status: { in: [OrderStatus.PENDING, OrderStatus.PRINTED] }           // Lock??
+                status: { in: [OrderStatus.PENDING, OrderStatus.PRINTED] },
+                assignedStaffId: user.id,
             },
             orderBy: {
                 Order: {
                     displayId: 'asc'
                 }
             },
-            // take: 3,
             include: {
                 Order: true,
                 NumberLottery: true
             }
         });
+
+        if (Lotteries.length === 0) {
+            await this.prismaService.$transaction(async (tx) => {
+                Lotteries = await tx.lottery.findMany({
+                    where: {
+                        type: LotteryType.Keno,
+                        drawCode: schedule.drawCode,
+                        status: { in: [OrderStatus.PENDING, OrderStatus.PRINTED] },
+                        assignedStaffId: null,
+                    },
+                    orderBy: {
+                        Order: {
+                            displayId: 'asc'
+                        }
+                    },
+                    take: 2,
+                    include: {
+                        Order: true,
+                        NumberLottery: true
+                    }
+                });
+
+                await tx.lottery.updateMany({
+                    where: {
+                        id: { in: Lotteries.map(lottery => lottery.id) }
+                    },
+                    data: {
+                        assignedStaffId: user.id,
+                    }
+                })
+            })
+        }
 
         return Lotteries;
     }
@@ -108,6 +145,8 @@ export class LotteryService {
             },
             include: { Order: { include: { Lottery: true } } }
         })
+
+        this.kenoSocketService.confirmLottery(lotteryId);
 
         for (const lottery of confirmedLottery.Order.Lottery) {
             const statusBeforeConfirmed: OrderStatus[] = [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED];
@@ -263,7 +302,6 @@ export class LotteryService {
             return update
         }
         else {
-            console.log(imgFront)
             fs.unlink(imgFront.path, () => {
                 console.log('Delete image successfully')
             })
@@ -298,7 +336,6 @@ export class LotteryService {
             return update
         }
         else {
-            console.log(imgFront)
             fs.unlink(imgFront.path, () => {
                 console.log('Delete image successfully')
             })
@@ -326,6 +363,8 @@ export class LotteryService {
                 status: OrderStatus.PRINTED,
             }
         })
+
+        this.kenoSocketService.printLottery(lotteryId);
 
         return true;
     }
@@ -369,8 +408,32 @@ export class LotteryService {
         let total = 0;
         const detail = lottery.NumberLottery.numberDetail as INumberDetail[]
         detail.map(item => total = total + item.tienCuoc)
-        console.log(total)
     }
+
+    // async revokeAllKenoFromUser(userId: string) {
+    //     const updated = await this.prismaService.lottery.updateMany({
+    //         where: {
+    //             type: LotteryType.Keno,
+    //             assignedStaffId: userId,
+    //             status: OrderStatus.PENDING
+    //         },
+    //         data: {
+    //             assignedStaffId: null
+    //         }
+    //     })
+
+    //     if (updated.count > 0) {
+    //         const lotteries = await this.prismaService.lottery.findMany({
+    //             where: {
+    //                 type: LotteryType.Keno,
+    //                 status: OrderStatus.PENDING,
+    //                 assignedStaffId: null
+    //             },
+    //         });
+
+    //         this.kenoSocketService.pushLotteriesToQueue(lotteries);
+    //     }
+    // }
 
     @Cron('4,9,14,19,24,29,34,39,44,49,54,59 6-22 * * *', { timeZone: TIMEZONE })
     async kenoSchedule() {
@@ -380,29 +443,12 @@ export class LotteryService {
             orderBy: { drawCode: 'asc' },
         });
 
-        const expiredLotteries = await this.prismaService.lottery.findMany({
+        // Update lottery expired
+        await this.prismaService.lottery.updateMany({
             where: {
                 type: LotteryType.Keno,
                 drawTime: { lte: now },
                 status: OrderStatus.PENDING,
-            },
-            select: {
-                id: true,
-                userId: true,
-            }
-        })
-
-        const userIds = Array.from(new Set(expiredLotteries.map(lottery => lottery.userId)));
-
-        for (const userId of userIds) {
-            this.firebaseService.senNotificationToUser(userId, FIREBASE_TITLE.PUSH_PERIOD, FIREBASE_MESSAGE.PUSH_PERIOD);
-        }
-
-        // Update lottery expired
-        const expiredLotteryIds = expiredLotteries.map(lottery => lottery.id);
-        await this.prismaService.lottery.updateMany({
-            where: {
-                id: { in: expiredLotteryIds }
             },
             data: {
                 drawCode: schedule.drawCode,
@@ -421,16 +467,34 @@ export class LotteryService {
                     displayId: 'asc'
                 }
             },
-            // take: 3,
-            include: {
-                Order: true,
-                NumberLottery: true
+            select: {
+                id: true,
+                type: true,
+                buyTime: true,
+                status: true,
+                orderId: true,
+                userId: true,
+                amount: true,
+                bets: true,
+                displayId: true,
+                drawCode: true,
+                drawTime: true,
+                assignedStaffId: true,
+                Order: {
+                    select: {
+                        id: true,
+                        displayId: true
+                    }
+                },
+                NumberLottery: true,
             }
         });
 
+        this.kenoSocketService.resetLotteriesQueue();
+
         if (lotteries.length) {
             this.firebaseService.sendNotification('Có đơn keno mới');
-            this.kenoSocketService.sendKenoLottery(lotteries);
+            this.kenoSocketService.pushLotteriesToQueue(lotteries);
         }
     }
 }

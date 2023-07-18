@@ -57,8 +57,8 @@ export class LotteryController {
     @UseGuards(MyJwtGuard, RolesGuard)
     @Roles(Role.Staff)
     @Get('keno/next-pending')
-    async getKenoNextPending() {
-        return await this.lotteryService.getKenoNextPending();
+    async getKenoNextPending(@GetUser() user: User) {
+        return await this.lotteryService.getKenoNextPending(user);
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
