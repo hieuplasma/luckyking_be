@@ -1,3 +1,5 @@
+import { HOT_LINE } from "../constants/constants";
+
 export const errorMessage = {
     BALANCE_NOT_ENOUGH: "Số dư không đủ!",
     NO_LOTTERY_CART: "Không có vé trong giỏ hàng!",
@@ -17,11 +19,16 @@ export const errorMessage = {
     UNAUTHORIZED: "Không thể có quyền",
 
     WRONG_AUTH: "Số điện thoại hoặc mật khẩu không chính xác!",
+    WRONG_PASS: "Mật khẩu không chính xác!",
     USER_EXISTED: "Số điện thoại này đã được đăng ký!",
     INVALID_PHONENUMBER: "Số điện thoại không hợp lệ!",
 
     DEVICE_NOT_FOUND: "Thiết bị không tồn tại!",
 
     UNABLE_UPDATE_LOTTERY:"Không thể cập nhật vé số!",
-    LOTTERY_NOT_EXIST:"Vé sổ xố không tồn tại!"
+    LOTTERY_NOT_EXIST:"Vé sổ xố không tồn tại!",
+
+    EMPTY_PASS: 'Bạn chưa nhập mật khẩu',
+
+    BLOCKED_ACCOUNT:`Tài khoản phone hiện đang bị khoá, liên hệ ${HOT_LINE} để được hỗ trợ.`
 }

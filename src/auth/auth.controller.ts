@@ -56,4 +56,9 @@ export class AuthController {
     verifyFirebase(@Body() body: AuthDTO) {
         console.log("lmao lmao:::", body)
     }
+
+    @Post("delete-account")
+    deleteAccount(@Body() body: AuthDTO) {
+        return this.authService.deleteAccount(body)
+    }
 } 

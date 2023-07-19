@@ -6,12 +6,10 @@ export class AuthDTO {
     @IsNotEmpty()
     phoneNumber: string
 
-    @IsNotEmpty()
+    @IsNotEmpty({ message: errorMessage.EMPTY_PASS })
     @IsString()
     password: string
 
-    @IsNotEmpty()
-    @IsString()
     deviceId: string
 }
 
@@ -27,10 +25,10 @@ export class CheckAuthDTO {
 
 export class UpdatePassWordDTO {
     @IsPhoneNumber('VN', { message: errorMessage.INVALID_PHONENUMBER })
-    @IsNotEmpty()
+    @IsNotEmpty({ message: errorMessage.INVALID_PHONENUMBER })
     phoneNumber: string
 
-    @IsNotEmpty()
+    @IsNotEmpty({ message: errorMessage.EMPTY_PASS })
     @IsString()
     oldPassword: string
 
@@ -44,7 +42,7 @@ export class ForgotPassWordDTO {
     @IsNotEmpty()
     phoneNumber: string
 
-    @IsNotEmpty()
+    @IsNotEmpty({ message: errorMessage.EMPTY_PASS })
     @IsString()
     newPassword: string
 }

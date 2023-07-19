@@ -19,7 +19,6 @@ import { Role, UserStatus } from 'src/common/enum';
 import { nDate } from 'src/common/utils';
 import { errorMessage } from 'src/common/error_message';
 import { RegisterDTO } from './dto/register.dto';
-import { Device } from '@prisma/client';
 
 @Injectable({})
 export class AuthService {
@@ -35,6 +34,10 @@ export class AuthService {
         phoneNumber: checkAuthDTO.phoneNumber,
       },
     });
+    if (user) {
+      console.log('checkUser', user)
+      if (user.status !== UserStatus.Acticve) throw new ForbiddenException(errorMessage.BLOCKED_ACCOUNT.replace('phone', checkAuthDTO.phoneNumber));
+    }
     if (!user) return { registered: false };
     else return { registered: true };
   }
@@ -42,6 +45,16 @@ export class AuthService {
   async register(authDTO: RegisterDTO) {
     const { phoneNumber, password, identify, fullName, email, deviceId } = authDTO;
     const hashedPassword = await argon.hash(password);
+
+    const checkUser = await this.prismaService.user.findUnique({
+      where: { phoneNumber: authDTO.phoneNumber }
+    })
+
+    if (checkUser) {
+      console.log('checkUser', checkUser)
+      if (checkUser.status == UserStatus.Acticve) throw new ForbiddenException(errorMessage.USER_EXISTED);
+      else throw new ForbiddenException(errorMessage.BLOCKED_ACCOUNT.replace('phone', authDTO.phoneNumber));
+    }
     try {
       const user = await this.prismaService.user.create({
         data: {
@@ -96,6 +109,7 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException(errorMessage.USER_NOT_FOUND);
     }
+    if (user.status !== UserStatus.Acticve) throw new ForbiddenException(errorMessage.BLOCKED_ACCOUNT.replace('phone', authDTO.phoneNumber));
     const passwordMatched = await argon.verify(
       user.hashedPassword,
       authDTO.password,
@@ -216,8 +230,6 @@ export class AuthService {
   }
 
   async updatePassword(body: UpdatePassWordDTO) {
-    console.log(new Date());
-    console.log(new Date().toISOString());
     const hashedPassword = await argon.hash(body.newPassword);
     const user = await this.prismaService.user.findUnique({
       where: {
@@ -258,6 +270,40 @@ export class AuthService {
       data: { hashedPassword: hashedPassword },
       select: { phoneNumber: true, updateAt: true },
     });
+    return update;
+  }
+
+  async deleteAccount(body: AuthDTO) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        phoneNumber: body.phoneNumber,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException(errorMessage.NOT_FOUND);
+    }
+    const passwordMatched = await argon.verify(
+      user.hashedPassword,
+      body.password,
+    );
+    if (!passwordMatched) {
+      // throw new UnauthorizedException(errorMessage.WRONG_AUTH);
+      // return {
+      //   statusCode: 600,
+      //   message: errorMessage.WRONG_AUTH,
+      //   error: 'WrongPasswordException',
+      //   timestamp: new Date().toISOString(),
+      //   path: '/auth/delete-account',
+      // }
+      throw new ForbiddenException(errorMessage.WRONG_PASS)
+    }
+
+    const update = await this.prismaService.user.update({
+      where: { phoneNumber: body.phoneNumber },
+      data: { status: UserStatus.Block },
+      select: { phoneNumber: true, updateAt: true, status: true },
+    });
+    console.log(update)
     return update;
   }
 

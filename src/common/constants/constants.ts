@@ -40,3 +40,5 @@ export const LIST_STATUS = {
     DONE: [OrderStatus.WON, OrderStatus.PAID, OrderStatus.NO_PRIZE],
     ERROR: [OrderStatus.ERROR, OrderStatus.RETURNED]
 }
+
+export const HOT_LINE = '0866.79.88.79'
