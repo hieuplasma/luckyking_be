@@ -28,7 +28,7 @@ services:
       - 8081:8081
       # - 9229:9229
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     networks:
       - nginx-network
     volumes:
@@ -46,7 +46,8 @@ services:
   #     - dev
   #   networks:
   #     - nestjs-network
-# networks:
-#   nestjs-network:
-#     # volumes:
-#     #   pgdata:
+networks:
+  nginx-network:
+    external: true
+    # volumes:
+    #   pgdata:
