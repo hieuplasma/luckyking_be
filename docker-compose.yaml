@@ -30,24 +30,23 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
-      - nestjs-network
+      - nginx-network
     volumes:
       - ./uploads:/home/node/app/uploads
-
     restart: unless-stopped
-  nginx:
-    container_name: nginx-proxy
-    image: nginx:1.21.1-alpine
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - dev
-    networks:
-      - nestjs-network
-networks:
-  nestjs-network:
-    # volumes:
-    #   pgdata:
+  # nginx:
+  #   container_name: nginx-proxy
+  #   image: nginx:1.21.1-alpine
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - dev
+  #   networks:
+  #     - nestjs-network
+# networks:
+#   nestjs-network:
+#     # volumes:
+#     #   pgdata:
