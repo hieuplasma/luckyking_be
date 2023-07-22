@@ -243,8 +243,7 @@ export class LotteryService implements OnModuleInit {
     }
 
     async createLotteryFromCart(user: User, lotteryId: string, orderId: string, percent = 0, session?) {
-        // const prismaService = session ? session : this.prismaService;
-        const prismaService = this.prismaService
+        const prismaService = session ? session : this.prismaService;
         const amount = await prismaService.lottery.findUnique({
             where: { id: lotteryId },
             select: {
