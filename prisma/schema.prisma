@@ -280,6 +280,9 @@ model Config {
   id                  String @id @default(uuid())
   autoRewardThreshold Int    @default(5000000)
   listBank            Json?
+  surcharge           Int?   @default(0)
+  kenoDuration        Int?   @default(30)
+  kenoPauseTime       Int?   @default(30)
 }
 
 model cms_async_ws_call {
