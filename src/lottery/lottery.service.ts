@@ -8,7 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateImageDTO } from './dto';
 import { ICreateLottery, IUpdateLotteryNumber } from './interfaces';
 import fs from 'fs'
-import { nDate } from 'src/common/utils';
+import { caculateSurcharge, nDate } from 'src/common/utils';
 import { LotteryType } from 'src/common/enum';
 import FirebaseService from '../firebase/firebase-app'
 import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
@@ -242,8 +242,15 @@ export class LotteryService implements OnModuleInit {
         return lottery
     }
 
-    async createLotteryFromCart(user: User, lotteryId: string, orderId: string, session?) {
-        const prismaService = session ? session : this.prismaService;
+    async createLotteryFromCart(user: User, lotteryId: string, orderId: string, percent = 0, session?) {
+        // const prismaService = session ? session : this.prismaService;
+        const prismaService = this.prismaService
+        const amount = await prismaService.lottery.findUnique({
+            where: { id: lotteryId },
+            select: {
+                amount: true
+            }
+        })
 
         const lottery = await prismaService.lottery.update({
             where: {
@@ -257,6 +264,7 @@ export class LotteryService implements OnModuleInit {
                     disconnect: true,
                 },
                 status: OrderStatus.PENDING,
+                surcharge: caculateSurcharge(amount.amount, percent)
             }
         })
 

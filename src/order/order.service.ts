@@ -28,6 +28,7 @@ export class OrderService {
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
+        const percent = (await this.prismaService.config.findFirst({}))?.surcharge
         const { drawCode, drawTime, bets, lotteryType } = body;
 
         const currentDate = new nDate()
@@ -65,6 +66,7 @@ export class OrderService {
                     },
                     type: lotteryType,
                     amount,
+                    surcharge: caculateSurcharge(amount, percent),
                     bets,
                     //@ts-ignore
                     status: body.status ? body.status : OrderStatus.PENDING,
@@ -76,14 +78,14 @@ export class OrderService {
                             numberSets: lotteryNumbers.length,
                             numberDetail: list.convertToJSon()
                         }
-                    }
+                    },
                 }
 
                 lotteries.push(lottery)
             }
         }
 
-        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
+        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount, percent)
         if (body.status !== OrderStatus.CART) {
             if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
         }
@@ -153,6 +155,7 @@ export class OrderService {
 
     async createOrderMax3d(user: User, body: CreateOrderMax3dDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
+        const percent = (await this.prismaService.config.findFirst({}))?.surcharge || body.surcharge
         const { drawCode, drawTime, lotteryType } = body;
 
         const currentDate = new nDate()
@@ -197,6 +200,7 @@ export class OrderService {
                     },
                     type: lotteryType,
                     amount,
+                    surcharge: caculateSurcharge(amount, percent),
                     bets: setOfBets[j],
                     //@ts-ignore
                     status: body.status ? body.status : OrderStatus.PENDING,
@@ -215,7 +219,7 @@ export class OrderService {
             }
         }
 
-        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
+        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount, percent)
         if (body.status !== OrderStatus.CART) {
             if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
         }
@@ -286,6 +290,7 @@ export class OrderService {
 
     async createOrderKeno(user: User, body: CreateOrderKenoDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
+        const percent = (await this.prismaService.config.findFirst({}))?.surcharge || body.surcharge
         const { drawCode, drawTime, lotteryType } = body;
 
         const currentDate = new nDate()
@@ -330,6 +335,7 @@ export class OrderService {
                     },
                     type: lotteryType,
                     amount,
+                    surcharge: caculateSurcharge(amount, percent),
                     bets: setOfBets[j],
                     //@ts-ignore
                     status: body.status ? body.status : OrderStatus.PENDING,
@@ -349,7 +355,7 @@ export class OrderService {
 
         }
 
-        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount)
+        const surcharge = body.surcharge ? parseInt(body.surcharge.toString()) : caculateSurcharge(totalAmount, percent)
         if (body.status !== OrderStatus.CART) {
             if (balances.luckykingBalance < totalAmount + surcharge) { throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH) }
         }
@@ -462,7 +468,8 @@ export class OrderService {
 
         if (lotteryIdsToCreate.length === 0) throw new ForbiddenException(errorMessage.NO_LOTTERY_CART);
 
-        const surcharge = caculateSurcharge(totalAmount);
+        const percent = (await this.prismaService.config.findFirst({}))?.surcharge
+        const surcharge = caculateSurcharge(totalAmount, percent);
         const totalMoney = totalAmount + surcharge;
 
         const balances = await this.userService.getAllWallet(user.id);
@@ -502,7 +509,7 @@ export class OrderService {
             )
 
             for (const lotteryId of lotteryIdsToCreate) {
-                await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id, tx);
+                await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id, percent, tx);
             }
 
             //@ts-ignore

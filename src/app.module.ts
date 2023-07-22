@@ -17,6 +17,7 @@ import { WebSocketModule } from './webSocket/webSocket.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { DeviceModule } from './device/device.module';
 import { StatisticalModule } from './statistical/statistical.module';
+import { SystemModule } from './system/system.module';
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { StatisticalModule } from './statistical/statistical.module';
     CartModule,
     WebSocketModule,
     FirebaseModule,
-    StatisticalModule
+    StatisticalModule,
+    SystemModule,
   ],
   // providers: [FirebaseApp]
 })

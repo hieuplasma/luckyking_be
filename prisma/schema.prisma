@@ -143,6 +143,7 @@ model Lottery {
   cartId          String?
   updatedAt       DateTime       @updatedAt
   amount          Int            @default(0)
+  surcharge       Int            @default(0)
   bets            Int[]
   displayId       Int?           @default(autoincrement())
   drawCode        Int

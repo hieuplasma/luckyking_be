@@ -3,9 +3,8 @@ import { NumberDetail } from '../entity';
 import { dateConvert } from './time.utils';
 import { getLevelFromNumber, kenoAnalysis } from './other.utils';
 
-
-export function caculateSurcharge(amount: number) {
-    let surcharge = amount * 2 / 100;
+export function caculateSurcharge(amount: number, percent = 2) {
+    let surcharge = amount * percent / 100;
     return surcharge;
 }
 
