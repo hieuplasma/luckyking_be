@@ -10,6 +10,8 @@ class CreateOrder {
     // @IsNotEmpty()
     method: string
 
+    amount: number
+
     @IsNotEmpty()
     level: number
 
@@ -43,6 +45,10 @@ export class CreateOrderMax3dDTO extends CreateOrder {
     @IsArray()
     @ArrayMinSize(1)
     bets: any
+
+    @IsArray()
+    @ArrayMinSize(1)
+    tienCuoc: any
 }
 
 export class CreateOrderKenoDTO extends CreateOrder {
