@@ -422,6 +422,10 @@ export function caculateMax3dProBenefits(lottery: any, special: string[], fitst:
     if (lottery.NumberLottery.level == 10) {
         return multibagMax3dPro(lottery, special, fitst, second, third)
     }
+
+    if (lottery.NumberLottery.level == 4) {
+        return threebagMax3dPro(lottery, special, fitst, second, third)
+    }
     numberDetail.map(item => {
         let benefits = 0
         const numbers: string[] = item.boSo.split(" ")
@@ -490,6 +494,56 @@ function multibagMax3dPro(lottery: any, special: string[], fitst: string[], seco
     return totalBenefits
 }
 
+function threebagMax3dPro(lottery: any, special: string[], fitst: string[], second: string[], third: string[]) {
+    let totalBenefits = 0;
+    const numberDetail: NumberDetail[] = lottery.NumberLottery.numberDetail
+    numberDetail.map((item: any, index: number) => {
+        const numbers: string[] = item.boSo.split(" ")
+        const multi = cntDistinct(numbers[0]) * cntDistinct(numbers[1])
+        const coefficient = Math.floor(parseInt(item.tienCuoc.toString()) / 10000 / multi)
+
+        const arrOfDigits1 = Array.from(String(numbers[0]), Number);
+        const arrOfDigits2 = Array.from(String(numbers[1]), Number);
+
+        let tmpGenerated: any[] = []
+
+        const generated2 = generateUniqueStrings(arrOfDigits2)
+        const abcc = generateUniqueStrings(arrOfDigits1).map(it => {
+            for (let i = 0; i < generated2.length; i++) {
+                tmpGenerated.push([it, generated2[i]])
+            }
+        })
+
+        tmpGenerated.map(numberGenerated => {
+            let benefits = 0
+            const number1 = numberGenerated[0]
+            const number2 = numberGenerated[1]
+
+            let duplicateSpecial = 0, duplicate1 = 0, duplicate2 = 0, duplicate3 = 0;
+
+            if (number1 == special[0] && number2 == special[1]) duplicateSpecial = 3
+            if (special.includes(number1)) duplicateSpecial++; if (special.includes(number2)) duplicateSpecial++;
+            if (fitst.includes(number1)) duplicate1++; if (fitst.includes(number2)) duplicate1++;
+            if (second.includes(number1)) duplicate2++; if (second.includes(number2)) duplicate2++;
+            if (third.includes(number1)) duplicate3++; if (third.includes(number2)) duplicate3++;
+
+            if (number1 == special[0] && number2 == special[1]) duplicateSpecial = 3
+
+            if (duplicateSpecial == 3) benefits = benefits + 2 * TY;
+            if (duplicateSpecial == 2) benefits = benefits + 400 * TRIEU;
+            if (duplicate1 == 2) benefits = benefits + 30 * TRIEU;
+            if (duplicate2 == 2) benefits = benefits + 10 * TRIEU;
+            if (duplicate3 == 2) benefits = benefits + 4 * TRIEU;
+            if ((duplicateSpecial + duplicate1 + duplicate2 + duplicate3) >= 2) benefits = benefits + TRIEU;
+            if (duplicateSpecial == 1) benefits = benefits + 10 * MUOI_NGHIN;
+            if ((duplicate1 + duplicate2 + duplicate3) == 1) benefits = benefits + 4 * MUOI_NGHIN
+
+            let tmp = coefficient * benefits
+            totalBenefits = totalBenefits + tmp
+        })
+    })
+    return totalBenefits
+}
 
 export function serializeBigInt(obj: any) {
     // const returned = JSON.stringify(
@@ -527,4 +581,43 @@ export function serializeBigInt(obj: any) {
 
 export function fileNameConvert(id: string) {
     return dateConvert(new Date()) + '_' + id + '_' + uuidv4();
+}
+
+export function cntDistinct(param: any) {
+    const str = param.toString()
+    let s = new Set();
+    for (let i = 0; i < str.length; i++) {
+        s.add(str[i]);
+    }
+
+    if (s.size == 3) return 6
+    if (s.size == 2) return 3
+    if (s.size == 1) return 1
+    return s.size;
+}
+
+export function generateUniqueStrings(arr: number[]) {
+    const results: string[] = [];
+
+    const generatePermutations = (arr: number[], currentString: string, counts: number[], length: number, results: string[]) => {
+        if (currentString.length === length) {
+            results.push(currentString);
+            return;
+        }
+        for (let i = 0; i < arr.length; i++) {
+            if (counts[i] > 0) {
+                counts[i]--;
+                generatePermutations(arr, currentString + arr[i], counts, length, results);
+                counts[i]++;
+            }
+        }
+    };
+
+    generatePermutations(arr, "", [1, 1, 1], 3, results);
+
+    return results.filter(onlyUnique);
+}
+
+function onlyUnique(value: any, index: number, array: any[]) {
+    return array.indexOf(value) === index;
 }

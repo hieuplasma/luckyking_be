@@ -46,8 +46,8 @@ export class CreateOrderMax3dDTO extends CreateOrder {
     @ArrayMinSize(1)
     bets: any
 
-    @IsArray()
-    @ArrayMinSize(1)
+    // @IsArray()
+    // @ArrayMinSize(1)
     tienCuoc: any
 }
 

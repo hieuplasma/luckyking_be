@@ -6,7 +6,7 @@ export class SystemController {
     constructor(private systemService: SystemService) { }
 
     @Get("config")
-    getFirebaseToken() {
+    getSystemConfig() {
         return this.systemService.getSystemConfig()
     }
 }

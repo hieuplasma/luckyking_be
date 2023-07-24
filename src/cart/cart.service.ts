@@ -155,6 +155,7 @@ export class CartService {
     }
 
     async addLotteryMax3D(user: User, body: CreateCartMax3dDTO) {
+        console.log(body)
         const status = OrderStatus.CART
         const cartId = await this.getCardId(user.id)
         const { drawCode, drawTime, lotteryType, level, amount: totalAmount } = body;
@@ -187,10 +188,10 @@ export class CartService {
                     if (item.includes('TC')) tuChon = true;
 
                     // Will update in a future
-                     // Case Bao => Only one number set
-                    if (lotteryType === LotteryType.Max3DPro && level === 10) {
-                        amount = totalAmount;
-                        list.add(new NumberDetail(setOfNumbers[j][i], amount, tuChon));
+                    // Case Bao => Only one number set
+                    if (lotteryType === LotteryType.Max3DPro && (level === 10 || level === 4)) {
+                        amount = amount + body.tienCuoc[index]
+                        list.add(new NumberDetail(setOfNumbers[j][index], body.tienCuoc[index], tuChon));
                     } else {
                         list.add(new NumberDetail(item, setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET, tuChon));
                         amount += setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET;
