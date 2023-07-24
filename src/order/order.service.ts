@@ -191,9 +191,7 @@ export class OrderService {
 
                 // Case Bao => Only one number set
                 if (lotteryType === LotteryType.Max3DPro && (level === 10 || level === 4)) {
-                    for (const element of tienCuoc) {
-                        amount = amount + element
-                    }
+                    amount = amount + tienCuoc[i];
                     list.add(new NumberDetail(setOfNumbers[j][i], tienCuoc[i], tuChon));
                 } else {
                     list.add(new NumberDetail(setOfNumbers[j][i], parseInt(setOfBets[j][i]) || DEFAULT_BET, tuChon));
@@ -892,6 +890,9 @@ export class OrderService {
                     include: { NumberLottery: true }
                 },
                 user: true
+            },
+            orderBy: {
+                displayId: 'asc'
             }
         });
 
