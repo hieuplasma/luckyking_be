@@ -6,6 +6,8 @@ export class CreateCart {
     @IsNotEmpty()
     lotteryType: string
 
+    amount: number
+
     level: number
 
     @IsArray()
@@ -37,6 +39,10 @@ export class CreateCartMax3dDTO extends CreateCart {
     @IsArray()
     @ArrayMinSize(1)
     bets: any
+
+    @IsArray()
+    @ArrayMinSize(1)
+    tienCuoc: any
 }
 
 export class CreateCartKenoDTO extends CreateCart {

@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Lottery, OrderStatus, User, NumberLottery } from '@prisma/client';
 import { DEFAULT_BET } from 'src/common/constants';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
+import { LotteryType } from 'src/common/enum';
 import { ICreateLottery } from 'src/lottery/interfaces';
 import { LotteryService } from 'src/lottery/lottery.service';
 import { NumberLotteryService } from 'src/numberLottery/numberLottery.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
-import { CreateCartKenoDTO, CreateCartMegaPowerDTO, DeleteNumberLotteryDTO } from './dto';
+import { CreateCartKenoDTO, CreateCartMax3dDTO, CreateCartMegaPowerDTO, DeleteNumberLotteryDTO } from './dto';
 
 @Injectable()
 export class CartService {
@@ -153,10 +154,10 @@ export class CartService {
         return lotteries
     }
 
-    async addLotteryMax3D(user: User, body: CreateCartKenoDTO) {
+    async addLotteryMax3D(user: User, body: CreateCartMax3dDTO) {
         const status = OrderStatus.CART
         const cartId = await this.getCardId(user.id)
-        const { drawCode, drawTime, lotteryType } = body;
+        const { drawCode, drawTime, lotteryType, level, amount: totalAmount } = body;
         const numbers = [...body.numbers];
         const setOfNumbers = [];
         const bets = [...body.bets];
@@ -183,9 +184,17 @@ export class CartService {
 
                 setOfNumbers[j].map((item: any, index: number) => {
                     let tuChon = false
-                    if (setOfNumbers[j][i].includes('TC')) tuChon = true
-                    list.add(new NumberDetail(item, setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET, tuChon));
-                    amount += setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET;
+                    if (item.includes('TC')) tuChon = true;
+
+                    // Will update in a future
+                     // Case Bao => Only one number set
+                    if (lotteryType === LotteryType.Max3DPro && level === 10) {
+                        amount = totalAmount;
+                        list.add(new NumberDetail(setOfNumbers[j][i], amount, tuChon));
+                    } else {
+                        list.add(new NumberDetail(item, setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET, tuChon));
+                        amount += setOfBets[j][index] ? parseInt(setOfBets[j][index]) : DEFAULT_BET;
+                    }
                 })
 
                 for (let i = 0; i < drawCode.length; i++) {

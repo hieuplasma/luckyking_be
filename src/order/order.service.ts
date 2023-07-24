@@ -156,7 +156,7 @@ export class OrderService {
     async createOrderMax3d(user: User, body: CreateOrderMax3dDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
         const percent = (await this.prismaService.config.findFirst({}))?.surcharge || body.surcharge
-        const { drawCode, drawTime, lotteryType } = body;
+        const { drawCode, drawTime, lotteryType, level, tienCuoc } = body;
 
         const currentDate = new nDate()
         let totalAmount = 0;
@@ -187,8 +187,15 @@ export class OrderService {
             for (let i = 0; i < setOfNumbers[j].length; i++) {
                 let tuChon = false
                 if (setOfNumbers[j][i].includes('TC')) tuChon = true
-                list.add(new NumberDetail(setOfNumbers[j][i], parseInt(setOfBets[j][i]) || DEFAULT_BET, tuChon));
-                amount += parseInt(setOfBets[j][i]) || DEFAULT_BET;
+
+                // Case Bao => Only one number set
+                if (lotteryType === LotteryType.Max3DPro && level === 10) {
+                    amount = tienCuoc[0];
+                    list.add(new NumberDetail(setOfNumbers[j][i], amount, tuChon));
+                } else {
+                    list.add(new NumberDetail(setOfNumbers[j][i], parseInt(setOfBets[j][i]) || DEFAULT_BET, tuChon));
+                    amount += parseInt(setOfBets[j][i]) || DEFAULT_BET;
+                }
             }
 
             for (let i = 0; i < drawCode.length; i++) {
