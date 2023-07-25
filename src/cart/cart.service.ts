@@ -155,7 +155,6 @@ export class CartService {
     }
 
     async addLotteryMax3D(user: User, body: CreateCartMax3dDTO) {
-        console.log(body)
         const status = OrderStatus.CART
         const cartId = await this.getCardId(user.id)
         const { drawCode, drawTime, lotteryType, level, amount: totalAmount } = body;
