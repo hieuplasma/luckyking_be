@@ -40,8 +40,8 @@ export class CreateCartMax3dDTO extends CreateCart {
     @ArrayMinSize(1)
     bets: any
 
-    @IsArray()
-    @ArrayMinSize(1)
+    // @IsArray()
+    // @ArrayMinSize(1)
     tienCuoc: any
 }
 
