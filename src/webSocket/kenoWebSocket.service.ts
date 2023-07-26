@@ -123,11 +123,18 @@ export class KenoSocketService {
     async sendKenoToStaff() {
         if (this.clients.length === 0) return;
         const returnedLotteryIds = [];
-
+        let config = null;
+        
         for (const lottery of this.pendingLotteries) {
             if (lottery.assignedStaffId !== null) continue;
 
-            if (dayjs(lottery.drawTime).diff(dayjs()) / 1000 <= 30) {
+            if (!config) {
+                config = await this.prismaService.config.findFirst({});
+            }
+
+            const {kenoDuration, kenoPauseTime} = config;
+
+            if (dayjs(lottery.drawTime).diff(dayjs()) / 1000 <= kenoPauseTime) {
                 return;
             }
 
@@ -147,7 +154,7 @@ export class KenoSocketService {
 
             const { socketId } = staffMemberToSend;
 
-            this.server.to(socketId).emit(socketEvent.NewKenoLottery, { lotteries: serializeBigInt([lottery]) });
+            this.server.to(socketId).emit(socketEvent.NewKenoLottery, { lotteries: serializeBigInt([lottery]), kenoDuration });
             staffMemberToSend.isReady = false;
 
             if (this.clients.length > 1) {
