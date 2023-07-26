@@ -26,6 +26,8 @@ export class LotteryController {
         })
     }
 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Roles(Role.Staff)
     @Post('check-print')
     async confirmPrintLottery(@Body() data: PrintDTO) {
         const { lotteryId } = data;
@@ -34,6 +36,8 @@ export class LotteryController {
 
     }
 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Roles(Role.Staff)
     @Patch('set-pending')
     async setPendingLottery(@Body() data: PrintDTO) {
         const { lotteryId } = data;
@@ -41,6 +45,8 @@ export class LotteryController {
         return await this.lotteryService.setPendingLottery(lotteryId);
     }
 
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Roles(Role.Staff)
     @Get(':lotteryId')
     async getLotteryById(@Param('lotteryId') lotteryId: string) {
         return await this.lotteryService.getLotteryById(lotteryId)
