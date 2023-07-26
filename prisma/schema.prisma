@@ -282,6 +282,7 @@ model Config {
   autoRewardThreshold Int    @default(5000000)
   listBank            Json?
   surcharge           Int?   @default(0)
+  kenoSurcharge       Int?   @default(0)
   kenoDuration        Int?   @default(30)
   kenoPauseTime       Int?   @default(30)
 }

@@ -298,7 +298,7 @@ export class OrderService {
 
     async createOrderKeno(user: User, body: CreateOrderKenoDTO): Promise<Order> {
         const balances = await this.userService.getAllWallet(user.id)
-        const percent = (await this.prismaService.config.findFirst({}))?.surcharge || body.surcharge
+        const percent = (await this.prismaService.config.findFirst({}))?.kenoSurcharge || 0;
         const { drawCode, drawTime, lotteryType } = body;
 
         const currentDate = new nDate()
