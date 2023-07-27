@@ -32,11 +32,6 @@ export class AuthController {
         return this.authService.login(body)
     }
 
-    @Post("/otp-verified/login")
-    veryfiedLogin(@Body() body: AuthDTO) {
-        return this.authService.login(body)
-    }
-
     @Post("super-login")
     superLogin(@Body() body: AuthDTO) {
         return this.authService.superLogin(body)
@@ -65,5 +60,25 @@ export class AuthController {
     @Post("delete-account")
     deleteAccount(@Body() body: AuthDTO) {
         return this.authService.deleteAccount(body)
+    }
+
+    @Post("/unverified-login")
+    unverifiedLogin(@Body() body: AuthDTO) {
+        return this.authService.unverifiedLogin(body)
+    }
+
+    @Post("/otp-verified/login")
+    verifiedLogin(@Body() body: AuthDTO) {
+        return this.authService.login(body)
+    }
+
+    @Post("/otp-verified/register")
+    verifiedRegister(@Body() body: RegisterDTO) {
+        return this.authService.register(body)
+    }
+
+    @Post("/otp-verified/forgot-password")
+    verifiedForgotPassword(@Body() body: ForgotPassWordDTO) {
+        return this.authService.forgotPassword(body)
     }
 } 

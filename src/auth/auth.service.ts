@@ -71,6 +71,7 @@ export class AuthService {
               lastLogin: new nDate(),
             },
           },
+          currentDeviceId: deviceId,
           role: Role.User,
           MoneyAccount: {
             create: { decription: 'Ví LuckyKing của ' + phoneNumber },
@@ -116,6 +117,7 @@ export class AuthService {
     }
     delete user.hashedPassword;
 
+
     let device = await this.prismaService.device.findFirst({
       where: {
         deviceId: authDTO.deviceId,
@@ -139,6 +141,11 @@ export class AuthService {
         }
       })
     }
+
+    await this.prismaService.user.update({
+      where: { id: user.id },
+      data: { currentDeviceId: authDTO.deviceId }
+    })
 
     const { accessToken } = await this.signJwtToken(user.id, user.phoneNumber, authDTO.deviceId);
 
@@ -182,6 +189,52 @@ export class AuthService {
         },
       });
     return await this.unExpireJwtToken(user.id, user.phoneNumber);
+  }
+
+  async unverifiedLogin(authDTO: AuthDTO) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        phoneNumber: authDTO.phoneNumber,
+      },
+    });
+    if (!user) throw new NotFoundException(errorMessage.USER_NOT_FOUND);
+    if (user.status !== UserStatus.Acticve) throw new ForbiddenException(errorMessage.BLOCKED_ACCOUNT.replace('phone', authDTO.phoneNumber));
+    const passwordMatched = await argon.verify(
+      user.hashedPassword,
+      authDTO.password,
+    );
+    if (!passwordMatched) {
+      throw new UnauthorizedException(errorMessage.WRONG_AUTH);
+    }
+    delete user.hashedPassword;
+
+    if (user.currentDeviceId !== authDTO.deviceId) {
+      return {
+        accessToken: false,
+        message: "Bạn cần mã OTP để đăng nhập ở thiết bị này"
+      }
+    }
+
+    let device = await this.prismaService.device.findFirst({
+      where: {
+        deviceId: authDTO.deviceId,
+        userId: user.id
+      }
+    })
+    await this.prismaService.device.update({
+      where: { id: device.id },
+      data: {
+        lastLogin: new nDate()
+      }
+    })
+
+    const { accessToken } = await this.signJwtToken(user.id, user.phoneNumber, authDTO.deviceId);
+
+    return {
+      accessToken,
+      printerUrl: user.printerUrl,
+      deviceId: device.deviceId
+    };
   }
 
   async createStaff(createStaffDTO: CreateStaffDTO) {

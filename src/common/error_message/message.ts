@@ -14,6 +14,7 @@ export const errorMessage = {
 
     MONEY_DEVIDE_1000: "Số tiền phải là bội của 1000",
     USER_NOT_FOUND: "Người dùng không tồn tại!",
+    WRONG_DEVICE: "Tài khoản đã được đăng nhập ở thiết bị khác",
 
     NOT_FOUND: "Bản ghi không tồn tại",
     UNAUTHORIZED: "Không thể có quyền",
@@ -33,7 +34,7 @@ export const errorMessage = {
     BLOCKED_ACCOUNT: `Tài khoản phone hiện đang bị khoá, liên hệ ${HOT_LINE} để được hỗ trợ.`,
 
     EXP_OTP: "OTP này đã hết hạn!",
-    INVALID_OTP:"OTP không chính xác!",
-    EXP_SESSION:"Phiên xác thực hết hạn!",
-    INVALID_SESSION:"Phiên xác thực không hợp lệ"
+    INVALID_OTP: "OTP không chính xác!",
+    EXP_SESSION: "Phiên xác thực hết hạn!",
+    INVALID_SESSION: "Phiên xác thực không hợp lệ"
 }
