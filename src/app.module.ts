@@ -18,6 +18,9 @@ import { FirebaseModule } from './firebase/firebase.module';
 import { DeviceModule } from './device/device.module';
 import { StatisticalModule } from './statistical/statistical.module';
 import { SystemModule } from './system/system.module';
+import { OtpMiddleware } from './otp/otp.middleware';
+import { OtpModule } from './otp/otp.module';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -39,13 +42,19 @@ import { SystemModule } from './system/system.module';
     FirebaseModule,
     StatisticalModule,
     SystemModule,
+    OtpModule
   ],
+  providers: [JwtService]
   // providers: [FirebaseApp]
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer): any {
     consumer.apply(PreAuthMiddleware).forRoutes({
       path: '/auth/sercure/*',
+      method: RequestMethod.ALL,
+    });
+    consumer.apply(OtpMiddleware).forRoutes({
+      path: '/auth/otp-verified/*',
       method: RequestMethod.ALL,
     });
   }

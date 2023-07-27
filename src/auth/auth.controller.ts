@@ -32,6 +32,11 @@ export class AuthController {
         return this.authService.login(body)
     }
 
+    @Post("/otp-verified/login")
+    veryfiedLogin(@Body() body: AuthDTO) {
+        return this.authService.login(body)
+    }
+
     @Post("super-login")
     superLogin(@Body() body: AuthDTO) {
         return this.authService.superLogin(body)

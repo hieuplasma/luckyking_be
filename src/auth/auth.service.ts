@@ -51,7 +51,6 @@ export class AuthService {
     })
 
     if (checkUser) {
-      console.log('checkUser', checkUser)
       if (checkUser.status == UserStatus.Acticve) throw new ForbiddenException(errorMessage.USER_EXISTED);
       else throw new ForbiddenException(errorMessage.BLOCKED_ACCOUNT.replace('phone', authDTO.phoneNumber));
     }
@@ -91,7 +90,7 @@ export class AuthService {
           RewardWallet: true,
         },
       });
-      const accessToken = await this.signJwtToken(user.id, user.phoneNumber);
+      const accessToken = await this.signJwtToken(user.id, user.phoneNumber, deviceId);
       //@ts-ignore
       user.accessToken = accessToken.accessToken;
       return user;
@@ -106,9 +105,7 @@ export class AuthService {
         phoneNumber: authDTO.phoneNumber,
       },
     });
-    if (!user) {
-      throw new NotFoundException(errorMessage.USER_NOT_FOUND);
-    }
+    if (!user) throw new NotFoundException(errorMessage.USER_NOT_FOUND);
     if (user.status !== UserStatus.Acticve) throw new ForbiddenException(errorMessage.BLOCKED_ACCOUNT.replace('phone', authDTO.phoneNumber));
     const passwordMatched = await argon.verify(
       user.hashedPassword,
@@ -143,7 +140,7 @@ export class AuthService {
       })
     }
 
-    const { accessToken } = await this.signJwtToken(user.id, user.phoneNumber);
+    const { accessToken } = await this.signJwtToken(user.id, user.phoneNumber, authDTO.deviceId);
 
     return {
       accessToken,
@@ -220,7 +217,7 @@ export class AuthService {
           identify: true,
         },
       });
-      const accessToken = await this.signJwtToken(user.id, user.phoneNumber);
+      const accessToken = await this.signJwtToken(user.id, user.phoneNumber, createStaffDTO.deviceId);
       //@ts-ignore
       user.accessToken = accessToken.accessToken;
       return user;
@@ -287,14 +284,6 @@ export class AuthService {
       body.password,
     );
     if (!passwordMatched) {
-      // throw new UnauthorizedException(errorMessage.WRONG_AUTH);
-      // return {
-      //   statusCode: 600,
-      //   message: errorMessage.WRONG_AUTH,
-      //   error: 'WrongPasswordException',
-      //   timestamp: new Date().toISOString(),
-      //   path: '/auth/delete-account',
-      // }
       throw new ForbiddenException(errorMessage.WRONG_PASS)
     }
 
@@ -303,17 +292,18 @@ export class AuthService {
       data: { status: UserStatus.Block },
       select: { phoneNumber: true, updateAt: true, status: true },
     });
-    console.log(update)
     return update;
   }
 
   async signJwtToken(
     userId: string,
     phoneNumber: string,
+    deviceId: string
   ): Promise<{ accessToken: string }> {
     const payload = {
       sub: userId,
       phoneNumber,
+      deviceId
     };
     const jwtString = await this.jwtService.signAsync(payload, {
       expiresIn: '7 days',
