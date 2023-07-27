@@ -26,7 +26,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         })
         if (!user) throw new UnauthorizedException(errorMessage.USER_NOT_FOUND)
         if (user.role === Role.User) {
-            console.log('user', payload)
+            if (user.currentDeviceId !== payload.deviceId)
+                throw new UnauthorizedException(errorMessage.WRONG_DEVICE)
         }
         delete user.hashedPassword
         return user;
