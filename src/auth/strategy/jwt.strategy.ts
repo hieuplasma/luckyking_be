@@ -4,6 +4,7 @@ import { PassportStrategy } from "@nestjs/passport";
 import { Strategy, ExtractJwt } from "passport-jwt"
 import { PrismaService } from "../../prisma/prisma.service";
 import { errorMessage } from "src/common/error_message";
+import { Role } from "src/common/enum";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -13,10 +14,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     ) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            secretOrKey: configService.get('JWT_SECRET')
+            secretOrKey: configService.get('JWT_SECRET'),
         })
     }
-    async validate(payload: { sub: string, phoneNumber: string }) {
+    async validate(payload: { sub: string, phoneNumber: string, deviceId?: string }) {
         console.log(payload.phoneNumber)
         const user = await this.prismaService.user.findUnique({
             where: {
@@ -24,6 +25,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
             }
         })
         if (!user) throw new UnauthorizedException(errorMessage.USER_NOT_FOUND)
+        if (user.role === Role.User) {
+            console.log('user', payload)
+        }
         delete user.hashedPassword
         return user;
     }

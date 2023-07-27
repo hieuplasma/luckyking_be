@@ -7,6 +7,9 @@ export class SystemService {
     constructor(private prismaService: PrismaService,) { }
 
     async getSystemConfig() {
-        return await this.prismaService.config.findFirst({})
+        const config = await this.prismaService.config.findFirst({})
+        delete config.zaloToken
+        delete config.zaloRefeshToken
+        return config
     }
 }

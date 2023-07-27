@@ -24,6 +24,7 @@ model User {
   personNumber    String?
   displayId       Int?              @default(autoincrement())
   printerUrl      String?
+  currentDeviceId String?
   BankAccount     BankAccount[]
   Cart            Cart?
   Device          Device[]
@@ -278,118 +279,23 @@ model JackPot {
 }
 
 model Config {
-  id                  String @id @default(uuid())
-  autoRewardThreshold Int    @default(5000000)
+  id                  String  @id @default(uuid())
+  autoRewardThreshold Int     @default(5000000)
   listBank            Json?
-  surcharge           Int?   @default(0)
-  kenoSurcharge       Int?   @default(0)
-  kenoDuration        Int?   @default(30)
-  kenoPauseTime       Int?   @default(30)
+  surcharge           Int?    @default(0)
+  kenoSurcharge       Int?    @default(0)
+  kenoDuration        Int?    @default(30)
+  kenoPauseTime       Int?    @default(30)
+  zaloToken           String?
+  zaloRefeshToken     String?
 }
 
-model cms_async_ws_call {
-  id            Int      @id(map: "PK_15b793d3960fa11f3f8f7506348") @default(autoincrement())
-  public_id     String   @db.VarChar(128)
-  action        String   @db.VarChar(256)
-  object_type   String?  @db.VarChar(256)
-  object_id     Int?
-  finished      Int      @default(0) @db.SmallInt
-  error_code    Int      @default(0) @db.SmallInt
-  error_message String?  @db.VarChar(512)
-  result        Json?
-  caller_id     Int
-  expired_dt    DateTime @db.Timestamptz(0)
-  cms_user      cms_user @relation(fields: [caller_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_f38ac6708d79884ce99a2ca5a05")
-}
-
-model cms_email_sent {
-  id                   Int        @id(map: "PK_0be963060a9425507c6811155f1") @default(autoincrement())
-  email_type           Int        @default(1) @db.SmallInt
-  linked_object_id     Int?
-  from                 String     @db.VarChar(128)
-  subject              String     @db.VarChar(512)
-  to                   String     @db.VarChar(1024)
-  content              String
-  bounced_addrs        String[]   @db.VarChar
-  transport_message_id String     @db.VarChar(128)
-  delivery_status      Int        @default(0) @db.SmallInt
-  spam_reported        Int        @default(0) @db.SmallInt
-  creation_dt          DateTime   @default(now()) @db.Timestamptz(0)
-  delivery_dt          DateTime?  @db.Timestamptz(0)
-  cms_user             cms_user[]
-}
-
-model cms_email_sync_status {
-  id           Int      @id(map: "PK_19af2e747284dddd9a4e7c86ab4") @default(autoincrement())
-  sync_state   Int      @default(0)
-  last_sync_dt DateTime @default(now()) @db.Timestamptz(0)
-}
-
-model cms_preauth_token {
-  id        Int       @id(map: "PK_ebde5965241921429cca4346476") @default(autoincrement())
-  user_id   Int?
-  expire_dt DateTime  @db.Timestamptz(0)
-  token     String?   @db.VarChar(64)
-  cms_user  cms_user? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_98d842825be8d1f77e29cd48413")
-
-  @@index([user_id], map: "IDX_98d842825be8d1f77e29cd4841")
-}
-
-model cms_session {
-  id           Int       @id(map: "PK_937809889a2847c92d365ce194a") @default(autoincrement())
-  session_id   String    @db.VarChar
-  access_token String    @db.VarChar(512)
-  user_id      Int?
-  cms_user     cms_user? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ffb853ccef83e2b324dcef56dd0")
-}
-
-model cms_setting_params {
-  id           Int      @id(map: "PK_3e818b3d36c328ab91fb6a22a33") @default(autoincrement())
-  auto_approve String[] @default(["keno"])
-}
-
-model cms_user {
-  id                    Int                   @id(map: "PK_1e641dd45089529dc60ab0d3176") @default(autoincrement())
-  email                 String                @unique(map: "user_email_unique_idx") @db.VarChar(256)
-  phone_number          String?               @db.VarChar(32)
-  first_name            String?               @db.VarChar(128)
-  last_name             String                @db.VarChar(128)
-  password              String                @db.VarChar(256)
-  confirmation_token    String?               @db.VarChar(128)
-  salt                  String                @db.VarChar(255)
-  enabled               Int                   @default(0) @db.SmallInt
-  user_type             Int                   @default(1) @db.SmallInt
-  confirmation_email_id Int?
-  last_login            DateTime?             @db.Timestamptz(0)
-  creation_dt           DateTime              @default(now()) @db.Timestamptz(0)
-  password_requested_at DateTime?             @db.Timestamptz(0)
-  cms_async_ws_call     cms_async_ws_call[]
-  cms_preauth_token     cms_preauth_token[]
-  cms_session           cms_session[]
-  cms_email_sent        cms_email_sent?       @relation(fields: [confirmation_email_id], references: [id], onUpdate: NoAction, map: "FK_00bf1ecf58a37ebef2575da83f9")
-  cms_user_action       cms_user_action[]
-  cms_user_oauth_token  cms_user_oauth_token?
-}
-
-model cms_user_action {
-  id         Int       @id(map: "PK_0cbf3a6ad3eb92d1bc939ab08a7") @default(autoincrement())
-  user_id    Int?
-  action_dt  DateTime  @db.Timestamptz(0)
-  action     String?   @db.VarChar(255)
-  object     String[]  @db.VarChar
-  object_ids String[]  @db.VarChar
-  detail     Json
-  cms_user   cms_user? @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_dff16bed8c8ac186fcdcf44e946")
-}
-
-model cms_user_oauth_token {
-  id                    Int       @id(map: "PK_68ac18e4ebeef5b1a69ed58f3e2") @default(autoincrement())
-  oauth_provider        Int
-  user_id               Int       @unique(map: "UQ_830a95c218d36815b33ef270fe3")
-  access_token          String    @db.VarChar(2048)
-  refresh_token         String?   @db.VarChar(2048)
-  access_token_deadline DateTime? @db.Timestamptz(0)
-  cms_user              cms_user  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_830a95c218d36815b33ef270fe3")
+model Otp {
+  id          String    @id @default(uuid())
+  otp         String?
+  phoneNumber String?
+  iat         DateTime?
+  exp         DateTime?
 }
 
 enum OrderStatus {

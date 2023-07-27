@@ -25,10 +25,15 @@ export const errorMessage = {
 
     DEVICE_NOT_FOUND: "Thiết bị không tồn tại!",
 
-    UNABLE_UPDATE_LOTTERY:"Không thể cập nhật vé số!",
-    LOTTERY_NOT_EXIST:"Vé sổ xố không tồn tại!",
+    UNABLE_UPDATE_LOTTERY: "Không thể cập nhật vé số!",
+    LOTTERY_NOT_EXIST: "Vé sổ xố không tồn tại!",
 
     EMPTY_PASS: 'Bạn chưa nhập mật khẩu',
 
-    BLOCKED_ACCOUNT:`Tài khoản phone hiện đang bị khoá, liên hệ ${HOT_LINE} để được hỗ trợ.`
+    BLOCKED_ACCOUNT: `Tài khoản phone hiện đang bị khoá, liên hệ ${HOT_LINE} để được hỗ trợ.`,
+
+    EXP_OTP: "OTP này đã hết hạn!",
+    INVALID_OTP:"OTP không chính xác!",
+    EXP_SESSION:"Phiên xác thực hết hạn!",
+    INVALID_SESSION:"Phiên xác thực không hợp lệ"
 }
