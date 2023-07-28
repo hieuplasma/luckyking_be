@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Lottery, OrderStatus, User } from "@prisma/client";
+import { Config, Lottery, OrderStatus, User } from "@prisma/client";
 import dayjs from "dayjs";
 import { Server, Socket } from 'socket.io';
 import { serializeBigInt } from "src/common/utils";
@@ -123,7 +123,7 @@ export class KenoSocketService {
     async sendKenoToStaff() {
         if (this.clients.length === 0) return;
         const returnedLotteryIds = [];
-        let config = null;
+        let config: Config = null;
         
         for (const lottery of this.pendingLotteries) {
             if (lottery.assignedStaffId !== null) continue;
@@ -132,7 +132,9 @@ export class KenoSocketService {
                 config = await this.prismaService.config.findFirst({});
             }
 
-            const {kenoDuration, kenoPauseTime} = config;
+            const {kenoDuration, kenoPauseTime, stopDistributingKenoTickets} = config;
+
+            if (stopDistributingKenoTickets) return;
 
             if (dayjs(lottery.drawTime).diff(dayjs()) / 1000 <= kenoPauseTime) {
                 return;
