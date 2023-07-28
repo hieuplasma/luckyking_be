@@ -19,7 +19,6 @@ export class OtpService {
     ) { }
 
     async createOtp(body: CreateOtpDTO) {
-        await this.replaceZaloToken()
         const otp = this.generateOTP()
         const now = new nDate().getTime()
         const session = await this.prismaService.otp.create({
