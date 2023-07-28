@@ -442,6 +442,96 @@ export class LotteryService implements OnModuleInit {
     //     }
     // }
 
+    // @Cron('30 17 * * *', { timeZone: TIMEZONE })
+    @Cron('0 18 * * *', { timeZone: TIMEZONE })
+    async autoPushPeriodLotteriesInCart() {
+        const now = new nDate();
+        const day = now.getDay();
+
+        // Power, 3DPro
+        if (day === 2 || day === 4 || day === 6) {
+            const nextPowerSchedule = await this.prismaService.resultPower.findFirst({
+                where: { drawn: false, drawTime: { gt: now } },
+                orderBy: { drawCode: 'asc' },
+                skip: 1
+            })
+
+            await this.prismaService.lottery.updateMany({
+                where: {
+                    type: LotteryType.Power,
+                    drawTime: { lte: now },
+                    status: OrderStatus.CART,
+                },
+                data: {
+                    drawCode: nextPowerSchedule.drawCode,
+                    drawTime: nextPowerSchedule.drawTime,
+                }
+            })
+
+            const next3DProSchedule = await this.prismaService.resultMax3d.findFirst({
+                where: { type: LotteryType.Max3DPro, drawn: false, drawTime: { gt: now } },
+                orderBy: { drawCode: 'asc' },
+                skip: 1
+            })
+
+            await this.prismaService.lottery.updateMany({
+                where: {
+                    type: LotteryType.Max3DPro,
+                    drawTime: { lte: now },
+                    status: OrderStatus.CART,
+                },
+                data: {
+                    drawCode: next3DProSchedule.drawCode,
+                    drawTime: next3DProSchedule.drawTime,
+                }
+            })
+        }
+
+        // Mega
+        if (day === 3 || day === 5 || day === 7) {
+            const nextMegaSchedule = await this.prismaService.resultMega.findFirst({
+                where: { drawn: false, drawTime: { gt: now } },
+                orderBy: { drawCode: 'asc' },
+                skip: 1
+            })
+
+            await this.prismaService.lottery.updateMany({
+                where: {
+                    type: LotteryType.Mega,
+                    drawTime: { lte: now },
+                    status: OrderStatus.CART,
+                },
+                data: {
+                    drawCode: nextMegaSchedule.drawCode,
+                    drawTime: nextMegaSchedule.drawTime,
+                }
+            })
+        }
+
+
+        // Max3D, 3Dplus
+        if (day === 1 || day === 3 || day === 5) {
+            const nextMax3DSchedule = await this.prismaService.resultMax3d.findFirst({
+                where: { type: LotteryType.Max3D, drawn: false, drawTime: { gt: now } },
+                orderBy: { drawCode: 'asc' },
+                skip: 1
+            })
+
+            await this.prismaService.lottery.updateMany({
+                where: {
+                    type: { in: [LotteryType.Max3D, LotteryType.Max3DPlus] },
+                    drawTime: { lte: now },
+                    status: OrderStatus.CART,
+                },
+                data: {
+                    drawCode: nextMax3DSchedule.drawCode,
+                    drawTime: nextMax3DSchedule.drawTime,
+                }
+            })
+        }
+    }
+
+
     @Cron('4,9,14,19,24,29,34,39,44,49,54,59 6-22 * * *', { timeZone: TIMEZONE })
     async kenoSchedule() {
         const now = new nDate()

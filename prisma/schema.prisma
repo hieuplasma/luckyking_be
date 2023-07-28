@@ -279,15 +279,21 @@ model JackPot {
 }
 
 model Config {
-  id                  String  @id @default(uuid())
-  autoRewardThreshold Int     @default(5000000)
-  listBank            Json?
-  surcharge           Int?    @default(0)
-  kenoSurcharge       Int?    @default(0)
-  kenoDuration        Int?    @default(30)
-  kenoPauseTime       Int?    @default(30)
-  zaloToken           String?
-  zaloRefeshToken     String?
+  id                           String  @id @default(uuid())
+  autoRewardThreshold          Int     @default(5000000)
+  listBank                     Json?
+  surcharge                    Int?    @default(0)
+  kenoSurcharge                Int?    @default(0)
+  kenoDuration                 Int?    @default(30)
+  kenoPauseTime                Int?    @default(30)
+  zaloToken                    String?
+  zaloRefeshToken              String?
+  maxNumberOfLockedOrder       Int?    @default(10)
+  minAmountCanWithdrawn        Int?    @default(100000)
+  stopDistributingKenoTickets  Boolean @default(false)
+  stopDistributingBasicTickets Boolean @default(false)
+  autoConfirmKenoResults       Boolean @default(true)
+  notification                 Boolean @default(true)
 }
 
 model Otp {
