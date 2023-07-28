@@ -556,8 +556,8 @@ export class ResultService {
     }
 
     async updateResultKeno(transactionPerson: User, body: UpdateResultKenoDTO) {
-        console.log(new nDate())
-        Logger.debug(new nDate())
+        // console.log(new nDate())
+        // Logger.debug(new nDate())
         const drawCode = parseInt(body.drawCode.toString())
         const draw = await this.prismaService.resultKeno.findUnique({
             where: { drawCode: drawCode }
@@ -565,6 +565,21 @@ export class ResultService {
         if (!draw) throw new NotFoundException(errorMessage.NOT_EXISTED_DRAW)
         if (draw.drawn) throw new ForbiddenException(errorMessage.UPDATED_DRAW)
         // Cap nhat ket qua
+
+        const config = await this.prismaService.config.findFirst({});
+
+        if (!config.autoConfirmKenoResults) {
+            const update = await this.prismaService.resultKeno.update({
+                where: { drawCode: drawCode },
+                data: {
+                    drawn: true,
+                    result: body.result,
+                }
+            })
+
+            return update;
+        }
+
         const update = await this.prismaService.resultKeno.update({
             where: { drawCode: drawCode },
             data: {

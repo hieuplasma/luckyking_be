@@ -554,6 +554,12 @@ export class OrderService {
     }
 
     async getOrderByDisplayId(displayId: number): Promise<Order> {
+        const config = await this.prismaService.config.findFirst({});
+
+        if (config.stopDistributingBasicTickets) {
+            return null;
+        }
+
         const order = await this.prismaService.order.findFirst({
             where: { displayId: displayId },
             include: {
@@ -764,6 +770,13 @@ export class OrderService {
 
 
     async getBasicOrdersAvailable(user: User): Promise<Order[]> {
+        const config = await this.prismaService.config.findFirst({});
+        const { stopDistributingBasicTickets, maxNumberOfLockedOrder} = config;
+
+        if (stopDistributingBasicTickets) {
+            return [];
+        }
+
         const now = new nDate();
         // const numberOfLotteries = 5;
 
@@ -777,87 +790,9 @@ export class OrderService {
                         drawTime: { gt: now },
                         status: { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] }
                     },
-                    // include: {
-                    //     NumberLottery: true,
-                    //     user: true
-                    // }
                 },
             }
         });
-
-
-        // if (staff.LotteryAssigned.length !== 0) {
-        //     const lotteryIds = staff.LotteryAssigned.map(lottery => lottery.id);
-        //     let orderIds = staff.LotteryAssigned.map(lottery => lottery.orderId);
-        //     const setOrderIds = new Set(orderIds);
-        //     orderIds = Array.from(setOrderIds)
-
-        //     const orders = await this.prismaService.order.findMany({
-        //         where: {
-        //             id: { in: orderIds }
-        //         },
-        //         include: {
-        //             Lottery: {
-        //                 where: {
-        //                     id: { in: lotteryIds }
-        //                 },
-        //                 orderBy: {
-        //                     displayId: 'asc'
-        //                 },
-        //                 include: { NumberLottery: true }
-        //             },
-        //             user: true
-        //         }
-        //     });
-
-        //     return orders;
-
-        // } else {
-        //     const lotteries = await this.prismaService.lottery.findMany({
-        //         where: {
-        //             assignedStaffId: null,
-        //             type: { not: LotteryType.Keno },
-        //             drawTime: { gt: now },
-        //             status: { in: [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED] },
-        //         },
-        //         // take: numberOfLotteries
-        //     });
-
-
-        //     const lotteryIds = lotteries.map(lottery => lottery.id);
-        //     let orderIds = lotteries.map(lottery => lottery.orderId);
-        //     const setOrderIds = new Set(orderIds);
-        //     orderIds = Array.from(setOrderIds)
-
-        //     const orders = await this.prismaService.order.findMany({
-        //         where: {
-        //             id: { in: orderIds }
-        //         },
-        //         include: {
-        //             Lottery: {
-        //                 where: {
-        //                     id: { in: lotteryIds }
-        //                 },
-        //                 orderBy: {
-        //                     displayId: 'asc'
-        //                 },
-        //                 include: { NumberLottery: true }
-        //             },
-        //             user: true
-        //         }
-        //     });
-
-        //     await this.prismaService.lottery.updateMany({
-        //         where: {
-        //             id: { in: lotteryIds },
-        //         },
-        //         data: {
-        //             assignedStaffId: user.id,
-        //         }
-        //     });
-
-        //     return orders;
-        // }
 
         const lotteries = await this.prismaService.lottery.findMany({
             where: {
@@ -869,7 +804,6 @@ export class OrderService {
             // take: numberOfLotteries
         });
 
-        const lotteryIdsToAssignToStaff = lotteries.map(lottery => lottery.id);
         const lotteryIds = lotteries.map(lottery => lottery.id).concat(staff.LotteryAssigned.map(lottery => lottery.id));
         let orderIds = lotteries.map(lottery => lottery.orderId).concat(staff.LotteryAssigned.map(lottery => lottery.orderId));
         const setOrderIds = new Set(orderIds);
@@ -893,18 +827,19 @@ export class OrderService {
             },
             orderBy: {
                 displayId: 'asc'
-            }
+            },
+            take: maxNumberOfLockedOrder
         });
 
-        if (lotteryIdsToAssignToStaff.length !== 0) {
-            await this.prismaService.lottery.updateMany({
-                where: {
-                    id: { in: lotteryIdsToAssignToStaff },
-                },
-                data: {
-                    assignedStaffId: user.id,
+        for (const order of orders) {
+            for (const lottery of order.Lottery) {
+                if (!lottery.assignedStaffId) {
+                    await this.prismaService.lottery.update({
+                        where: {id: lottery.id},
+                        data: {assignedStaffId: user.id}
+                    })
                 }
-            });
+            }
         }
 
         return orders;
