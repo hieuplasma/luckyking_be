@@ -453,7 +453,7 @@ export class LotteryService implements OnModuleInit {
             const nextPowerSchedule = await this.prismaService.resultPower.findFirst({
                 where: { drawn: false, drawTime: { gt: now } },
                 orderBy: { drawCode: 'asc' },
-                skip: 1
+                // skip: 1
             })
 
             await this.prismaService.lottery.updateMany({
@@ -471,7 +471,7 @@ export class LotteryService implements OnModuleInit {
             const next3DProSchedule = await this.prismaService.resultMax3d.findFirst({
                 where: { type: LotteryType.Max3DPro, drawn: false, drawTime: { gt: now } },
                 orderBy: { drawCode: 'asc' },
-                skip: 1
+                // skip: 1
             })
 
             await this.prismaService.lottery.updateMany({
@@ -492,7 +492,7 @@ export class LotteryService implements OnModuleInit {
             const nextMegaSchedule = await this.prismaService.resultMega.findFirst({
                 where: { drawn: false, drawTime: { gt: now } },
                 orderBy: { drawCode: 'asc' },
-                skip: 1
+                // skip: 1
             })
 
             await this.prismaService.lottery.updateMany({
@@ -514,7 +514,7 @@ export class LotteryService implements OnModuleInit {
             const nextMax3DSchedule = await this.prismaService.resultMax3d.findFirst({
                 where: { type: LotteryType.Max3D, drawn: false, drawTime: { gt: now } },
                 orderBy: { drawCode: 'asc' },
-                skip: 1
+                // skip: 1
             })
 
             await this.prismaService.lottery.updateMany({
