@@ -12,4 +12,18 @@ export class SystemService {
         delete config.zaloRefeshToken
         return config
     }
+
+    async getCurrentPopup() {
+        const popup = await this.prismaService.popup.findFirst({
+            orderBy: { id: 'desc' },
+            take: 1
+        })
+
+        if (popup) {
+            delete popup.updateStaffId
+            delete popup.createdAt
+            delete popup.updatedAt
+        }
+        return popup
+    }
 }

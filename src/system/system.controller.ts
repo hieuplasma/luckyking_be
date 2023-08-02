@@ -9,4 +9,9 @@ export class SystemController {
     getSystemConfig() {
         return this.systemService.getSystemConfig()
     }
+
+    @Get("popup")
+    getCurrentPopup() {
+        return this.systemService.getCurrentPopup()
+    }
 }

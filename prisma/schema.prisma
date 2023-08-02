@@ -304,6 +304,15 @@ model Otp {
   exp         DateTime?
 }
 
+model Popup {
+  id            Int      @id @default(autoincrement())
+  content       String?
+  show          Boolean?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  updateStaffId String?
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
