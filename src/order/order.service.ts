@@ -958,6 +958,7 @@ export class OrderService {
                             id: lottery.id,
                         },
                         data: {
+                            confirmedAt: new nDate(),
                             status: newStatus
                         }
                     })

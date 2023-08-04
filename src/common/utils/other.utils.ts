@@ -88,7 +88,7 @@ export function kenoAnalysis(param: number[]) {
 export function convertObjectToJsonValue(obj: object): Prisma.JsonValue {
     const jsonString = JSON.stringify(serializeBigInt(obj));
     const jsonValue = JSON.parse(jsonString) as Prisma.JsonValue;
-    console.log("jsonValue", jsonValue)
+    // console.log("jsonValue", jsonValue)
     return jsonValue;
 }
 
