@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { JackPot, Lottery, OrderStatus, Prisma, User } from '@prisma/client';
+import { JackPot, Lottery, OrderStatus, Prisma, ResultKeno, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
 import { FIREBASE_MESSAGE, FIREBASE_TITLE, TIMEZONE } from 'src/common/constants/constants';
 import { LotteryType } from 'src/common/enum';
@@ -701,6 +701,14 @@ export class ResultService {
         }
         // Service ban notify cho nguoi dung o day .........
     }
+
+    // Tra thuong keno
+    async rewardKenoLottery(transactionPerson: User, lottery: any, resultKeno: ResultKeno) {
+        let benefits = caculateKenoBenefits(lottery, resultKeno.result)
+        
+        await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(resultKeno))
+    }
+
     // ------ End ------
 
     //Update JackPot

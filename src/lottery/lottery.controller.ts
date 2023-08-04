@@ -71,8 +71,6 @@ export class LotteryController {
     @Roles(Role.Staff)
     @Patch('confirm/:lotteryId')
     async confirmLottery(@GetUser() user: User, @Param('lotteryId') lotteryId: string) {
-        // console.log('confirm...')
-        // return true
         return await this.lotteryService.confirmLottery(user, lotteryId);
     }
 

@@ -8,12 +8,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateImageDTO } from './dto';
 import { ICreateLottery, IUpdateLotteryNumber } from './interfaces';
 import fs from 'fs'
+import dayjs from 'dayjs';
 import { caculateSurcharge, nDate } from 'src/common/utils';
 import { LotteryType } from 'src/common/enum';
 import FirebaseService from '../firebase/firebase-app'
 import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
 import { printCode } from 'src/common/utils/other.utils';
 import { errorMessage } from 'src/common/error_message';
+import { ResultService } from 'src/result/result.service';
 
 @Injectable()
 export class LotteryService implements OnModuleInit {
@@ -21,6 +23,7 @@ export class LotteryService implements OnModuleInit {
         private prismaService: PrismaService,
         private firebaseService: FirebaseService,
         private kenoSocketService: KenoSocketService,
+        private resultService: ResultService
     ) { }
 
     onModuleInit() {
@@ -134,6 +137,23 @@ export class LotteryService implements OnModuleInit {
 
     async confirmLottery(user: User, lotteryId: string): Promise<Lottery> {
         const now = new nDate();
+
+        const lotteryToConfirm = await this.prismaService.lottery.findUnique({
+            where: {id: lotteryId},
+            select: {
+                id: true,
+                userId: true,
+                status: true,
+                drawTime: true,
+                drawCode: true,
+                NumberLottery: true
+            }
+        })
+
+        if (lotteryToConfirm.status === OrderStatus.RETURNED) {
+            throw new ForbiddenException(errorMessage.CAN_NOT_CONFIRM_DUE_TO_REFUND_STATUS);
+        }
+
         const confirmedLottery = await this.prismaService.lottery.update({
             where: {
                 id: lotteryId,
@@ -147,6 +167,17 @@ export class LotteryService implements OnModuleInit {
         })
 
         this.kenoSocketService.confirmLottery(lotteryId);
+
+        // Reward if result exists
+        if (dayjs().isAfter(dayjs(lotteryToConfirm.drawTime))) {
+            const result = await this.prismaService.resultKeno.findUnique({
+                where: {drawCode: lotteryToConfirm.drawCode}
+            })
+
+            if(result.drawn && result.approved) {
+                this.resultService.rewardKenoLottery(user, lotteryToConfirm, result);
+            }
+        }
 
         for (const lottery of confirmedLottery.Order.Lottery) {
             const statusBeforeConfirmed: OrderStatus[] = [OrderStatus.PENDING, OrderStatus.LOCK, OrderStatus.PRINTED];

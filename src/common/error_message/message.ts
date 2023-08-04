@@ -7,6 +7,7 @@ export const errorMessage = {
     RESOLVED_ORDER: "Đơn hàng đã được xác nhận hoặc hoàn trả!",
     NOT_LOCK_ORDER: "Đơn hàng chưa được khoá!",
     NOT_PRINT_ORDER: "Các vé trong đơn hàng chưa được in hết!",
+    CAN_NOT_CONFIRM_DUE_TO_REFUND_STATUS: "Không thể xác nhận vé này, vé đã được hoàn trả",
 
     EXISTED_DRAW: "Mã kỳ quay đã tồn tại!",
     NOT_EXISTED_DRAW: "Mã kỳ quay không tồn tại!",
