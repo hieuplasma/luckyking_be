@@ -140,12 +140,7 @@ export class LotteryService implements OnModuleInit {
 
         const lotteryToConfirm = await this.prismaService.lottery.findUnique({
             where: {id: lotteryId},
-            select: {
-                id: true,
-                userId: true,
-                status: true,
-                drawTime: true,
-                drawCode: true,
+            include: {
                 NumberLottery: true
             }
         })
