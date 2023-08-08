@@ -558,7 +558,7 @@ export class LotteryService implements OnModuleInit {
     }
 
 
-    @Cron('4,9,14,19,24,29,34,39,44,49,54,59 6-22 * * *', { timeZone: TIMEZONE })
+    @Cron('30 4,9,14,19,24,29,34,39,44,49,54,59 6-22 * * *', { timeZone: TIMEZONE })
     async kenoSchedule() {
         const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findFirst({
