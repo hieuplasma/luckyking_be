@@ -19,12 +19,12 @@ export class RegisterDTO {
   @IsOptional()
   identify: string
 
-  @IsEmail()
-  @IsOptional()
+  // @IsEmail()
+  // @IsOptional()
   email: string
 
-  @IsString()
-  @IsOptional()
+  // @IsString()
+  // @IsOptional()
   address: string
 
   @IsString()
