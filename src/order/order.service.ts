@@ -102,7 +102,7 @@ export class OrderService {
                     },
                     //@ts-ignore
                     status: body.status ? body.status : OrderStatus.PENDING,
-                    dataPart: "" + currentDate.getDate() + (currentDate.getMonth() + 1) + currentDate.getFullYear(),
+                    dataPart: formattedDate(currentDate),
                     method: body.method,
                     surcharge: surcharge
                 },

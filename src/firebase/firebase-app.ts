@@ -1,5 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import { User } from "@prisma/client";
 import * as firebase from "firebase-admin";
 import { Role } from "src/common/enum";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -72,15 +71,23 @@ export default class FirebaseApp {
                         title: title,
                         body: message
                     },
-                    token: device.deviceToken
-                };
+                    android: {
+                        notification: {
+                            title: title,
+                            body: message,
+                            icon: "ic_notification",
+                            color: "#FC000C"
+                        }
+                    },
+                    token: device.deviceToken,
+                }
 
                 await firebase.messaging().send(messageInfo)
                     .then((response) => {
                         console.log("Firebase bắn Notification thành công:", userId);
                     })
                     .catch((error) => {
-                        // console.log("Lỗi:", error);
+                        console.log("Lỗi:", error);
                     });
             }
         }
