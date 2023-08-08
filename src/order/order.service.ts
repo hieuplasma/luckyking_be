@@ -300,8 +300,12 @@ export class OrderService {
         const balances = await this.userService.getAllWallet(user.id)
         const percent = (await this.prismaService.config.findFirst({}))?.kenoSurcharge || 0;
         const { drawCode, drawTime, lotteryType } = body;
+        const now = new nDate()
+        const schedule = await this.prismaService.resultKeno.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        });
 
-        const currentDate = new nDate()
         let totalAmount = 0;
 
         const numbers = [...body.numbers];
@@ -337,6 +341,14 @@ export class OrderService {
             for (let i = 0; i < drawCode.length; i++) {
                 totalAmount += amount;
 
+                let validDrawCode = drawCode[i];
+                let validDrawTime = drawTime[i];
+
+                if (schedule.drawCode > drawCode[i]) {
+                    validDrawCode = schedule.drawCode;
+                    validDrawTime = schedule.drawTime;
+                }
+
                 const lottery = {
                     user: {
                         connect: { id: user.id }
@@ -347,8 +359,8 @@ export class OrderService {
                     bets: setOfBets[j],
                     //@ts-ignore
                     status: body.status ? body.status : OrderStatus.PENDING,
-                    drawCode: drawCode[i],
-                    drawTime: drawTime[i],
+                    drawCode: validDrawCode,
+                    drawTime: validDrawTime,
                     NumberLottery: {
                         create: {
                             level: parseInt(body.level.toString()),
@@ -381,7 +393,7 @@ export class OrderService {
                     //@ts-ignore
                     status: body.status ? body.status : OrderStatus.PENDING,
                     ticketType: "keno",
-                    dataPart: formattedDate(currentDate),
+                    dataPart: formattedDate(now),
                     method: body.method,
                     surcharge: surcharge,
                 },
@@ -432,13 +444,6 @@ export class OrderService {
             order.transaction = transaction;
             //@ts-ignore
             order.Lottery = lotteryToReturn;
-        });
-
-
-        const now = new nDate()
-        const schedule = await this.prismaService.resultKeno.findFirst({
-            where: { drawn: false, drawTime: { gt: now } },
-            orderBy: { drawCode: 'asc' },
         });
 
         // @ts-ignore
