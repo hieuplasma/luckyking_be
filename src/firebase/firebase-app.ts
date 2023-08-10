@@ -30,7 +30,7 @@ export default class FirebaseApp {
 
     sendNotification = async (message: string) => {
 
-        const staffUser = await this.prismaService.user.findFirst({
+        const staffUser = await this.prismaService.user.findMany({
             where: {
                 role: Role.Staff,
             },
@@ -39,23 +39,25 @@ export default class FirebaseApp {
             }
         });
 
-        for (const device of staffUser.Device) {
-            if (device.deviceToken) {
-                const messageInfo = {
-                    notification: {
-                        title: "Thông báo",
-                        body: message
-                    },
-                    token: device.deviceToken
-                };
+        for (const user of staffUser) {
+            for (const device of user.Device) {
+                if (device.deviceToken) {
+                    const messageInfo = {
+                        notification: {
+                            title: "Thông báo",
+                            body: message
+                        },
+                        token: device.deviceToken
+                    };
 
-                firebase.messaging().send(messageInfo)
-                    .then((response) => {
-                        console.log("Thành công:", response);
-                    })
-                    .catch((error) => {
-                        // console.log("Lỗi:", error);
-                    });
+                    firebase.messaging().send(messageInfo)
+                        .then((response) => {
+                            console.log("Thành công:", response);
+                        })
+                        .catch((error) => {
+                            // console.log("Lỗi:", error);
+                        });
+                }
             }
         }
     }
