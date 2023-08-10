@@ -286,6 +286,7 @@ model Config {
   kenoSurcharge                Int?    @default(0)
   kenoDuration                 Int?    @default(30)
   kenoPauseTime                Int?    @default(30)
+  kenoSalesStoppageTime        Int?    @default(40)
   autoRefundKeno               Boolean @default(true)
   zaloToken                    String?
   zaloRefeshToken              String?
