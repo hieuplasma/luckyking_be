@@ -296,6 +296,7 @@ model Config {
   stopDistributingBasicTickets Boolean @default(false)
   autoConfirmKenoResults       Boolean @default(true)
   notification                 Boolean @default(true)
+  kenoResultWarningTime        Int?    @default(40)
 }
 
 model Otp {
