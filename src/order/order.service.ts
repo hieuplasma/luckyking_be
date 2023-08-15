@@ -566,7 +566,6 @@ export class OrderService {
     }
 
     async reorder(user: User, body: ReorderDTO) {
-        console.log(body)
         if (body.lotteries.length === 0) throw new ForbiddenException(errorMessage.NO_LOTTERY_IN_ORDER);
 
         const amount = parseInt(body.amount.toString())
