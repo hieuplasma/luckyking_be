@@ -608,6 +608,7 @@ export class OrderService {
                 tx,
             )
 
+            let lotteryToReturn = []
             for (const element of body.lotteries) {
                 for (const draw of element.drawSelected) {
                     let list = element.NumberLottery.numberDetail as INumberDetail[]
@@ -616,7 +617,7 @@ export class OrderService {
                         list[i].tuChon = false
                         listUpdate.add(list[i])
                     }
-                    await tx.lottery.create({
+                    const lottery = await tx.lottery.create({
                         data: {
                             user: {
                                 connect: { id: user.id }
@@ -641,20 +642,38 @@ export class OrderService {
                             }
                         }
                     })
+
+                    lotteryToReturn.push(lottery)
                 }
             }
 
             //@ts-ignore
             order.transaction = transaction;
+            //@ts-ignore
+            order.Lottery = lotteryToReturn;
         })
+
+        if (body.ticketType = TicketOrderType.Basic) this.firebaseService.sendNotification('Có đơn vé thường mới');
+        else {
+            const now = new nDate()
+            const schedule = await this.prismaService.resultKeno.findFirst({
+                where: { drawn: false, drawTime: { gt: now } },
+                orderBy: { drawCode: 'asc' },
+            });
+            // @ts-ignore
+            let lotteriesToSend = order.Lottery.filter((lottery) => lottery.drawCode === schedule.drawCode);
+            lotteriesToSend.map((lottery: any) => lottery.Order = { displayId: order.displayId })
+            if (lotteriesToSend.length) {
+                this.firebaseService.sendNotification('Có đơn keno mới');
+                this.kenoSocketService.pushLotteriesToQueue(lotteriesToSend);
+            }
+        }
 
         const dataFirebase = {
             type: RemoteMessageType.DETAIL_ORDER,
             orderId: order.id
         }
 
-        if (body.ticketType = TicketOrderType.Basic) this.firebaseService.sendNotification('Có đơn vé thường mới');
-        else this.firebaseService.sendNotification('Có đơn Keno mới');
         this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
