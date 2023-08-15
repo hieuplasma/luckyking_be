@@ -623,7 +623,7 @@ export class OrderService {
                                 connect: { id: user.id }
                             },
                             type: element.type,
-                            amount,
+                            amount: element.amount,
                             surcharge: caculateSurcharge(element.amount, percent),
                             bets: element.bets,
                             //@ts-ignore
@@ -653,7 +653,7 @@ export class OrderService {
             order.Lottery = lotteryToReturn;
         })
 
-        if (body.ticketType = TicketOrderType.Basic) this.firebaseService.sendNotification('Có đơn vé thường mới');
+        if (body.ticketType == TicketOrderType.Basic) this.firebaseService.sendNotification('Có đơn vé thường mới');
         else {
             const now = new nDate()
             const schedule = await this.prismaService.resultKeno.findFirst({
@@ -666,6 +666,7 @@ export class OrderService {
             if (lotteriesToSend.length) {
                 this.firebaseService.sendNotification('Có đơn keno mới');
                 this.kenoSocketService.pushLotteriesToQueue(lotteriesToSend);
+
             }
         }
 
