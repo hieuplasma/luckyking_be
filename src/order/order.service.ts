@@ -640,7 +640,25 @@ export class OrderService {
                             Order: {
                                 connect: { id: order.id }
                             }
-                        }
+                        },
+                        select: {
+                            id: true,
+                            type: true,
+                            buyTime: true,
+                            status: true,
+                            orderId: true,
+                            userId: true,
+                            amount: true,
+                            bets: true,
+                            displayId: true,
+                            drawCode: true,
+                            drawTime: true,
+                            assignedStaffId: true,
+                            NumberLottery: true,
+                            Order: {
+                                select: { id: true, displayId: true }
+                            }
+                        },
                     })
 
                     lotteryToReturn.push(lottery)
