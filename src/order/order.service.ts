@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, OrderByDrawDTO, ReturnOrderDTO } from './dto';
-import { LotteryType, OrderMethod, Role, TicketOrderType, TransactionDestination } from 'src/common/enum';
+import { LotteryType, OrderMethod, RemoteMessageType, Role, TicketOrderType, TransactionDestination } from 'src/common/enum';
 import { LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, formattedDate, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
@@ -141,13 +141,19 @@ export class OrderService {
             order.Lottery = lotteryToReturn;
         })
 
-        this.firebaseService.sendNotification('Có đơn Power|Mega mới');
+        const dataFirebase = {
+            type: RemoteMessageType.DETAIL_ORDER,
+            orderId: order.id
+        }
+
+        this.firebaseService.sendNotification('Có đơn Power | Mega mới');
         this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
             FIREBASE_MESSAGE.ORDER_SUCCESS
                 .replace('ma_don_hang', printCode(order.displayId))
-                .replace('so_tien', totalAmount.toString())
+                .replace('so_tien', totalAmount.toString()),
+            dataFirebase
         )
 
         return order
@@ -283,6 +289,10 @@ export class OrderService {
             order.Lottery = lotteryToReturn;
         })
 
+        const dataFirebase = {
+            type: RemoteMessageType.DETAIL_ORDER,
+            orderId: order.id
+        }
 
         this.firebaseService.sendNotification('Có đơn max3D mới');
         this.firebaseService.senNotificationToUser(
@@ -290,7 +300,8 @@ export class OrderService {
             FIREBASE_TITLE.ORDER_SUCCESS,
             FIREBASE_MESSAGE.ORDER_SUCCESS
                 .replace('ma_don_hang', printCode(order.displayId))
-                .replace('so_tien', totalAmount.toString())
+                .replace('so_tien', totalAmount.toString()),
+            dataFirebase
         )
 
         return order
@@ -454,12 +465,18 @@ export class OrderService {
             this.kenoSocketService.pushLotteriesToQueue(lotteriesToSend);
         }
 
+        const dataFirebase = {
+            type: RemoteMessageType.DETAIL_ORDER,
+            orderId: order.id
+        }
+
         this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
             FIREBASE_MESSAGE.ORDER_SUCCESS
                 .replace('ma_don_hang', printCode(order.displayId))
-                .replace('so_tien', totalAmount.toString())
+                .replace('so_tien', totalAmount.toString()),
+            dataFirebase
         )
 
         return order;
@@ -529,13 +546,19 @@ export class OrderService {
             order.transaction = transaction;
         })
 
+        const dataFirebase = {
+            type: RemoteMessageType.DETAIL_ORDER,
+            orderId: order.id
+        }
+
         this.firebaseService.sendNotification('Có đơn vé thường mới');
         this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.ORDER_SUCCESS,
             FIREBASE_MESSAGE.ORDER_SUCCESS
                 .replace('ma_don_hang', printCode(order.displayId))
-                .replace('so_tien', totalAmount.toString())
+                .replace('so_tien', totalAmount.toString()),
+            dataFirebase
         )
 
         return order;
@@ -776,7 +799,7 @@ export class OrderService {
 
     async getBasicOrdersAvailable(user: User): Promise<Order[]> {
         const config = await this.prismaService.config.findFirst({});
-        const { stopDistributingBasicTickets, maxNumberOfLockedOrder} = config;
+        const { stopDistributingBasicTickets, maxNumberOfLockedOrder } = config;
 
         if (stopDistributingBasicTickets) {
             return [];
@@ -840,8 +863,8 @@ export class OrderService {
             for (const lottery of order.Lottery) {
                 if (!lottery.assignedStaffId) {
                     await this.prismaService.lottery.update({
-                        where: {id: lottery.id},
-                        data: {assignedStaffId: user.id}
+                        where: { id: lottery.id },
+                        data: { assignedStaffId: user.id }
                     })
                 }
             }

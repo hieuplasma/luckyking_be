@@ -61,37 +61,52 @@ export default class FirebaseApp {
         }
     }
 
-    senNotificationToUser = async (userId: string, title: string = DEFAULT_TITLE, message: string = DEFAULT_MESSAGE,) => {
+    senNotificationToUser = async (
+        userId: string,
+        title: string = DEFAULT_TITLE,
+        message: string = DEFAULT_MESSAGE,
+        data: any = {}
+    ) => {
         const user = await this.prismaService.user.findUnique({
             where: { id: userId },
-            include: { Device: true }
+            select: {
+                currentDeviceId: true
+            }
         })
-        for (const device of user.Device) {
-            if (device.deviceToken) {
-                const messageInfo = {
+
+        const device = await this.prismaService.device.findFirst({
+            where: {
+                userId: userId,
+                deviceId: user.currentDeviceId
+            }
+        })
+
+        if (device.deviceToken) {
+            const messageInfo = {
+                notification: {
+                    title: title,
+                    body: message,
+
+                },
+                android: {
                     notification: {
                         title: title,
-                        body: message
-                    },
-                    android: {
-                        notification: {
-                            title: title,
-                            body: message,
-                            icon: "ic_notification",
-                            color: "#FC000C"
-                        }
-                    },
-                    token: device.deviceToken,
-                }
-
-                await firebase.messaging().send(messageInfo)
-                    .then((response) => {
-                        console.log("Firebase bắn Notification thành công:", userId);
-                    })
-                    .catch((error) => {
-                        console.log("Lỗi:", error);
-                    });
+                        body: message,
+                        icon: "ic_notification",
+                        color: "#FC000C"
+                    }
+                },
+                token: device.deviceToken,
+                data: data
             }
+
+            await firebase.messaging().send(messageInfo)
+                .then((response) => {
+                    console.log("Firebase bắn Notification thành công:", userId);
+                })
+                .catch((error) => {
+                    console.log("Lỗi:", error);
+                });
         }
     }
 

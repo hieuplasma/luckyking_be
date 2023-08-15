@@ -3,7 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { JackPot, Lottery, OrderStatus, Prisma, ResultKeno, User } from '@prisma/client';
 import { WARNING_REWARD } from 'src/common/constants';
 import { FIREBASE_MESSAGE, FIREBASE_TITLE, TIMEZONE } from 'src/common/constants/constants';
-import { LotteryType } from 'src/common/enum';
+import { LotteryType, RemoteMessageType } from 'src/common/enum';
 import {
     caculateKenoBenefits, caculateMax3dBenefits,
     caculateMax3dProBenefits, caculateMax3PlusdBenefits,
@@ -673,6 +673,12 @@ export class ResultService {
                 where: { id: lottery.id },
                 include: { Order: true }
             })
+
+            const dataFirebase = {
+                type: RemoteMessageType.DETAIL_ORDER,
+                orderId: update.Order.id
+            }
+
             this.firebaseService.senNotificationToUser(
                 lottery.userId,
                 FIREBASE_TITLE.WON_PRIZE,
@@ -680,7 +686,9 @@ export class ResultService {
                     .replace('ma_don_hang', printCode(update.Order.displayId))
                     .replace('ky_quay', printDrawCode(lottery.drawCode))
                     .replace('ngay_quay', lottery.drawTime.toDateString())
-                    .replace('so_tien', benefits.toString())
+                    .replace('so_tien', benefits.toString()),
+                dataFirebase
+
             )
         }
         // Neu trung thi tao transaction tra thuong
@@ -691,12 +699,19 @@ export class ResultService {
                 where: { id: lottery.id },
                 include: { Order: true }
             })
+
+            const dataFirebase = {
+                type: RemoteMessageType.DETAIL_ORDER,
+                orderId: update.Order.id
+            }
+
             this.firebaseService.senNotificationToUser(
                 lottery.userId,
                 FIREBASE_TITLE.PAID_PRIZE,
                 FIREBASE_MESSAGE.PAID_PRIZE
                     .replace('so_tien', benefits.toString())
-                    .replace('ma_don_hang', printCode(update.Order.displayId))
+                    .replace('ma_don_hang', printCode(update.Order.displayId)),
+                dataFirebase
             )
         }
         // Service ban notify cho nguoi dung o day .........
@@ -705,7 +720,7 @@ export class ResultService {
     // Tra thuong keno
     async rewardKenoLottery(transactionPerson: User, lottery: any, resultKeno: ResultKeno) {
         let benefits = caculateKenoBenefits(lottery, resultKeno.result)
-        
+
         await this.rewardLottery(benefits, lottery, transactionPerson.id, convertObjectToJsonValue(resultKeno))
     }
 

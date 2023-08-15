@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Transaction, User, WithdrawRequest, Lottery, BalanceFluctuations } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { TransactionDestination, TransactionStatus, TransactionType } from '../common/enum'
+import { LotteryType, RemoteMessageType, TransactionDestination, TransactionStatus, TransactionType } from '../common/enum'
 import { AcceptBankWithdrawDTO, RechargeDTO, WithDrawBankAccountDTO, WithDrawLuckyKingDTO } from './dto';
 import { WalletEnum } from './enum';
 import { nDate } from 'src/common/utils';
@@ -50,10 +50,15 @@ export class TransactionService {
         })
         const moneyAccount = await this.updateLucKyingBalance(user.id, body.amount, WalletEnum.Increase, transaction.id)
 
+        const dataFirebase = {
+            type: RemoteMessageType.LUCKYKING_WALLET,
+        }
+
         this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.RECHARGE_SUCCESS,
-            FIREBASE_MESSAGE.RECHARGE_SUCCESS.replace('so_tien', amount + '').replace('nguon_tien', body.payment)
+            FIREBASE_MESSAGE.RECHARGE_SUCCESS.replace('so_tien', amount + '').replace('nguon_tien', body.payment),
+            dataFirebase
         )
 
         delete transaction.User.hashedPassword
@@ -105,10 +110,15 @@ export class TransactionService {
         //@ts-ignore
         transaction.rewardWalletBalance = rewardWallet.balance
 
+        const dataFirebase = {
+            type: RemoteMessageType.LUCKYKING_WALLET,
+        }
+
         this.firebaseService.senNotificationToUser(
             user.id,
             FIREBASE_TITLE.WITHDRAW_LUCKYKING,
-            FIREBASE_MESSAGE.WITHDRAW_LUCKYKING.replace('so_tien', amount + '')
+            FIREBASE_MESSAGE.WITHDRAW_LUCKYKING.replace('so_tien', amount + ''),
+            dataFirebase
         )
 
         return transaction

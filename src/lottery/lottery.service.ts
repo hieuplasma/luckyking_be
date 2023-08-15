@@ -10,7 +10,7 @@ import { ICreateLottery, IUpdateLotteryNumber } from './interfaces';
 import fs from 'fs'
 import dayjs from 'dayjs';
 import { caculateSurcharge, nDate } from 'src/common/utils';
-import { LotteryType } from 'src/common/enum';
+import { LotteryType, RemoteMessageType } from 'src/common/enum';
 import FirebaseService from '../firebase/firebase-app'
 import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
 import { printCode } from 'src/common/utils/other.utils';
@@ -139,7 +139,7 @@ export class LotteryService implements OnModuleInit {
         const now = new nDate();
 
         const lotteryToConfirm = await this.prismaService.lottery.findUnique({
-            where: {id: lotteryId},
+            where: { id: lotteryId },
             include: {
                 NumberLottery: true
             }
@@ -166,10 +166,10 @@ export class LotteryService implements OnModuleInit {
         // Reward if result exists
         if (dayjs().isAfter(dayjs(lotteryToConfirm.drawTime))) {
             const result = await this.prismaService.resultKeno.findUnique({
-                where: {drawCode: lotteryToConfirm.drawCode}
+                where: { drawCode: lotteryToConfirm.drawCode }
             })
 
-            if(result.drawn && result.approved) {
+            if (result.drawn && result.approved) {
                 this.resultService.rewardKenoLottery(user, lotteryToConfirm, result);
             }
         }
@@ -181,7 +181,7 @@ export class LotteryService implements OnModuleInit {
             }
         }
 
-        await this.prismaService.order.update({
+        const order = await this.prismaService.order.update({
             where: {
                 id: confirmedLottery.orderId,
             },
@@ -193,11 +193,17 @@ export class LotteryService implements OnModuleInit {
             }
         })
 
+        const dataFirebase = {
+            type: RemoteMessageType.DETAIL_ORDER,
+            orderId: order.id
+        }
+
         this.firebaseService.senNotificationToUser(
             confirmedLottery.userId,
             FIREBASE_TITLE.PRINTED_LOTTERY,
             FIREBASE_MESSAGE.PRINTED_LOTTERY
-                .replace('ma_don_hang', printCode(confirmedLottery.Order.displayId))
+                .replace('ma_don_hang', printCode(confirmedLottery.Order.displayId)),
+            dataFirebase
         )
 
         return confirmedLottery;
