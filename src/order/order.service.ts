@@ -1,9 +1,9 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, OrderByDrawDTO, ReturnOrderDTO } from './dto';
+import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, OrderByDrawDTO, ReorderDTO, ReturnOrderDTO } from './dto';
 import { LotteryType, OrderMethod, RemoteMessageType, Role, TicketOrderType, TransactionDestination } from 'src/common/enum';
-import { LotteryNumber, NumberDetail } from '../common/entity';
+import { INumberDetail, LotteryNumber, NumberDetail } from '../common/entity';
 import { caculateSurcharge, formattedDate, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
 import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
@@ -523,7 +523,8 @@ export class OrderService {
                     status: OrderStatus.PENDING,
                     dataPart: formattedDate(currentDate),
                     method: method || OrderMethod.Keep,
-                    surcharge: surcharge
+                    surcharge: surcharge,
+                    ticketType: 'basic'
                 },
             });
 
@@ -562,6 +563,109 @@ export class OrderService {
         )
 
         return order;
+    }
+
+    async reorder(user: User, body: ReorderDTO) {
+        console.log(body)
+        if (body.lotteries.length === 0) throw new ForbiddenException(errorMessage.NO_LOTTERY_IN_ORDER);
+
+        const amount = parseInt(body.amount.toString())
+        const percent = (await this.prismaService.config.findFirst({}))?.surcharge
+        const surcharge = caculateSurcharge(amount, percent);
+        const totalMoney = amount + surcharge;
+        const balances = await this.userService.getAllWallet(user.id);
+
+        if (totalMoney > balances.luckykingBalance) {
+            throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH);
+        }
+
+        let order: Order;
+        await this.prismaService.$transaction(async (tx) => {
+
+            const currentDate = new nDate()
+            order = await tx.order.create({
+                data: {
+                    amount: amount,
+                    user: {
+                        connect: { id: user.id }
+                    },
+                    //@ts-ignore
+                    status: OrderStatus.PENDING,
+                    dataPart: formattedDate(currentDate),
+                    method: body.method || OrderMethod.Keep,
+                    surcharge: surcharge,
+                    ticketType: body.ticketType
+                },
+            });
+
+            const transaction = await this.transactionService.payForOrder(
+                user,
+                totalMoney,
+                LUCKY_KING_PAYMENT,
+                TransactionDestination.LUCKY_KING,
+                TransactionDestination.HOST,
+                user.id,
+                order.id,
+                tx,
+            )
+
+            for (const element of body.lotteries) {
+                for (const draw of element.drawSelected) {
+                    let list = element.NumberLottery.numberDetail as INumberDetail[]
+                    let listUpdate = new LotteryNumber()
+                    for (let i = 0; i < list.length; i++) {
+                        list[i].tuChon = false
+                        listUpdate.add(list[i])
+                    }
+                    await tx.lottery.create({
+                        data: {
+                            user: {
+                                connect: { id: user.id }
+                            },
+                            type: element.type,
+                            amount,
+                            surcharge: caculateSurcharge(element.amount, percent),
+                            bets: element.bets,
+                            //@ts-ignore
+                            status: OrderStatus.PENDING,
+                            drawCode: draw.drawCode,
+                            drawTime: draw.drawTime,
+                            NumberLottery: {
+                                create: {
+                                    level: parseInt(element.NumberLottery.level.toString()),
+                                    numberSets: element.NumberLottery.numberSets,
+                                    numberDetail: listUpdate.convertToJSon()
+                                }
+                            },
+                            Order: {
+                                connect: { id: order.id }
+                            }
+                        }
+                    })
+                }
+            }
+
+            //@ts-ignore
+            order.transaction = transaction;
+        })
+
+        const dataFirebase = {
+            type: RemoteMessageType.DETAIL_ORDER,
+            orderId: order.id
+        }
+
+        if (body.ticketType = TicketOrderType.Basic) this.firebaseService.sendNotification('Có đơn vé thường mới');
+        else this.firebaseService.sendNotification('Có đơn Keno mới');
+        this.firebaseService.senNotificationToUser(
+            user.id,
+            FIREBASE_TITLE.ORDER_SUCCESS,
+            FIREBASE_MESSAGE.ORDER_SUCCESS
+                .replace('ma_don_hang', printCode(order.displayId))
+                .replace('so_tien', amount.toString()),
+            dataFirebase
+        )
+
+        return order
     }
 
     async getOrderById(orderId: string): Promise<Order> {

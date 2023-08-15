@@ -3,6 +3,7 @@ import { HOT_LINE } from "../constants/constants";
 export const errorMessage = {
     BALANCE_NOT_ENOUGH: "Số dư không đủ!",
     NO_LOTTERY_CART: "Không có vé trong giỏ hàng!",
+    NO_LOTTERY_IN_ORDER: "Không có vé trong đơn hàng!",
     NO_ORDER: "Đơn mua hàng không tồn tại!",
     RESOLVED_ORDER: "Đơn hàng đã được xác nhận hoặc hoàn trả!",
     NOT_LOCK_ORDER: "Đơn hàng chưa được khoá!",

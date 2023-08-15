@@ -3,7 +3,7 @@ import { Order, OrderStatus, User } from '../../node_modules/.prisma/client';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { LotteryType, Role } from 'src/common/enum';
-import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO, ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderFromCartDTO, lockMultiOrderDTO, OrderByDrawDTO } from './dto';
+import { CreateOrderMegaPowerDTO, CreateOrderMax3dDTO, ReturnOrderDTO, ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderFromCartDTO, lockMultiOrderDTO, OrderByDrawDTO, ReorderDTO } from './dto';
 import { OrderService } from './order.service';
 
 @Controller('order')
@@ -36,6 +36,13 @@ export class OrderController {
     createOderFromCart(@GetUser() user: User, @Body() body: CreateOrderFromCartDTO): Promise<Order> {
         const { lotteryIds, method } = body;
         return this.orderService.createOrderFromCart(user, lotteryIds, method);
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Post('re-order')
+    @Roles(Role.User)
+    reorder(@GetUser() user: User, @Body() body: ReorderDTO): Promise<Order> {
+        return this.orderService.reorder(user, body);
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)

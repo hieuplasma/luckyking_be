@@ -1,5 +1,6 @@
+import { Lottery, NumberLottery } from "@prisma/client";
 import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
-import { LotteryType, OrderMethod } from "src/common/enum";
+import { LotteryType, OrderMethod, TicketOrderType } from "src/common/enum";
 
 class CreateOrder {
     @IsEnum(LotteryType)
@@ -62,4 +63,25 @@ export class CreateOrderFromCartDTO {
 
     @IsEnum(OrderMethod)
     method?: keyof typeof OrderMethod;
+}
+
+interface DrawSelected {
+    drawCode: number
+    drawTime: any
+}
+interface LotteryReorder extends Lottery {
+    drawSelected: DrawSelected[],
+    NumberLottery: NumberLottery
+}
+
+export class ReorderDTO {
+
+    amount: number
+    surcharge: number
+
+    @IsEnum(OrderMethod)
+    method?: keyof typeof OrderMethod;
+
+    lotteries: LotteryReorder[]
+    ticketType: TicketOrderType
 }

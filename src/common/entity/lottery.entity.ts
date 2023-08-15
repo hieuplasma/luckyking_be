@@ -3,7 +3,8 @@ import { convertArrayToJsonValue } from "../utils/other.utils"
 
 export type INumberDetail = {
     boSo: string
-    tienCuoc: number
+    tienCuoc: number,
+    tuChon: boolean | undefined
 }
 
 export class NumberDetail {
