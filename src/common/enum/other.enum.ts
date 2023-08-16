@@ -4,3 +4,8 @@ export enum RemoteMessageType {
     REWARD_WALLET = 'rewardwallet',
     RESULT_DRAW = 'resultdraw'
 }
+
+export enum OTPSender {
+    ZALO = "zalo",
+    VOICE_OTP = "voiceotp"
+}

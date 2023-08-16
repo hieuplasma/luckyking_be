@@ -7,6 +7,7 @@ import { errorMessage } from 'src/common/error_message';
 import axios from 'axios';
 import { Cron } from '@nestjs/schedule';
 import { TIMEZONE } from 'src/common/constants/constants';
+import { OTPSender } from 'src/common/enum';
 
 export const OTP_SECRECT = "OTP_LUCKYKING_SECRECT"
 const URL_SEND_OTP = 'https://business.openapi.zalo.me/message/template'
@@ -34,8 +35,9 @@ export class OtpService {
         })
 
         delete (session.otp)
-        this.sendZaloOTP(otp, body.phoneNumber)
-
+        if (body.otpSender && body.otpSender == OTPSender.VOICE_OTP) this.sendVoiceOTP(otp, body.phoneNumber)
+        else this.sendZaloOTP(otp, body.phoneNumber)
+        
         return session
     }
 
@@ -88,6 +90,14 @@ export class OtpService {
             "tracking_id": "tracking_id"
         }
         const res = await axios.post(URL_SEND_OTP, postData, config)
+        if (res.data) console.log(res.data)
+        else console.log(res)
+    }
+
+    async sendVoiceOTP(otp: string, phoneNumber: string) {
+        let otpStr = Array.from(otp).join(',');
+        const URL_SEND_OTP = `http://otp.voip24h.vn/api/voice_otp?voip=e3d9e2d98bdd0def22d1798cd852afb959a2ac15&phone=${phoneNumber}&data_speech=${otpStr}`
+        const res = await axios.get(URL_SEND_OTP)
         if (res.data) console.log(res.data)
         else console.log(res)
     }
