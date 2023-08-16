@@ -332,11 +332,12 @@ export class LotteryService implements OnModuleInit {
             }
 
             const update = await this.prismaService.lottery.update({
+                where: { id: body.lotteryId },
                 data: {
+                    tryToUpload: +body.tryToUpload,
                     imageFront: imgFront ? `/${imgFront.filename}` : lottery.imageFront,
                     imageBack: imgBack ? `/${imgBack.filename}` : lottery.imageBack
                 },
-                where: { id: body.lotteryId }
             })
             return update
         }
@@ -366,11 +367,12 @@ export class LotteryService implements OnModuleInit {
             }
 
             const update = await this.prismaService.lottery.update({
+                where: { id: body.lotteryId },
                 data: {
+                    tryToUpload: +body.tryToUpload,
                     imageFront: imgFront ? `/${imgFront.filename}` : lottery.imageFront,
                     imageBack: imgFront ? `/${imgFront.filename}` : lottery.imageBack,
                 },
-                where: { id: body.lotteryId }
             })
             return update
         }
@@ -564,7 +566,7 @@ export class LotteryService implements OnModuleInit {
     }
 
 
-    @Cron('30 4,9,14,19,24,29,34,39,44,49,54,59 6-22 * * *', { timeZone: TIMEZONE })
+    @Cron('20 4,9,14,19,24,29,34,39,44,49,54,59 6-22 * * *', { timeZone: TIMEZONE })
     async kenoSchedule() {
         const now = new nDate()
         const schedule = await this.prismaService.resultKeno.findFirst({
