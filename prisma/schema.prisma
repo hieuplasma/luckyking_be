@@ -137,6 +137,7 @@ model Lottery {
   confirmedAt     DateTime?
   benefits        BigInt?        @default(0)
   userId          String
+  tryToUpload     Int?           @default(0)
   imageFront      String?
   orderId         String?
   status          OrderStatus?

@@ -93,7 +93,7 @@ export class LotteryController {
             filename(req, file, callback) {
                 const ext = file.originalname.split('.').pop();
                 const fileName = `${fileNameConvert(req.body.lotteryId)}.${ext}`;
-                console.log(fileName)
+                // console.log(fileName)
                 callback(null, fileName)
             },
         })
@@ -101,7 +101,7 @@ export class LotteryController {
     async updateImage(
         @Body() body: UpdateImageDTO,
         @UploadedFiles() files: { imgFront?: Express.Multer.File[], imgBack?: Express.Multer.File[] }) {
-        return this.lotteryService.updateImage(body, files.imgFront[0], files.imgBack[0])
+            return this.lotteryService.updateImage(body, files.imgFront[0], files.imgBack[0])
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
@@ -115,7 +115,7 @@ export class LotteryController {
             filename(req, file, callback) {
                 const ext = file.originalname.split('.').pop();
                 const fileName = `${fileNameConvert(req.body.lotteryId)}.${ext}`;
-                console.log(fileName)
+                // console.log(fileName)
                 callback(null, fileName)
             },
         })
