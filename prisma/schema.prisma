@@ -54,14 +54,14 @@ model BankAccount {
   userId        String
   name          String?
   code          String?
-  shortName     String?  @unique
+  shortName     String?  
   accountNumber String?
   amount        BigInt?  @default(0)
   userName      String?
   logo          String?
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([shortName, accountNumber], name: "uniqueAccount")
+  @@unique([shortName, accountNumber, userId], name: "uniqueAccount")
 }
 
 model MoneyAccount {

@@ -4,7 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser, Roles } from '../auth/decorator';
 import { UserService } from './user.service';
 import { UserDTO } from './dto';
-import { User, BankAccount } from '../../node_modules/.prisma/client';
+import { User, BankAccount, WithdrawRequest } from '../../node_modules/.prisma/client';
 import { MyJwtGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/common/enum';
 
@@ -39,5 +39,19 @@ export class UserController {
     @Roles(Role.User)
     getAllWallet(@GetUser() user: User) {
         return this.userService.getAllWallet(user.id)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-all-bank')
+    @Roles(Role.User)
+    getAllBank(@GetUser() user: User) {
+        return this.userService.getAllBank(user.id)
+    }
+
+    @UseGuards(MyJwtGuard, RolesGuard)
+    @Get('get-all-bank-withdraw')
+    @Roles(Role.User)
+    getAllBankWithdraw(@GetUser() user: User) {
+        return this.userService.getAllBankWithdraw(user.id)
     }
 }

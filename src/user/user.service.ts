@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Role } from "src/common/enum";
 import { nDate } from "src/common/utils";
-import { User, BankAccount } from '../../node_modules/.prisma/client';
+import { User, BankAccount, WithdrawRequest } from '../../node_modules/.prisma/client';
 import { PrismaService } from "../prisma/prisma.service";
 import { UserDTO } from "./dto/user.dto";
 
@@ -53,6 +53,19 @@ export class UserService {
 
     async getAllWallet(userId: string) {
         return await this.getBalance(userId)
+    }
+
+    async getAllBank(userId: string) {
+        return await this.prismaService.bankAccount.findMany({
+            where: { userId: userId }
+        })
+    }
+
+    async getAllBankWithdraw(userId: string) {
+        return await this.prismaService.withdrawRequest.findMany({
+            where: { userId: userId },
+            orderBy: {displayId:'desc'}
+        })
     }
 
     private async getBalance(userId: string) {

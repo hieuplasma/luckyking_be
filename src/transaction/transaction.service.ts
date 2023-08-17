@@ -129,6 +129,38 @@ export class TransactionService {
         const MIN_WITHDRAW = (await this.prismaService.config.findFirst({})).minAmountCanWithdrawn
         const amount = parseInt(body.amount.toString())
         if (amount < MIN_WITHDRAW) { throw new ForbiddenException(`Số tiền phải lớn hơn ${MIN_WITHDRAW}đ!`) }
+
+        if (body.save) {
+            await this.prismaService.bankAccount.upsert({
+                where: {
+                    uniqueAccount: {
+                        shortName: body.shortName,
+                        accountNumber: body.accountNumber,
+                        userId: user.id
+                    }
+                },
+                create: {
+                    userId: user.id,
+                    name: body.name,
+                    userName: body.userName,
+                    logo: body.logo,
+                    code: body.code,
+                    shortName: body.shortName,
+                    accountNumber: body.accountNumber,
+                    amount: amount
+                },
+                update: {
+                    name: body.name,
+                    userName: body.userName,
+                    code: body.code,
+                    logo: body.logo,
+                    shortName: body.shortName,
+                    accountNumber: body.accountNumber,
+                    amount: amount
+                }
+            })
+        }
+
         const withdrawRequest = await this.prismaService.withdrawRequest.create({
             data: {
                 amount: amount,
@@ -142,35 +174,10 @@ export class TransactionService {
             }
         })
 
-        if (body.save) {
-            await this.prismaService.bankAccount.upsert({
-                where: { uniqueAccount: { shortName: body.shortName, accountNumber: body.accountNumber } },
-                update: {
-                    name: body.name,
-                    userName: body.userName,
-                    code: body.code,
-                    logo: body.logo,
-                    shortName: body.shortName,
-                    accountNumber: body.accountNumber,
-                    amount: amount
-                },
-                create: {
-                    userId: user.id,
-                    name: body.name,
-                    userName: body.userName,
-                    logo: body.logo,
-                    code: body.code,
-                    shortName: body.shortName,
-                    accountNumber: body.accountNumber,
-                    amount: amount
-                }
-            })
-        }
-
         const transaction = await this.prismaService.transaction.create({
             data: {
                 type: TransactionType.WithDraw,
-                description: "Đổi thưởng về tài khoản ngân hàng",
+                description: "Yêu cầu đổi thưởng về TKNH",
                 amount: withdrawRequest.amount,
                 payment: "Chuyển khoản ngân hàng",
                 User: {
