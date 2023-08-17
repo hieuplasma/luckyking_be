@@ -32,14 +32,6 @@ export class TransactionController {
     }
 
     @UseGuards(MyJwtGuard, RolesGuard)
-    @Post('accept-bank-withdraw')
-    @Roles(Role.User)
-    acceptBankWithdraw(@GetUser() transactionPerson: User, @Body() body: AcceptBankWithdrawDTO) {
-        return this.transactionService.acceptBankWithdraw(transactionPerson, body)
-    }
-
-
-    @UseGuards(MyJwtGuard, RolesGuard)
     @Get('list')
     @Roles(Role.User)
     getListTransaction(@GetUser() me: User) {

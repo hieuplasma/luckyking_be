@@ -8,6 +8,7 @@ import { nDate } from 'src/common/utils';
 import FirebaseService from '../firebase/firebase-app'
 import { FIREBASE_MESSAGE, FIREBASE_TITLE } from 'src/common/constants/constants';
 import { errorMessage } from 'src/common/error_message';
+import { printCode } from 'src/common/utils/other.utils';
 
 @Injectable()
 export class TransactionService {
@@ -125,10 +126,10 @@ export class TransactionService {
     }
 
     async requestWithDrawToBank(user: User, body: WithDrawBankAccountDTO) {
-        const MIN_WITHDRAW = 100000
+        const MIN_WITHDRAW = (await this.prismaService.config.findFirst({})).minAmountCanWithdrawn
         const amount = parseInt(body.amount.toString())
         if (amount < MIN_WITHDRAW) { throw new ForbiddenException(`Số tiền phải lớn hơn ${MIN_WITHDRAW}đ!`) }
-        const response = await this.prismaService.withdrawRequest.create({
+        const withdrawRequest = await this.prismaService.withdrawRequest.create({
             data: {
                 amount: amount,
                 userId: user.id,
@@ -165,42 +166,37 @@ export class TransactionService {
                 }
             })
         }
-        return response
-    }
 
-    async acceptBankWithdraw(user: User, body: AcceptBankWithdrawDTO) {
-        const withdrawRequest = await this.prismaService.withdrawRequest.update({
-            where: { id: body.id },
+        const transaction = await this.prismaService.transaction.create({
             data: {
-                status: body.status,
-                statusDescription: body.statusDescription,
-                confirmAt: new nDate(),
-                confirmBy: user.phoneNumber,
-                confirmUserId: user.id
+                type: TransactionType.WithDraw,
+                description: "Đổi thưởng về tài khoản ngân hàng",
+                amount: withdrawRequest.amount,
+                payment: "Chuyển khoản ngân hàng",
+                User: {
+                    connect: { id: withdrawRequest.userId }
+                },
+                source: TransactionDestination.REWARD,
+                destination: withdrawRequest.shortName + " - " + withdrawRequest.accountNumber + " - " + withdrawRequest.userName,
+                WithdrawRequest: {
+                    connect: {
+                        id: withdrawRequest.id
+                    }
+                }
             }
         })
-
-        if (body.status == TransactionStatus.SUCCESS) {
-            const transaction = await this.prismaService.transaction.create({
-                data: {
-                    type: TransactionType.WithDraw,
-                    description: "Đổi thưởng về tài khoản ngân hàng",
-                    amount: withdrawRequest.amount,
-                    payment: "Chuyển khoản ngân hàng",
-                    User: {
-                        connect: { id: withdrawRequest.userId }
-                    },
-                    source: TransactionDestination.REWARD,
-                    destination: withdrawRequest.shortName + " - " + withdrawRequest.accountNumber + " - " + withdrawRequest.userName,
-                    transactionPersonId: user.id
-                }
-            })
-            await this.updateRewardWalletBalance(user.id, Number(withdrawRequest.amount), WalletEnum.Decrease, transaction.id)
-
-            //@ts-ignores
-            withdrawRequest.transaction = transaction
+        await this.updateRewardWalletBalance(withdrawRequest.userId, Number(withdrawRequest.amount), WalletEnum.Decrease, transaction.id)
+        const dataFirebase = {
+            type: RemoteMessageType.REWARD_WALLET,
         }
-
+        this.firebaseService.senNotificationToUser(
+            withdrawRequest.userId,
+            FIREBASE_TITLE.WITHDRAW_BANK_ACOUNT,
+            FIREBASE_MESSAGE.WITHDRAW_BANK_ACOUNT
+                .replace('so_tien', withdrawRequest.amount.toString())
+                .replace('ma_rut', printCode(withdrawRequest.displayId)),
+            dataFirebase
+        )
         return withdrawRequest
     }
 

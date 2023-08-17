@@ -23,7 +23,7 @@ export const FIREBASE_MESSAGE = {
     PRINTED_LOTTERY: "Quý Khách đã mua vé thành công, mã đơn hàng của Quý Khách là ma_don_hang ",
     RECHARGE_SUCCESS: "Tài khoản LuckyKing của Quý Khách đã được cộng so_tien VND từ nguon_tien",
     WITHDRAW_LUCKYKING: "Quý Khách đã thực hiện đổi thưởng so_tienVND từ Tài khoản trả thưởng sang tài khoản LuckyKing thành công. Mọi thắc mắc xin liên hệ hotline 0586.79.88.79",
-    WITHDRAW_BANK_ACOUNT: "Quý Khách đã thực hiện đổi thưởng so_tienVND từ Tài khoản trả thưởng về tài khoản ngân hàng thành công. Mọi thắc mắc xin liên hệ hotline 0586.79.88.79",
+    WITHDRAW_BANK_ACOUNT: "Quý Khách đã yêu cầu đổi thưởng so_tienVND từ Tài khoản trả thưởng về tài khoản ngân hàng thành công. Mã yêu cầu là ma_rut",
     WON_PRIZE: "Đơn hàng ma_don_hang kỳ quay ky_quay ngày ngay_quay đã trúng thưởng với số tiền là so_tienVND",
     PAID_PRIZE: "LuckyKing đã trả thưởng so_tienVND từ đơn hàng ma_don_hang vào Tài khoản trả thưởng của Quý khách",
     RETURN_MONEY: "LuckyKing đã hoàn so_tien VND từ đơn hàng ma_don_hang vào Tài khoản mua vé của Quý khách",
