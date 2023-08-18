@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Get, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AuthDTO, CheckAuthDTO, CreateStaffDTO, ForgotPassWordDTO, UpdatePassWordDTO } from "./dto";
 import { RegisterDTO } from "./dto/register.dto";
@@ -80,5 +80,10 @@ export class AuthController {
     @Post("/otp-verified/forgot-password")
     verifiedForgotPassword(@Body() body: ForgotPassWordDTO) {
         return this.authService.forgotPassword(body)
+    }
+
+    @Get("/priority-number")
+    getPriorityNumber() {
+        return this.authService.getPriorityNumber()
     }
 } 

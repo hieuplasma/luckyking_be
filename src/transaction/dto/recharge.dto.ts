@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsPhoneNumber } from "class-validator"
 
 export class RechargeDTO {
-    @IsPhoneNumber('VN')
+    // @IsPhoneNumber('VN')
     @IsNotEmpty()
     phoneNumber: string
 

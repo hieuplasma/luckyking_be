@@ -382,4 +382,11 @@ export class AuthService {
       accessToken: jwtString,
     };
   }
+
+  async getPriorityNumber() {
+    const list = await this.prismaService.priorityNumber.findMany({})
+    let res: string[] = []
+    for (const element of list) res.push(element.phoneNumber)
+    return res
+  }
 }

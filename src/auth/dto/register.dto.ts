@@ -3,7 +3,7 @@ import { errorMessage } from "src/common/error_message"
 
 
 export class RegisterDTO {
-  @IsPhoneNumber('VN', { message: errorMessage.INVALID_PHONENUMBER })
+  // @IsPhoneNumber('VN', { message: errorMessage.INVALID_PHONENUMBER })
   @IsNotEmpty()
   phoneNumber: string
 
