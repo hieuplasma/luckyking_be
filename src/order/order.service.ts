@@ -569,7 +569,9 @@ export class OrderService {
         if (body.lotteries.length === 0) throw new ForbiddenException(errorMessage.NO_LOTTERY_IN_ORDER);
 
         const amount = parseInt(body.amount.toString())
-        const percent = (await this.prismaService.config.findFirst({}))?.surcharge
+        const config = await this.prismaService.config.findFirst({})
+        let percent = config.surcharge
+        if (body.ticketType == TicketOrderType.Keno) percent = config.kenoSurcharge
         const surcharge = caculateSurcharge(amount, percent);
         const totalMoney = amount + surcharge;
         const balances = await this.userService.getAllWallet(user.id);
