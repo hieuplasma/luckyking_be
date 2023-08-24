@@ -4,7 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfirmOrderDTO, CreateOrderKenoDTO, CreateOrderMax3dDTO, CreateOrderMegaPowerDTO, lockMultiOrderDTO, OrderByDrawDTO, ReorderDTO, ReturnOrderDTO } from './dto';
 import { LotteryType, OrderMethod, RemoteMessageType, Role, TicketOrderType, TransactionDestination } from 'src/common/enum';
 import { INumberDetail, LotteryNumber, NumberDetail } from '../common/entity';
-import { caculateSurcharge, formattedDate, nDate } from 'src/common/utils';
+import { caculateSurcharge, formattedDate, getSaleTime, nDate } from 'src/common/utils';
 import { UserService } from 'src/user/user.service';
 import { DEFAULT_BET, LUCKY_KING_PAYMENT } from 'src/common/constants';
 import { TransactionService } from 'src/transaction/transaction.service';
@@ -14,6 +14,7 @@ import FirebaseService from '../firebase/firebase-app'
 import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
 import { printCode } from 'src/common/utils/other.utils';
 import { errorMessage } from 'src/common/error_message';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class OrderService {
@@ -30,6 +31,20 @@ export class OrderService {
         const balances = await this.userService.getAllWallet(user.id)
         const percent = (await this.prismaService.config.findFirst({}))?.surcharge
         const { drawCode, drawTime, bets, lotteryType } = body;
+
+        // ============= Check drawTime and Sale time ============
+
+        const config = await this.prismaService.config.findFirst();
+        const saleTime = getSaleTime(lotteryType as LotteryType, config);
+        
+        for(const drawTimeItem of drawTime) {
+            const stopTime = dayjs(drawTimeItem).subtract(saleTime, "minutes");
+            if (dayjs().isAfter(stopTime)) {
+                throw new ForbiddenException(errorMessage.TOO_LATE_TO_BUY.replace('TIME', stopTime.format("HH:mm")));
+            }
+        }
+        
+        // =============            END               ============
 
         const currentDate = new nDate()
         let totalAmount = 0;
@@ -164,6 +179,20 @@ export class OrderService {
         const balances = await this.userService.getAllWallet(user.id)
         const percent = (await this.prismaService.config.findFirst({}))?.surcharge || body.surcharge
         const { drawCode, drawTime, lotteryType, level, tienCuoc } = body;
+
+        // ============= Check drawTime and Sale time ============
+
+        const config = await this.prismaService.config.findFirst();
+        const saleTime = getSaleTime(lotteryType as LotteryType, config);
+        
+        for(const drawTimeItem of drawTime) {
+            const stopTime = dayjs(drawTimeItem).subtract(saleTime, "minutes");
+            if (dayjs().isAfter(stopTime)) {
+                throw new ForbiddenException(errorMessage.TOO_LATE_TO_BUY.replace('TIME', stopTime.format("HH:mm")));
+            }
+        }
+
+        // =============            END               ============
 
         const currentDate = new nDate()
         let totalAmount = 0;
@@ -485,10 +514,23 @@ export class OrderService {
     async createOrderFromCart(user: User, lotteryIds: string[], method: keyof typeof OrderMethod) {
         let totalAmount = 0;
         const lotteryIdsToCreate = []; // Only create lottery with status as cart
+        const config = await this.prismaService.config.findFirst({})
 
         for (const lotteryId of lotteryIds) {
             const lottery = await this.lotteryService.getLotteryById(lotteryId);
             if (!lottery || lottery.status !== OrderStatus.CART) continue;
+
+            // ============= Check drawTime and Sale time ============
+
+            const {type, drawTime} = lottery;
+            const saleTime = getSaleTime(type as LotteryType, config);
+
+            const stopTime = dayjs(drawTime).subtract(saleTime, "minutes");
+            if (dayjs().isAfter(stopTime)) {
+                throw new ForbiddenException(errorMessage.TOO_LATE_TO_BUY_FROM_CART.replace('TYPE', type).replace('TIME', stopTime.format("HH:mm")));
+            }
+            
+            // =============            END               ============
 
             lotteryIdsToCreate.push(lotteryId);
 
@@ -498,7 +540,7 @@ export class OrderService {
 
         if (lotteryIdsToCreate.length === 0) throw new ForbiddenException(errorMessage.NO_LOTTERY_CART);
 
-        const percent = (await this.prismaService.config.findFirst({}))?.surcharge
+        const percent = config.surcharge;
         const surcharge = caculateSurcharge(totalAmount, percent);
         const totalMoney = totalAmount + surcharge;
 
@@ -580,6 +622,14 @@ export class OrderService {
             throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH);
         }
 
+        // KENO next result
+        const now = new nDate()
+        const schedule = await this.prismaService.resultKeno.findFirst({
+            where: { drawn: false, drawTime: { gt: now } },
+            orderBy: { drawCode: 'asc' },
+        });
+
+
         let order: Order;
         await this.prismaService.$transaction(async (tx) => {
 
@@ -612,7 +662,32 @@ export class OrderService {
 
             let lotteryToReturn = []
             for (const element of body.lotteries) {
+
+                const { type } = element;
+
                 for (const draw of element.drawSelected) {
+                    
+                    let validDrawCode = draw.drawCode;
+                    let validDrawTime = draw.drawTime;
+
+                    // ============= Check drawTime and Sale time ============
+                    if (type !== LotteryType.Keno) {
+                        const { drawTime } = draw;
+                        const saleTime = getSaleTime(type as LotteryType, config);
+                        
+                        const stopTime = dayjs(drawTime).subtract(saleTime, "minutes");
+                        if (dayjs().isAfter(stopTime)) {
+                            throw new ForbiddenException(errorMessage.TOO_LATE_TO_RE_ORDER.replace('TYPE', type).replace('TIME', stopTime.format("HH:mm")));
+                        }
+                    } else {
+                        if (schedule.drawCode > draw.drawCode) {
+                            validDrawCode = schedule.drawCode;
+                            validDrawTime = schedule.drawTime;
+                        }
+                    }
+                    
+                    // =============            END               ============
+
                     let list = element.NumberLottery.numberDetail as INumberDetail[]
                     let listUpdate = new LotteryNumber()
                     for (let i = 0; i < list.length; i++) {
@@ -630,8 +705,8 @@ export class OrderService {
                             bets: element.bets,
                             //@ts-ignore
                             status: OrderStatus.PENDING,
-                            drawCode: draw.drawCode,
-                            drawTime: draw.drawTime,
+                            drawCode: validDrawCode,
+                            drawTime: validDrawTime,
                             NumberLottery: {
                                 create: {
                                     level: parseInt(element.NumberLottery.level.toString()),
@@ -675,11 +750,6 @@ export class OrderService {
 
         if (body.ticketType == TicketOrderType.Basic) this.firebaseService.sendNotification('Có đơn vé thường mới');
         else {
-            const now = new nDate()
-            const schedule = await this.prismaService.resultKeno.findFirst({
-                where: { drawn: false, drawTime: { gt: now } },
-                orderBy: { drawCode: 'asc' },
-            });
             // @ts-ignore
             let lotteriesToSend = order.Lottery.filter((lottery) => lottery.drawCode === schedule.drawCode);
             lotteriesToSend.map((lottery: any) => lottery.Order = { displayId: order.displayId })
