@@ -2,6 +2,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { NumberDetail } from '../entity';
 import { dateConvert } from './time.utils';
 import { getLevelFromNumber, kenoAnalysis } from './other.utils';
+import { LotteryType } from '../enum';
+import { Config } from '@prisma/client';
 
 export function caculateSurcharge(amount: number, percent = 2) {
     let surcharge = amount * percent / 100;
@@ -616,6 +618,21 @@ export function generateUniqueStrings(arr: number[]) {
     generatePermutations(arr, "", [1, 1, 1], 3, results);
 
     return results.filter(onlyUnique);
+}
+
+export function getSaleTime(lotteryType: LotteryType, config: Config) {
+    switch (lotteryType) {
+        case LotteryType.Max3D:
+            return config.max3dSaleTime;
+        case LotteryType.Max3DPlus:
+            return config.max3dplusSaleTime;
+        case LotteryType.Max3DPro:
+            return config.max3dproSaleTime;
+        case LotteryType.Power:
+            return config.power655SaleTime;
+        case LotteryType.Mega:
+            return config.mega645SaleTime;
+    }
 }
 
 function onlyUnique(value: any, index: number, array: any[]) {

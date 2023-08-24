@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Lottery, OrderStatus, User, NumberLottery } from '@prisma/client';
+import dayjs from 'dayjs';
 import { DEFAULT_BET } from 'src/common/constants';
 import { LotteryNumber, NumberDetail } from 'src/common/entity';
 import { LotteryType } from 'src/common/enum';
+import { errorMessage } from 'src/common/error_message';
+import { getSaleTime } from 'src/common/utils';
 import { ICreateLottery } from 'src/lottery/interfaces';
 import { LotteryService } from 'src/lottery/lottery.service';
 import { NumberLotteryService } from 'src/numberLottery/numberLottery.service';
@@ -23,6 +26,19 @@ export class CartService {
         const status = OrderStatus.CART
         const cartId = await this.getCardId(user.id);
         const { drawCode, drawTime, lotteryType, bets } = body;
+        const config = await this.prismaService.config.findFirst();
+
+        // ============= Check drawTime and Sale time ============
+        for (const drawTimeItem of drawTime) {
+            let saleTime = getSaleTime(lotteryType as LotteryType, config);
+            
+            const stopTime = dayjs(drawTimeItem).subtract(saleTime, "minutes");
+            if (dayjs().isAfter(stopTime)) {
+                throw new ForbiddenException(errorMessage.TOO_LATE_TO_BUY.replace('TIME', stopTime.format("HH:mm")));
+            }
+        }
+        // =============            END               ============
+
         const numbers = [...body.numbers];
         const setOfNumbers = [];
         let i = 0;
@@ -158,6 +174,19 @@ export class CartService {
         const status = OrderStatus.CART
         const cartId = await this.getCardId(user.id)
         const { drawCode, drawTime, lotteryType, level, amount: totalAmount } = body;
+        const config = await this.prismaService.config.findFirst();
+
+        // ============= Check drawTime and Sale time ============
+        for (const drawTimeItem of drawTime) {
+            let saleTime = getSaleTime(lotteryType as LotteryType, config);
+            
+            const stopTime = dayjs(drawTimeItem).subtract(saleTime, "minutes");
+            if (dayjs().isAfter(stopTime)) {
+                throw new ForbiddenException(errorMessage.TOO_LATE_TO_BUY.replace('TIME', stopTime.format("HH:mm")));
+            }
+        }
+        // =============            END               ============
+
         const numbers = [...body.numbers];
         const setOfNumbers = [];
         const bets = [...body.bets];

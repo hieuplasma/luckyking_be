@@ -298,6 +298,13 @@ model Config {
   autoConfirmKenoResults       Boolean @default(true)
   notification                 Boolean @default(true)
   kenoResultWarningTime        Int?    @default(40)
+
+  // Sales time
+  power655SaleTime  Int @default(30)
+  mega645SaleTime   Int @default(30)
+  max3dSaleTime     Int @default(30)
+  max3dplusSaleTime Int @default(30)
+  max3dproSaleTime  Int @default(30)
 }
 
 model Otp {
