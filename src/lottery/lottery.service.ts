@@ -296,6 +296,9 @@ export class LotteryService implements OnModuleInit {
                 },
                 status: OrderStatus.PENDING,
                 surcharge: caculateSurcharge(amount.amount, percent)
+            },
+            include: {
+                NumberLottery: true,
             }
         })
 

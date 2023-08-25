@@ -15,6 +15,7 @@ import { KenoSocketService } from 'src/webSocket/kenoWebSocket.service';
 import { printCode } from 'src/common/utils/other.utils';
 import { errorMessage } from 'src/common/error_message';
 import dayjs from 'dayjs';
+import { BasicLotterySocketService } from 'src/webSocket/basicLotteryWebSocket.service';
 
 @Injectable()
 export class OrderService {
@@ -24,6 +25,7 @@ export class OrderService {
         private transactionService: TransactionService,
         private lotteryService: LotteryService,
         private kenoSocketService: KenoSocketService,
+        private basicLotterySocketService: BasicLotterySocketService,
         private firebaseService: FirebaseService,
     ) { }
 
@@ -121,7 +123,10 @@ export class OrderService {
                     method: body.method,
                     surcharge: surcharge
                 },
-                include: { Lottery: { include: { NumberLottery: true } } }
+                include: {
+                    user: true
+                }
+                // include: { Lottery: { include: { NumberLottery: true } } }
             })
 
             const transaction = await this.transactionService.payForOrder(
@@ -170,6 +175,8 @@ export class OrderService {
                 .replace('so_tien', totalAmount.toString()),
             dataFirebase
         )
+
+        this.basicLotterySocketService.sendOrderToStaff(order)
 
         return order
     }
@@ -283,7 +290,10 @@ export class OrderService {
                     method: body.method,
                     surcharge: surcharge,
                 },
-                include: { Lottery: { include: { NumberLottery: true } } }
+                include: {
+                    user: true
+                }
+                // include: { Lottery: { include: { NumberLottery: true } } }
             })
 
             const transaction = await this.transactionService.payForOrder(
@@ -332,6 +342,8 @@ export class OrderService {
                 .replace('so_tien', totalAmount.toString()),
             dataFirebase
         )
+
+        this.basicLotterySocketService.sendOrderToStaff(order)
 
         return order
     }
@@ -568,6 +580,9 @@ export class OrderService {
                     surcharge: surcharge,
                     ticketType: 'basic'
                 },
+                include: {
+                    user: true,
+                }
             });
 
             const transaction = await this.transactionService.payForOrder(
@@ -581,12 +596,16 @@ export class OrderService {
                 tx,
             )
 
+            const lotteryToReturn = [];
             for (const lotteryId of lotteryIdsToCreate) {
-                await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id, percent, tx);
+               const lottery = await this.lotteryService.createLotteryFromCart(user, lotteryId, order.id, percent, tx);
+               lotteryToReturn.push(lottery);
             }
 
             //@ts-ignore
             order.transaction = transaction;
+            //@ts-ignore
+            order.Lottery = lotteryToReturn;
         })
 
         const dataFirebase = {
@@ -603,6 +622,8 @@ export class OrderService {
                 .replace('so_tien', totalAmount.toString()),
             dataFirebase
         )
+
+        this.basicLotterySocketService.sendOrderToStaff(order)
 
         return order;
     }
@@ -647,6 +668,9 @@ export class OrderService {
                     surcharge: surcharge,
                     ticketType: body.ticketType
                 },
+                include: {
+                    user: true,
+                }
             });
 
             const transaction = await this.transactionService.payForOrder(
@@ -773,6 +797,8 @@ export class OrderService {
                 .replace('so_tien', amount.toString()),
             dataFirebase
         )
+
+        this.basicLotterySocketService.sendOrderToStaff(order)
 
         return order
     }
