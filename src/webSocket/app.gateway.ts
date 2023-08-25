@@ -14,6 +14,8 @@ import { Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from "@nestjs/config";
 import { socketEvent } from './socket.event';
+import { TicketOrderType } from 'src/common/enum';
+import { BasicLotterySocketService } from './basicLotteryWebSocket.service';
 
 
 @WebSocketGateway(parseInt(process.env.SOCKET_PORT), { cors: true })
@@ -21,6 +23,7 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     constructor(
         private configService: ConfigService,
         private kenoSocketService: KenoSocketService,
+        private basicLotterySocketService: BasicLotterySocketService,
         private jwtService: JwtService,
     ) { }
 
@@ -28,17 +31,8 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 
     afterInit(server: any) {
         this.kenoSocketService.server = server;
+        this.basicLotterySocketService.server = server;
         this.logger.log('Initialized!');
-    }
-
-    @SubscribeMessage('getNextKenoOrder')
-    async getNextKenoOrder(
-        @MessageBody() data: string,
-        @ConnectedSocket() client: Socket,
-    ) {
-
-        console.log(data)
-        return false;
     }
 
     @SubscribeMessage(socketEvent.IAmBusy)
@@ -60,15 +54,13 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     }
 
     async handleConnection(client: Socket) {
-        console.log('connection: ', client.id);
         try {
-
-            if (!client.handshake.headers.authorization) {
+            if (!client.handshake.auth.token) {
                 console.log('UnAuthorization')
                 return
             };
 
-            const token = client.handshake.headers.authorization.split(' ')[1];
+            const token = client.handshake.auth.token.split(' ')[1];
 
             if (!token) {
                 console.log('Token not exists');
@@ -80,14 +72,28 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
                 ignoreExpiration: true
             })
 
-            this.kenoSocketService.addNewClient(client, data.sub);
+            const {type} = client.handshake.query;
+            console.log(`connection ${type}:`, client.id);
+
+            if (type === TicketOrderType.Keno) {
+                this.kenoSocketService.addNewClient(client, data.sub);
+            } else if (type === TicketOrderType.Basic) {
+                this.basicLotterySocketService.addNewClient(client, data.sub);
+            }
+
         } catch (error) {
             console.log(error)
         }
     }
 
     async handleDisconnect(client: Socket) {
-        console.log('disconnect: ', client.id)
-        this.kenoSocketService.deleteClient(client)
+        const {type} = client.handshake.query;
+        console.log(`disconnect ${type}: `, client.id)
+
+        if (type === TicketOrderType.Keno) {
+            this.kenoSocketService.deleteClient(client)
+        } else if (type === TicketOrderType.Basic) {
+            this.basicLotterySocketService.deleteClient(client);
+        }
     }
 }
