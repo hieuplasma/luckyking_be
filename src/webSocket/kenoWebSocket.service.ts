@@ -52,6 +52,8 @@ export class KenoSocketService {
                 isReady: true,
             })
         }
+
+        this.revokeAllKenoFromUser(userId);
     };
 
     setEmployeeIsBusy(client: Socket) {
