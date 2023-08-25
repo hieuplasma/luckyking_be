@@ -42,6 +42,13 @@ export function formattedDate(param: Date) {
     return formattedDate
 }
 
+export function formattedDate2(param: Date) {
+    const day = param.getDate();
+    const month = param.getMonth() + 1;
+    const year = param.getFullYear();
+    const formattedDate = printNumber(day) + '/' + printNumber(month) + '/' + (year - 2000);
+    return formattedDate
+}
 // Lay thoi gian gmt+7
 export class nDate extends Date {
     constructor() {
