@@ -32,7 +32,7 @@ export class OrderService {
 
     async createOrderPowerMega(user: User, body: CreateOrderMegaPowerDTO): Promise<Order> {
 
-        // throw new ForbiddenException(returnContent);
+        throw new ForbiddenException(returnContent);
         const balances = await this.userService.getAllWallet(user.id)
         const percent = (await this.prismaService.config.findFirst({}))?.surcharge
         const { drawCode, drawTime, bets, lotteryType } = body;
@@ -186,7 +186,7 @@ export class OrderService {
 
     async createOrderMax3d(user: User, body: CreateOrderMax3dDTO): Promise<Order> {
 
-        // throw new ForbiddenException(returnContent);
+        throw new ForbiddenException(returnContent);
         const balances = await this.userService.getAllWallet(user.id)
         const percent = (await this.prismaService.config.findFirst({}))?.surcharge || body.surcharge
         const { drawCode, drawTime, lotteryType, level, tienCuoc } = body;
@@ -354,7 +354,7 @@ export class OrderService {
 
     async createOrderKeno(user: User, body: CreateOrderKenoDTO): Promise<Order> {
      
-        // throw new ForbiddenException(returnContent);
+        throw new ForbiddenException(returnContent);
         const balances = await this.userService.getAllWallet(user.id)
         const percent = (await this.prismaService.config.findFirst({}))?.kenoSurcharge || 0;
         const { drawCode, drawTime, lotteryType } = body;
@@ -531,7 +531,7 @@ export class OrderService {
 
     async createOrderFromCart(user: User, lotteryIds: string[], method: keyof typeof OrderMethod) {
         
-        // throw new ForbiddenException(returnContent);
+        throw new ForbiddenException(returnContent);
         let totalAmount = 0;
         const lotteryIdsToCreate = []; // Only create lottery with status as cart
         const config = await this.prismaService.config.findFirst({})
@@ -638,7 +638,7 @@ export class OrderService {
 
     async reorder(user: User, body: ReorderDTO) {
 
-        // throw new ForbiddenException(returnContent);
+        throw new ForbiddenException(returnContent);
         if (body.lotteries.length === 0) throw new ForbiddenException(errorMessage.NO_LOTTERY_IN_ORDER);
 
         const amount = parseInt(body.amount.toString())
