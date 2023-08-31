@@ -18,8 +18,8 @@ import { BasicLotterySocketService } from './basicLotteryWebSocket.service';
 
 @WebSocketGateway(parseInt(process.env.SOCKET_PORT), {
   cors: true,
-  pingInterval: 2100,
-  pingTimeout: 2000,
+  pingInterval: 5100,
+  pingTimeout: 5000,
 })
 export class AppGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
