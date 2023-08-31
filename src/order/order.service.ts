@@ -17,7 +17,7 @@ import { errorMessage } from 'src/common/error_message';
 import dayjs from 'dayjs';
 import { BasicLotterySocketService } from 'src/webSocket/basicLotteryWebSocket.service';
 
-const returnContent = 'Để nâng cấp hệ thống nhằm đem lại trải nghiệm tốt hơn cho Khách hàng, LuckyKing sẽ tiến hành bảo trì hệ thống từ 16h ngày 25/08/2023.'
+const returnContent = 'Để nâng cấp hệ thống nhằm đem lại trải nghiệm tốt hơn cho Khách hàng, LuckyKing sẽ tiến hành bảo trì hệ thống từ 17h ngày 31/08/2023.'
 @Injectable()
 export class OrderService {
     constructor(
