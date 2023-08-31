@@ -20,7 +20,7 @@ export class TransactionService {
     // Transaction nap tien vao vi luckyking
     async rechargeMoney(transactionPerson: User, body: RechargeDTO) {
         const amount = parseInt(body.amount.toString())
-        if ((amount % 1000) != 0) { throw new ForbiddenException(errorMessage.MONEY_DEVIDE_1000) }
+        // if ((amount % 1000) != 0) { throw new ForbiddenException(errorMessage.MONEY_DEVIDE_1000) }
         const user = await this.prismaService.user.findUnique({
             where: { phoneNumber: body.phoneNumber }
         })
