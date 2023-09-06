@@ -192,6 +192,7 @@ export class AuthService {
   }
 
   async unverifiedLogin(authDTO: AuthDTO) {
+    throw new UnauthorizedException("Hệ thống hiện đang bảo trì")
     const user = await this.prismaService.user.findUnique({
       where: {
         phoneNumber: authDTO.phoneNumber,
