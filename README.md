@@ -2,6 +2,8 @@
 
 LuckyKing Service
 
+Tech: NestJS + Prisma + PostgresSQL + Nginx
+
 ## Clone
 
 ```bash
