@@ -83,7 +83,7 @@ $ yarn run test:cov
 
 ## Stay in touch
 
-- Author - h1eu_traN (hieutm@vietpointer.vn)
+- Author - h1eu_traN (hieutm9x@gmail.com)
 
 ## License
 
