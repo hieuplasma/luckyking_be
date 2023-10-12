@@ -59,12 +59,6 @@ $ npx prisma studio
 
 ## Deploy with MacOS
 
-Dowload ZenTermLite in Appstore  
-Config:  
-IP: 103.162.31.84  
-PORT: 26266  
-Username/Password: luckyking/VptNC@2023  
-
 Pull Project -> Rename `.evn.example` to `.env`
 
 ```bash
